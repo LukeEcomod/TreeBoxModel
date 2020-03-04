@@ -40,4 +40,4 @@ test_tree = Tree(height=height,
 def test_tree_init():
 
     assert test_tree.height == 12
-    assert test_tree.elements[1].concentration == 0
+    assert test_tree.elements[0][1].elastic_modulus == 1000e6
