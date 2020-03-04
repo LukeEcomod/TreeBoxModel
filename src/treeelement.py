@@ -1,15 +1,30 @@
+from typing import List
+from src.solute import Solute
+from dataclasses import dataclass
+
+
+@dataclass
 class TreeElement:
-    def __init__(self, pressure, solutes, viscosity, permeability, height,
-                 hydraulic_conductivity, transpiration_rate,
-                 photosynthesis_rate, sugar_loading_rate,
-                 sugar_unloading_rate):
-        self.pressure = pressure  # unit: Pa
-        self.solutes = solutes  # Solute array
-        self.viscosity = viscosity  # unit: Pa s
-        self.permeability = permeability  # unit: m2
-        self.height = height  # unit: m
-        self.hydraulic_conductivity = hydraulic_conductivity  # unit: m/(Pa s)
-        self.transpiration_rate = transpiration_rate  # unit: m3/s
-        self.photosynthesis_rate = photosynthesis_rate  # unit: mol/s
-        self.sugar_loading_rate = sugar_loading_rate  # unit: mol/s
-        self.sugar_unloading_rate = sugar_unloading_rate  # unit: mol/s
+    pressure: float  # unit: Pa
+
+    solutes: List[Solute]  # Solute array
+
+    viscosity: float  # unit: Pa s
+
+    permeability: float  # unit: m2
+
+    elastic_modulus: float  # unit: Pa
+
+    hydraulic_conductivity: float  # unit: m/(Pa s)
+
+    height: float  # unit: m
+
+    radius: float  # unit: m
+
+    transpiration_rate: float  # unit: m3/s
+
+    photosynthesis_rate: float  # unit: mol/s
+
+    sugar_loading_rate: float  # unit: mol/s
+
+    sugar_unloading_rate: float  # unit: mol/s
