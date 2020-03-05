@@ -50,4 +50,9 @@ def test_tree_init():
     assert test_tree.elements[-1][0].pressure == 0.0
     for i in range(num_elements):
         assert test_tree.elements[i][1].solutes[0].concentration == sugar_profile[i]
-    # TODO: write more tests
+    # TODO: write more tests in initialization
+
+
+def test_calculate_fluxes():
+
+    assert test_tree.calculate_fluxes() == 4
