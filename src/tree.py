@@ -127,9 +127,9 @@ class Tree:
         phloem_area = math.pi*((HEARTWOOD_RADIUS + XYLEM_RADIUS + PHLOEM_RADIUS)**2
                                - (HEARTWOOD_RADIUS+XYLEM_RADIUS)**2)
         # calculate transport coefficients
-        transport_ax = k[0:-1, :]/eta[0:-1, :]/length*xylem_area
+        transport_ax = k/eta/length*xylem_area
         # calculate fluxes
-        Q_ax = np.diff(pressures, axis=0)*transport_ax
+        Q_ax = np.diff(pressures, axis=0)*transport_ax[0:-1, :]
         Q_rad = 0
 
         # update phloem sap viscosity
