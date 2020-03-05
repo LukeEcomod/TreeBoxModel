@@ -1,5 +1,6 @@
 import pytest
-from src.tree import Tree
+from ..tree import Tree
+from typing import List
 
 # values from Hölttä et al. (2006)
 # except for transp/photosynth/loading/unloading profile
@@ -7,10 +8,10 @@ height = 12.0
 
 num_elements = 40
 
-transpiration_profile = [0 for i in range(num_elements)]
+transpiration_profile: List[float] = [0 for i in range(num_elements)]
 transpiration_profile[0] = 0.9*1e-6  # m3/s
 
-photosynth_profile = [0 for i in range(num_elements)]
+photosynth_profile: List[float] = [0 for i in range(num_elements)]
 photosynth_profile[0:3] = [1e-6, 1e-6, 1e-6]
 
 sugar_profile = [0 for i in range(num_elements)]
@@ -19,7 +20,7 @@ sugar_loading_profile = photosynth_profile
 sugar_unloading_profile = [0 for i in range(num_elements)]
 sugar_unloading_profile[-1] = 2
 
-axial_permeability_profile = [[1.5e-12, 6.0e-12]] * num_elements
+axial_permeability_profile = [[1.5e-12, 6.0e-12]]*num_elements
 
 radial_hydr_conductivity = [1e-13] * num_elements
 

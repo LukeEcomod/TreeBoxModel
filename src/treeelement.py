@@ -1,5 +1,5 @@
 from typing import List
-from src.solute import Solute
+from .solute import Solute
 from dataclasses import dataclass
 
 
@@ -18,8 +18,6 @@ class TreeElement:
     hydraulic_conductivity: float  # unit: m/(Pa s)
 
     height: float  # unit: m
-
-    radius: float  # unit: m
 
     transpiration_rate: float  # unit: m3/s
 
