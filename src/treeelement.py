@@ -19,6 +19,8 @@ class TreeElement:
 
     height: float  # unit: m
 
+    radius: float  # distance from the center of the tree. unit: m
+
     transpiration_rate: float  # unit: m3/s
 
     photosynthesis_rate: float  # unit: mol/s
