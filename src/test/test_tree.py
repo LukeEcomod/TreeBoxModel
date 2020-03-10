@@ -1,5 +1,6 @@
-from ..constants import PHLOEM_RADIUS, XYLEM_RADIUS
+from ..constants import HEARTWOOD_RADIUS, PHLOEM_RADIUS, XYLEM_RADIUS
 import pytest
+import math
 from ..tree import Tree
 from typing import List
 
@@ -13,7 +14,7 @@ def test_tree():
 
     num_elements = 40
 
-    radii = [XYLEM_RADIUS, XYLEM_RADIUS + PHLOEM_RADIUS]
+    radii = [1, 2]
     transpiration_profile: List[float] = [0 for i in range(num_elements)]
     transpiration_profile[0] = 0.9*1e-6  # m3/s
 
@@ -58,3 +59,15 @@ def test_tree_init(test_tree):
     for i in range(test_tree.num_elements):
         assert test_tree.elements[i][1].solutes[0].concentration == test_tree.sugar_profile[i]
     # TODO: write more tests in initialization
+
+
+def test_element_area(test_tree):
+
+    assert test_tree.element_area([1], 0)[0] == math.pi*(1 - HEARTWOOD_RADIUS**2)
+    assert test_tree.element_area([1], 1)[0] == pytest.approx(math.pi*(2**2 - HEARTWOOD_RADIUS**2), rel=1e-6)
+
+
+def test_element_volume(test_tree):
+
+    assert test_tree.element_volume([1], 0)[0] == pytest.approx(math.pi*(1 - HEARTWOOD_RADIUS**2)*12/40, rel=1e-6)
+    assert test_tree.element_volume([1], 1)[0] == pytest.approx(math.pi*(2**2 - HEARTWOOD_RADIUS**2)*12/40, rel=1e-6)

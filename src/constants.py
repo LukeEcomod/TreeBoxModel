@@ -13,3 +13,5 @@ AVOGADROS_CONSTANT: float = 6.022e23  # avogadro's constant unit: 1/mol
 HEARTWOOD_RADIUS = 60e-3
 XYLEM_RADIUS = 80e-3
 PHLOEM_RADIUS = 8e-3
+
+MAX_ELEMENT_COLUMNS = 2  # Max number of columns in tree.elements

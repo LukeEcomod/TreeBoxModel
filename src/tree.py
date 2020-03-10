@@ -4,7 +4,7 @@ from typing import List
 from .treeelement import TreeElement
 from .solute import Solute
 from .constants import M_SUCROSE, RHO_SUCROSE, RHO_WATER,\
-    GRAVITATIONAL_ACCELERATION, HEARTWOOD_RADIUS
+    GRAVITATIONAL_ACCELERATION, HEARTWOOD_RADIUS, MAX_ELEMENT_COLUMNS
 
 
 class Tree:
@@ -125,26 +125,45 @@ class Tree:
         return np.asarray([self.elements[i][1].solutes[0].concentration
                            for i in range(self.num_elements)])
 
-    def element_area(self, ind: List[int] = []) -> float:
+    def element_area(self, ind: List[int] = [], column: int = 0) -> np.ndarray:
+        """ returns element areas specified in parameter ind and column of self.elements.
+
+            If no ind is given returns the areas for every element.
+            If no column is given returns the areas in column 0 of self.elements (the xylem)
+        """
         radii: np.ndarray = self.element_property_as_numpy_array('radius')
 
         if len(ind) > 0:
-            radii = radii[ind]
-        # FIXME: this is wrong! should be so that for phloem also xylem radius is taken into account
-        # Probably need to output array of xylem and phloem areas
-        return np.sum(math.pi*(radii**2 - HEARTWOOD_RADIUS**2))
+            radii = radii[ind, :]
+        if column < MAX_ELEMENT_COLUMNS:
+            radii = radii[:, 0:column+1]
 
-    def element_volume(self, ind: List[int] = []) -> float:
+        areas: np.ndarray = np.sum(radii[:, 0:column+1]**2, axis=1)  # every element column until desired column
+        areas = areas - HEARTWOOD_RADIUS**2  # subtract the area of heartwood
+        if column > 0:  # subtract the area of every element column before desired column
+            for i in range(column):
+                areas = areas - radii[:, i]**2
+        return areas*math.pi
+
+    def element_volume(self, ind: List[int] = [], column: int = 0) -> float:
+        """ returns element volumes specified in parameter ind and column of self.elements.
+
+            If no ind is given returns the volume of every element.
+            If no column is given returns the volumes in column 0 of self.elements (the xylem)
+        """
         # TODO: refactor the radii finding to own function (used multiple times)
-        radii: np.ndarray = self.element_property_as_numpy_array('radius')
         heights: np.ndarray = self.element_property_as_numpy_array('height')
-
         if len(ind) > 0:
-            radii = radii[ind]
+            heights = heights[ind, :]
 
-        return np.sum(math.pi*(radii**2 - HEARTWOOD_RADIUS**2) * heights)
+        elif column < MAX_ELEMENT_COLUMNS:
+            heights = heights[:, 0:column+1]
+
+        return self.element_area(ind, column) * heights
 
     def update_sap_viscosity(self) -> None:
+        """ Updates the viscosity in column 1 of self.elements (the phloem)
+        """
         # TODO: refactor into solution class
 
         # calculate sugar volume in sap
