@@ -1,6 +1,8 @@
-from ..constants import HEARTWOOD_RADIUS, PHLOEM_RADIUS, XYLEM_RADIUS
+from ..constants import HEARTWOOD_RADIUS, M_SUCROSE, PHLOEM_RADIUS, RHO_SUCROSE, XYLEM_RADIUS
+from ..constants import VISCOSITY_WATER
 import pytest
 import math
+import numpy as np
 from ..tree import Tree
 from typing import List
 
@@ -9,7 +11,7 @@ from typing import List
 def test_tree():
 
     # values from Hölttä et al. (2006)
-    # except for transp/photosynth/loading/unloading profile
+    # except for transp/photosynth/loading/unloading/sugar profile
     height = 12.0
 
     num_elements = 40
@@ -21,7 +23,7 @@ def test_tree():
     photosynth_profile: List[float] = [0 for i in range(num_elements)]
     photosynth_profile[0:3] = [1e-6, 1e-6, 1e-6]
 
-    sugar_profile = [1e1 for i in range(num_elements)]
+    sugar_profile = [10 for i in range(num_elements)]
     sugar_loading_profile = photosynth_profile
 
     sugar_unloading_profile = [0 for i in range(num_elements)]
@@ -71,3 +73,20 @@ def test_element_volume(test_tree):
 
     assert test_tree.element_volume([1], 0)[0] == pytest.approx(math.pi*(1 - HEARTWOOD_RADIUS**2)*12/40, rel=1e-6)
     assert test_tree.element_volume([1], 1)[0] == pytest.approx(math.pi*(2**2 - HEARTWOOD_RADIUS**2)*12/40, rel=1e-6)
+
+
+def test_viscosity_update(test_tree):
+    #  check that the viscosity in xylem is 1e-3 (water viscosity) in the start
+    assert test_tree.elements[0][0].viscosity == 1e-3
+    # check that the viscosity in phloem is calculated correctly after initialization
+    assert test_tree.elements[30][1].viscosity == pytest.approx(VISCOSITY_WATER *
+                                                                np.exp(4.68*0.956*400*M_SUCROSE / RHO_SUCROSE /
+                                                                       (1-0.956*400*M_SUCROSE / RHO_SUCROSE)), rel=1e-6)
+    # update an elements sugar concentartion
+    for i in range(test_tree.num_elements):
+        test_tree.elements[i][1].solutes[0].concentration = 100
+    test_tree.update_sap_viscosity()
+    # check that the viscosity is calculated correctly after the concentration changes
+    assert test_tree.elements[30][1].viscosity == pytest.approx(
+        VISCOSITY_WATER * np.exp(4.68*0.956*4000*M_SUCROSE / RHO_SUCROSE
+                                 / (1-0.956*4000*M_SUCROSE / RHO_SUCROSE)), rel=1e-6)

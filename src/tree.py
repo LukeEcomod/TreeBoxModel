@@ -153,11 +153,10 @@ class Tree:
         """
         # TODO: refactor the radii finding to own function (used multiple times)
         heights: np.ndarray = self.element_property_as_numpy_array('height')
-        if len(ind) > 0:
-            heights = heights[ind, :]
+        heights = heights[:, column]
 
-        elif column < MAX_ELEMENT_COLUMNS:
-            heights = heights[:, 0:column+1]
+        if len(ind) > 0:
+            heights = heights[ind]
 
         return self.element_area(ind, column) * heights
 
@@ -167,12 +166,10 @@ class Tree:
         # TODO: refactor into solution class
 
         # calculate sugar volume in sap
-        sugar_volume: np.ndarray = self.sugar_concentration_as_numpy_array() * M_SUCROSE / RHO_SUCROSE
+        sugar_volume_fraction: np.ndarray = np.sum(self.sugar_concentration_as_numpy_array()) * M_SUCROSE / RHO_SUCROSE
 
-        sugar_volume_fraction: np.ndarray = np.sum(sugar_volume) / self.element_volume()
         viscosity: np.ndarray = 1e-3 * np.exp(4.68 * 0.956 * sugar_volume_fraction /
                                               (1 - 0.956 * sugar_volume_fraction))
-
         # TODO: make a function to tree class that allows setting all the viscosity values at once
         for i in range(self.num_elements):
             self.elements[i][1].viscosity = viscosity
