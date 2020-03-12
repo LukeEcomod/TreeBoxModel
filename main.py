@@ -1,3 +1,4 @@
+from src.constants import PHLOEM_RADIUS, XYLEM_RADIUS
 from src.model import Model
 from src.tree import Tree
 from typing import List
@@ -9,7 +10,7 @@ if __name__ == "__main__":
 
     num_elements: int = 40
 
-    radii: List[float] = [1.0, 2.0]
+    radii: List[float] = [XYLEM_RADIUS, PHLOEM_RADIUS]
     transpiration_profile: List[float] = [0 for i in range(num_elements)]
     transpiration_profile[0] = 0.9*1e-6  # m3/s
 
@@ -20,7 +21,7 @@ if __name__ == "__main__":
     sugar_loading_profile = photosynth_profile
 
     sugar_unloading_profile: List[float] = [0.0 for i in range(num_elements)]
-    sugar_unloading_profile[-1] = 2
+    sugar_unloading_profile[-1] = 2e-5
 
     axial_permeability_profile: List[List[float]] = [[1.5e-12, 6.0e-12]]*num_elements
 
@@ -45,5 +46,5 @@ if __name__ == "__main__":
 
     model = Model(tree, outputfile="test.out")
 
-    model.run(time_start=1e-5, time_end=5.0, dt=1.0)
+    model.run(time_start=0, time_end=60*5, dt=0.01)
     print('Model simualtion finished')

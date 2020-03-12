@@ -28,7 +28,7 @@ class Model:
         L: np.ndarray = self.tree.element_property_as_numpy_array('sugar_loading_rate')
         U: np.ndarray = self.tree.element_property_as_numpy_array('sugar_unloading_rate')
         C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
-        
+
         # print(pressures.shape)
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
@@ -53,41 +53,50 @@ class Model:
         Q_ax: np.ndarray = Q_ax_up + Q_ax_down - E
         return Q_ax
 
-    def run(self, time_start: float = 1e-3, time_end: float = 120.0, dt: float = 1):
+    def run(self, time_start: float = 1e-3, time_end: float = 120.0, dt: float = 0.01):
         # TODO: do not use explicit euler method
 
         for time in np.linspace(time_start, time_end, int(time_end/dt)):
+            if(np.abs(time % 10) < 1e-2):
+                print(time)
             # get the change in every elements mass
             dmdt_ax: np.ndarray = self.axial_fluxes()
             dmdt_rad: np.ndarray = np.zeros(dmdt_ax.shape)  # FIXME: add this to version 0.2
             # TODO: do this without for loop
             for i in range(self.tree.num_elements):
+
                 # update pressures
-                self.tree.elements[i][0].pressure = dt * self.tree.elements[i][0].elastic_modulus\
+                self.tree.elements[i][0].pressure += dt * self.tree.elements[i][0].elastic_modulus\
                     / float((self.tree.element_volume([i], 0)) * RHO_WATER) * (dmdt_ax[i, 0] + dmdt_rad[i, 0])
-                self.tree.elements[i][1].pressure = dt * self.tree.elements[i][1].elastic_modulus\
+                self.tree.elements[i][1].pressure += dt * self.tree.elements[i][1].elastic_modulus\
                     / float((self.tree.element_volume([i], 1)) * RHO_WATER) * (dmdt_ax[i, 1] + dmdt_rad[i, 1])
                 # update sugar concentration
-                self.tree.elements[i][1].solutes[0].concentration = dt * dmdt_ax[i, 1]\
+                self.tree.elements[i][1].solutes[0].concentration += dt * dmdt_ax[i, 1]\
                     * self.tree.elements[i][1].solutes[0].concentration/RHO_WATER\
                     + self.tree.elements[i][1].sugar_loading_rate\
                     + self.tree.elements[i][1].sugar_unloading_rate
 
                 # update radius of each element
 
-                self.tree.elements[i][0].radius = dt * (dmdt_ax[i, 0] + dmdt_rad[i, 0])\
+                self.tree.elements[i][0].radius += dt * (dmdt_ax[i, 0] + dmdt_rad[i, 0])\
                     / (math.pi * RHO_WATER
                        * self.tree.elements[i][0].height
                        * self.tree.elements[i][0].radius)
+                self.tree.elements[i][1].radius += dt * (dmdt_ax[i, 1] + dmdt_rad[i, 1])\
+                    / (math.pi * RHO_WATER
+                       * self.tree.elements[i][1].height
+                       * self.tree.elements[i][1].radius)
+
             # update sap viscosity
             self.tree.update_sap_viscosity()
-            
             # save data to file
-            self.save()
+            self.save(time)
 
-    def save(self):
+    def save(self, time):
         # TODO: switch to pandas.to_csv
-        file = open(self.outputfile, 'ab')
-        np.savetxt(file, self.tree.element_property_as_numpy_array('pressure').reshape((40, 2)),
-                   fmt="%1.4f", footer="\n", comments="")
-        file.close()
+        if(np.abs(time % 10) < 1e-2):
+            file = open(self.outputfile, 'ab')
+            # np.savetxt(file, [time], fmt="%1.4e", footer="\n", comments="")
+            np.savetxt(file, self.tree.element_property_as_numpy_array('pressure').reshape((40, 2)),
+                       fmt="%1.4e", footer="\n", comments="")
+            file.close()
