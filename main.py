@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     radii: List[float] = [XYLEM_RADIUS, PHLOEM_RADIUS]
     transpiration_profile: List[float] = [0 for i in range(num_elements)]
-    transpiration_profile[0] = 0.9*1e-6  # m3/s
+    transpiration_profile[0] = 0.9*1e-3  # kg/s
 
     photosynth_profile: List[float] = [0 for i in range(num_elements)]
     photosynth_profile[0:3] = [1e-6, 1e-6, 1e-6]

@@ -6,8 +6,8 @@ from .constants import RHO_WATER
 
 class Model:
     def __init__(self, tree: Tree, outputfile: str = "a.out"):
-        self.tree = tree
-        self.outputfile = outputfile
+        self.tree: Tree = tree
+        self.outputfile: str = outputfile
 
     def axial_fluxes(self) -> np.ndarray:
         """ calculates change in sap mass of every element
