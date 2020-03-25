@@ -1,11 +1,14 @@
-from typing import Dict, List
+from typing import Dict
 from netCDF4 import Dataset, Variable
-from ..model import Model
+# from ..model import Model # TODO: check why this import fails
 from ..constants import MAX_ELEMENT_COLUMNS
+from ..model_variables import index_dim_vars
+from ..tree import Tree
 import os.path
+import numpy as np
 
 
-def initialize_netcdf(model: Model, variables: Dict) -> Dataset:
+def initialize_netcdf(model, variables: Dict) -> Dataset:
 
     # create the file if it does not exist
     if os.path.isfile(model.outputfile):
@@ -36,7 +39,6 @@ def initialize_netcdf(model: Model, variables: Dict) -> Dataset:
 
 def write_netcdf(ncf: Dataset, results: Dict) -> None:
     ind: int = ncf['index'].shape[0]
-    index_dim_vars: List = ['num_elements', 'simTime', 'index']
     ncf['index'][ind] = ind
     for key in results.keys():
         if key in index_dim_vars:
@@ -46,3 +48,26 @@ def write_netcdf(ncf: Dataset, results: Dict) -> None:
             # the variable has dimension
             # ("index", "radial_layers", "axial_layers")
             ncf[key][ind, :, :] = results[key]
+
+
+def tree_properties_to_dict(tree: Tree) -> Dict:
+    """ cast tree properties to dictionary for saving"""
+    properties = {}
+    properties['height'] = tree.height
+    properties['num_elements'] = tree.num_elements
+    properties['ground_water_potential'] = tree.ground_water_potential
+    properties['transpiration_rate'] = tree.element_property_as_numpy_array('transpiration_rate')
+    properties['photosynthesis_rate'] = tree.element_property_as_numpy_array('photosynthesis_rate')
+    sugar_conc = tree.sugar_concentration_as_numpy_array().reshape(40, 1)
+    zeros = np.zeros((40, 1))
+    properties['sugar_concentration'] = np.concatenate((zeros, sugar_conc), axis=1)
+    properties['sugar_loading_rate'] = tree.element_property_as_numpy_array('sugar_loading_rate')
+    properties['sugar_unloading_rate'] = tree.element_property_as_numpy_array('sugar_unloading_rate')
+    properties['axial_permeability'] = tree.element_property_as_numpy_array('permeability')
+    properties['radial_hydraulic_conductivity'] = tree.element_property_as_numpy_array('hydraulic_conductivity')
+    properties['viscosity'] = tree.element_property_as_numpy_array('viscosity')
+    properties['elastic_modulus'] = tree.element_property_as_numpy_array('elastic_modulus')
+    properties['pressure'] = tree.element_property_as_numpy_array('pressure')
+    properties['radius'] = tree.element_property_as_numpy_array('radius')
+
+    return properties

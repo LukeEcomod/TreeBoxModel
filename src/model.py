@@ -1,11 +1,15 @@
+from typing import Dict
 import numpy as np
 import math
+import datetime
 from .tree import Tree
 from .constants import RHO_WATER
+from .tools.iotools import initialize_netcdf, write_netcdf, tree_properties_to_dict
+from .model_variables import all_variables
 
 
 class Model:
-    def __init__(self, tree: Tree, outputfile: str = "a.out"):
+    def __init__(self, tree: Tree, outputfile: str = "a.nc"):
         self.tree: Tree = tree
         self.outputfile: str = outputfile
 
@@ -29,7 +33,6 @@ class Model:
         U: np.ndarray = self.tree.element_property_as_numpy_array('sugar_unloading_rate')
         C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
 
-        # print(pressures.shape)
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
         transport_ax: np.ndarray = k/eta/length*RHO_WATER*np.transpose(
@@ -55,16 +58,22 @@ class Model:
 
     def run(self, time_start: float = 1e-3, time_end: float = 120.0, dt: float = 0.01):
         # TODO: do not use explicit euler method
-
-        for time in np.linspace(time_start, time_end, int(time_end/dt)):
-            if(np.abs(time % 10) < 1e-2):
-                print(time)
+        # set up the netcdf writer
+        ncf = initialize_netcdf(self, all_variables)
+        for (ind, time) in enumerate(np.linspace(time_start, time_end, int(time_end/dt))):
             # get the change in every elements mass
             dmdt_ax: np.ndarray = self.axial_fluxes()
             dmdt_rad: np.ndarray = np.zeros(dmdt_ax.shape)  # FIXME: add this to version 0.2
-            # TODO: do this without for loop
+            if(np.abs(time % 300) < 1e-2):
+                print(datetime.datetime.now(), "\t", time)
+                results = tree_properties_to_dict(self.tree)
+                results['dqrad'] = dmdt_rad
+                results['dqax'] = dmdt_ax
+                results['simulation_time'] = time
+                results['model_index'] = ind
+                write_netcdf(ncf, results)
             for i in range(self.tree.num_elements):
-
+                # TODO: do this without for loop
                 # update pressures
                 self.tree.elements[i][0].pressure += dt * self.tree.elements[i][0].elastic_modulus\
                     / float((self.tree.element_volume([i], 0)) * RHO_WATER) * (dmdt_ax[i, 0] + dmdt_rad[i, 0])
@@ -89,14 +98,3 @@ class Model:
 
             # update sap viscosity
             self.tree.update_sap_viscosity()
-            # save data to file
-            self.save(time)
-
-    def save(self, time):
-        # TODO: switch to pandas.to_csv
-        if(np.abs(time % 10) < 1e-2):
-            file = open(self.outputfile, 'ab')
-            # np.savetxt(file, [time], fmt="%1.4e", footer="\n", comments="")
-            np.savetxt(file, self.tree.element_property_as_numpy_array('pressure').reshape((40, 2)),
-                       fmt="%1.4e", footer="\n", comments="")
-            file.close()

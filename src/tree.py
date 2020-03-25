@@ -25,11 +25,11 @@ class Tree:
         self.initial_radius = initial_radius  # initial radius of the xylem and phloem
 
         # (num_elements,1) array of transpiration rates in the xylem
-        # unit: m3/s
+        # unit: kg/s
         self.transpiration_profile: List[float] = transpiration_profile
 
         # (num_elements,1) array of photosynth. rate in the phloem
-        # unit: m3/s
+        # unit: mol/s
         self.photosynthesis_profile: List[float] = photosynthesis_profile
 
         # (num_elements,1) array of sugar conc. at t=0s in phloem
@@ -37,11 +37,11 @@ class Tree:
         self.sugar_profile: List[float] = sugar_profile
 
         # (num_elements,1) array of sugar loading rates in phloem
-        # unit: m3/s
+        # unit: mol/s
         self.sugar_loading_profile: List[float] = sugar_loading_profile
 
         # (num_elements,1) array of sugar unloading rates in phloem
-        # unit: m3/s
+        # unit: mol/s
         self.sugar_unloading_profile: List[float] = sugar_unloading_profile
 
         self.axial_permeability_profile: List[float] = axial_permeability_profile
