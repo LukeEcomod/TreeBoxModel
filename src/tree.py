@@ -4,7 +4,8 @@ from typing import List
 from .treeelement import TreeElement
 from .solute import Solute
 from .constants import M_SUCROSE, RHO_SUCROSE, RHO_WATER,\
-    GRAVITATIONAL_ACCELERATION, HEARTWOOD_RADIUS, MAX_ELEMENT_COLUMNS
+    GRAVITATIONAL_ACCELERATION, HEARTWOOD_RADIUS, MAX_ELEMENT_COLUMNS,\
+    XYLEM_PHLOEM_CONTACT_ANGLE
 
 
 class Tree:
@@ -145,7 +146,7 @@ class Tree:
                 areas = areas - radii[:, i]**2
         return areas*math.pi
 
-    def element_volume(self, ind: List[int] = [], column: int = 0) -> float:
+    def element_volume(self, ind: List[int] = [], column: int = 0) -> np.ndarray:
         """ returns element volumes specified in parameter ind and column of self.elements.
 
             If no ind is given returns the volume of every element.
@@ -159,6 +160,18 @@ class Tree:
             heights = heights[ind]
 
         return self.element_area(ind, column) * heights
+
+    def cross_sectional_area(self, ind: List[int] = []) -> np.ndarray:
+        """ calculates the cross sectional area between xylem and phloem
+
+            if no ind is given returns the cross sectional area for every axial element
+        """
+        heights: np.ndarray = self.element_property_as_numpy_array('height')
+        heights = heights[:, 1]
+        if len(ind) > 0:
+            heights = heights[ind]
+
+        return XYLEM_PHLOEM_CONTACT_ANGLE/(2.0*math.pi)*heights
 
     def update_sap_viscosity(self) -> None:
         """ Updates the viscosity in column 1 of self.elements (the phloem)

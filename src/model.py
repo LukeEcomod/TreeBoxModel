@@ -3,7 +3,7 @@ import numpy as np
 import math
 import datetime
 from .tree import Tree
-from .constants import RHO_WATER
+from .constants import RHO_WATER, MOLAR_GAS_CONSTANT, TEMPERATURE
 from .tools.iotools import initialize_netcdf, write_netcdf, tree_properties_to_dict
 from .model_variables import all_variables
 
@@ -14,7 +14,7 @@ class Model:
         self.outputfile: str = outputfile
 
     def axial_fluxes(self) -> np.ndarray:
-        """ calculates change in sap mass of every element
+        """ calculates axial change in sap mass of every element
 
         variable names in this function's scope are the same as in Hölttä et al. (2006)
         shorter variable names are used to make errror prone calculations more readable
@@ -23,15 +23,10 @@ class Model:
         # FIXME: refactor into axial and radial fluxes
         # TODO: think is this the smartest way to do the calculations
         pressures: np.ndarray = self.tree.element_property_as_numpy_array('pressure')
-        L: np.ndarray = self.tree.element_property_as_numpy_array('hydraulic_conductivity')
         k: np.ndarray = self.tree.element_property_as_numpy_array('permeability')
         eta: np.ndarray = self.tree.element_property_as_numpy_array('viscosity')
         length: np.ndarray = self.tree.element_property_as_numpy_array('height')
         E: np.ndarray = self.tree.element_property_as_numpy_array('transpiration_rate')
-        P: np.ndarray = self.tree.element_property_as_numpy_array('photosynthesis_rate')
-        L: np.ndarray = self.tree.element_property_as_numpy_array('sugar_loading_rate')
-        U: np.ndarray = self.tree.element_property_as_numpy_array('sugar_unloading_rate')
-        C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
 
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
@@ -56,15 +51,33 @@ class Model:
         Q_ax: np.ndarray = Q_ax_up + Q_ax_down - E
         return Q_ax
 
-    def run(self, time_start: float = 1e-3, time_end: float = 120.0, dt: float = 0.01):
+    def radial_fluxes(self) -> np.ndarray:
+        """ calculates radial change in sap mass of every element
+
+        variable names in this function's scope are the same as in Hölttä et al. (2006)
+        shorter variable names are used to make errror prone calculations more readable
+        """
+
+        pressures: np.ndarray = self.tree.element_property_as_numpy_array('pressure')
+        Lr: np.ndarray = self.tree.element_property_as_numpy_array('hydraulic_conductivity')
+        C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
+        Q_rad_phloem: np.ndarray = Lr[:, 1].reshape((40, 1))*self.tree.cross_sectional_area().reshape((40, 1))\
+            * RHO_WATER * (
+            np.diff(np.flip(pressures, axis=1), axis=1) + C.reshape((40, 1))*MOLAR_GAS_CONSTANT*TEMPERATURE)
+
+        Q_rad_xylem: np.ndarray = -Q_rad_phloem
+        return np.concatenate((Q_rad_xylem, Q_rad_phloem), axis=1)
+
+    def run(self, time_start: float = 1e-3, time_end: float = 120.0, dt: float = 0.01, output_interval: float = 60):
         # TODO: do not use explicit euler method
         # set up the netcdf writer
         ncf = initialize_netcdf(self, all_variables)
         for (ind, time) in enumerate(np.linspace(time_start, time_end, int(time_end/dt))):
             # get the change in every elements mass
             dmdt_ax: np.ndarray = self.axial_fluxes()
-            dmdt_rad: np.ndarray = np.zeros(dmdt_ax.shape)  # FIXME: add this to version 0.2
-            if(np.abs(time % 300) < 1e-2):
+            dmdt_rad: np.ndarray = self.radial_fluxes()
+            # print(dmdt_rad.shape)
+            if(np.abs(time % output_interval) < 1e-2):
                 print(datetime.datetime.now(), "\t", time)
                 results = tree_properties_to_dict(self.tree)
                 results['dqrad'] = dmdt_rad

@@ -44,7 +44,7 @@ if __name__ == "__main__":
                 elastic_modulus_profile=elastic_modulus_profile,
                 ground_water_potential=ground_water_potential)
 
-    model = Model(tree, outputfile="test_2hour.nc")
+    model = Model(tree, outputfile="test.nc")
 
-    model.run(time_start=0, time_end=60*60*2, dt=0.01)
+    model.run(time_start=0, time_end=60, dt=0.01, output_interval=1)
     print('Model simualtion finished')
