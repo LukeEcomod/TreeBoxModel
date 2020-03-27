@@ -22,4 +22,4 @@ MAX_ELEMENT_COLUMNS: int = 2  # Max number of columns in tree.elements
 
 XYLEM_PHLOEM_CONTACT_ANGLE = 36.0*math.pi/180.0  # Corresponds to 10 % from circumference
 
-TEMPERATURE = 293  # Temperature of the tree unit: K
+TEMPERATURE: float = 293.0  # Temperature of the tree unit: K

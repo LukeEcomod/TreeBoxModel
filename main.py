@@ -15,13 +15,13 @@ if __name__ == "__main__":
     transpiration_profile[0] = 0.9*1e-3  # kg/s
 
     photosynth_profile: List[float] = [0 for i in range(num_elements)]
-    photosynth_profile[0:3] = [1e-6, 1e-6, 1e-6]
+    photosynth_profile[0:3] = [1e-4, 1e-4, 1e-4]
 
-    sugar_profile: List[float] = [10.0 for i in range(num_elements)]
+    sugar_profile: List[float] = [1.0 for i in range(num_elements)]
     sugar_loading_profile = photosynth_profile
 
     sugar_unloading_profile: List[float] = [0.0 for i in range(num_elements)]
-    sugar_unloading_profile[-1] = 2e-5
+    # sugar_unloading_profile[-1] = 2e-5
 
     axial_permeability_profile: List[List[float]] = [[1.5e-12, 6.0e-12]]*num_elements
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
                 elastic_modulus_profile=elastic_modulus_profile,
                 ground_water_potential=ground_water_potential)
 
-    model = Model(tree, outputfile="test.nc")
+    model = Model(tree, outputfile="test_no_elements.nc")
 
     model.run(time_start=0, time_end=60, dt=0.01, output_interval=1)
     print('Model simualtion finished')
