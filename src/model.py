@@ -19,14 +19,12 @@ class Model:
         variable names in this function's scope are the same as in Hölttä et al. (2006)
         shorter variable names are used to make errror prone calculations more readable
         """
-        # TODO:figure out why ndarray type hint does not raise error in pyright
-        # FIXME: refactor into axial and radial fluxes
-        # TODO: think is this the smartest way to do the calculations
-        pressures: np.ndarray = self.tree.element_property_as_numpy_array('pressure')
-        k: np.ndarray = self.tree.element_property_as_numpy_array('permeability')
-        eta: np.ndarray = self.tree.element_property_as_numpy_array('viscosity')
-        length: np.ndarray = self.tree.element_property_as_numpy_array('height')
-        E: np.ndarray = self.tree.element_property_as_numpy_array('transpiration_rate')
+
+        pressures: np.ndarray = self.tree.pressure
+        k: np.ndarray = self.tree.axial_permeability
+        eta: np.ndarray = self.tree.viscosity
+        length: np.ndarray = self.tree.element_height
+        E: np.ndarray = self.tree.transpiration_rate
 
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
@@ -48,7 +46,8 @@ class Model:
 
         Q_ax_up[0, :] = 0  # the upward flux is handled in transpiration rate for the highest element
 
-        Q_ax: np.ndarray = Q_ax_up + Q_ax_down - E
+        Q_ax: np.ndarray = Q_ax_up + Q_ax_down
+        Q_ax[:, 0] = Q_ax[:, 0] - E.reshape(40,)  # subtract transpiration
         return Q_ax
 
     def radial_fluxes(self) -> np.ndarray:
@@ -58,10 +57,10 @@ class Model:
         shorter variable names are used to make errror prone calculations more readable
         """
 
-        pressures: np.ndarray = self.tree.element_property_as_numpy_array('pressure')
-        Lr: np.ndarray = self.tree.element_property_as_numpy_array('hydraulic_conductivity')
+        pressures: np.ndarray = self.tree.pressure
+        Lr: np.ndarray = self.tree.radial_hydraulic_conductivity
         C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
-        Q_rad_phloem: np.ndarray = Lr[:, 1].reshape((40, 1))*self.tree.cross_sectional_area().reshape((40, 1))\
+        Q_rad_phloem: np.ndarray = Lr.reshape((40, 1))*self.tree.cross_sectional_area().reshape((40, 1))\
             * RHO_WATER * (
             np.diff(np.flip(pressures, axis=1), axis=1) + C.reshape((40, 1))*MOLAR_GAS_CONSTANT*TEMPERATURE)
 
@@ -76,7 +75,6 @@ class Model:
             # get the change in every elements mass
             dmdt_ax: np.ndarray = self.axial_fluxes()
             dmdt_rad: np.ndarray = self.radial_fluxes()
-            # print(dmdt_rad.shape)
             if(np.abs(time % output_interval) < 1e-2):
                 print(datetime.datetime.now(), "\t", time)
                 results = tree_properties_to_dict(self.tree)
@@ -85,29 +83,21 @@ class Model:
                 results['simulation_time'] = time
                 results['model_index'] = ind
                 write_netcdf(ncf, results)
+
+            self.tree.pressure += dt*self.tree.elastic_modulus/(np.transpose(
+                np.array([self.tree.element_volume([], 0),
+                          self.tree.element_volume([], 1)])) * RHO_WATER)\
+                * (dmdt_ax + dmdt_rad)
+
             for i in range(self.tree.num_elements):
-                # TODO: do this without for loop
-                # update pressures
-                self.tree.elements[i][0].pressure += dt * self.tree.elements[i][0].elastic_modulus\
-                    / float((self.tree.element_volume([i], 0)) * RHO_WATER) * (dmdt_ax[i, 0] + dmdt_rad[i, 0])
-                self.tree.elements[i][1].pressure += dt * self.tree.elements[i][1].elastic_modulus\
-                    / float((self.tree.element_volume([i], 1)) * RHO_WATER) * (dmdt_ax[i, 1] + dmdt_rad[i, 1])
-                # update sugar concentration
-                self.tree.elements[i][1].solutes[0].concentration += dt * dmdt_ax[i, 1]\
-                    * self.tree.elements[i][1].solutes[0].concentration/RHO_WATER\
-                    + self.tree.elements[i][1].sugar_loading_rate\
-                    + self.tree.elements[i][1].sugar_unloading_rate
-
-                # update radius of each element
-
-                self.tree.elements[i][0].radius += dt * (dmdt_ax[i, 0] + dmdt_rad[i, 0])\
-                    / (math.pi * RHO_WATER
-                       * self.tree.elements[i][0].height
-                       * self.tree.elements[i][0].radius)
-                self.tree.elements[i][1].radius += dt * (dmdt_ax[i, 1] + dmdt_rad[i, 1])\
-                    / (math.pi * RHO_WATER
-                       * self.tree.elements[i][1].height
-                       * self.tree.elements[i][1].radius)
-
+                self.tree.solutes[i, 1].concentration += dt / self.tree.element_volume([i], 1)\
+                    * (dmdt_ax[i, 1]
+                       * self.tree.solutes[i, 1].concentration/RHO_WATER
+                       + self.tree.sugar_loading_rate[i]
+                       - self.tree.sugar_unloading_rate[i])
+                self.tree.sugar_unloading_rate[i] = (self.tree.solutes[i, 1].concentration - 10)*1e-9
+            self.tree.element_radius += (dmdt_ax + dmdt_rad)\
+                / (math.pi*RHO_WATER * np.repeat(self.tree.element_height, 2, axis=1) * self.tree.element_radius)
+            
             # update sap viscosity
             self.tree.update_sap_viscosity()

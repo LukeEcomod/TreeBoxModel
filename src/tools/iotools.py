@@ -56,18 +56,19 @@ def tree_properties_to_dict(tree: Tree) -> Dict:
     properties['height'] = tree.height
     properties['num_elements'] = tree.num_elements
     properties['ground_water_potential'] = tree.ground_water_potential
-    properties['transpiration_rate'] = tree.element_property_as_numpy_array('transpiration_rate')
-    properties['photosynthesis_rate'] = tree.element_property_as_numpy_array('photosynthesis_rate')
+    properties['transpiration_rate'] = tree.transpiration_rate
+    properties['photosynthesis_rate'] = tree.photosynthesis_rate
     sugar_conc = tree.sugar_concentration_as_numpy_array().reshape(40, 1)
     zeros = np.zeros((40, 1))
     properties['sugar_concentration'] = np.concatenate((zeros, sugar_conc), axis=1)
-    properties['sugar_loading_rate'] = tree.element_property_as_numpy_array('sugar_loading_rate')
-    properties['sugar_unloading_rate'] = tree.element_property_as_numpy_array('sugar_unloading_rate')
-    properties['axial_permeability'] = tree.element_property_as_numpy_array('permeability')
-    properties['radial_hydraulic_conductivity'] = tree.element_property_as_numpy_array('hydraulic_conductivity')
-    properties['viscosity'] = tree.element_property_as_numpy_array('viscosity')
-    properties['elastic_modulus'] = tree.element_property_as_numpy_array('elastic_modulus')
-    properties['pressure'] = tree.element_property_as_numpy_array('pressure')
-    properties['radius'] = tree.element_property_as_numpy_array('radius')
+    properties['sugar_loading_rate'] = tree.sugar_loading_rate
+    properties['sugar_unloading_rate'] = tree.sugar_unloading_rate
+    properties['axial_permeability'] = tree.axial_permeability
+    properties['radial_hydraulic_conductivity'] = np.repeat(tree.radial_hydraulic_conductivity.reshape(40, 1),
+                                                            2, axis=1)
+    properties['viscosity'] = tree.viscosity
+    properties['elastic_modulus'] = tree.elastic_modulus
+    properties['pressure'] = tree.pressure
+    properties['radius'] = tree.element_radius
 
     return properties
