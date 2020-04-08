@@ -95,9 +95,9 @@ class Model:
                        * self.tree.solutes[i, 1].concentration/RHO_WATER
                        + self.tree.sugar_loading_rate[i]
                        - self.tree.sugar_unloading_rate[i])
-
+                self.tree.sugar_unloading_rate[i] = (self.tree.solutes[i, 1].concentration - 10)*1e-9
             self.tree.element_radius += (dmdt_ax + dmdt_rad)\
                 / (math.pi*RHO_WATER * np.repeat(self.tree.element_height, 2, axis=1) * self.tree.element_radius)
-
+            
             # update sap viscosity
             self.tree.update_sap_viscosity()
