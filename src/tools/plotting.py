@@ -4,16 +4,35 @@ import numpy as np
 import xarray as xr
 
 
-def single_property_plot(filename: str, property: str, ind: List) -> None:
-    if(not(isinstance(ind[1], int) and isinstance(ind[2], int))):
-        raise ValueError('ind[1] and ind[2] cannot be longer than 1')
-    # load the property
+def plot_xylem_pressure_top_bottom(filename: str):
     data = xr.open_dataset(filename)
-    propertydata = data.__getattr__(property).isel(index=ind[0], axial_layers=ind[1], radial_layers=ind[2])
-    indexdata = np.asarray(data.simulation_time.isel(index=ind[0]))
+    p_top = np.asarray(data.pressure[:, 0, 0])*1e-6
+    p_bottom = np.asarray(data.pressure[:, 39, 0])*1e-6
 
-    labels = ['{:03.1f}'.format(index) for index in indexdata]
+    sim_time = np.asarray(data.simulation_time)
 
-    propertydata.plot.line()
-    plt.xticks(ticks=data.index.isel(index=ind[0]), labels=labels)
-    plt.xlabel('Time [s]')
+    plt.plot(sim_time, p_top, 'k-', label='Top')
+    plt.plot(sim_time, p_bottom, 'r-', label='Bottom')
+    plt.legend()
+    plt.xlabel('Time (s)')
+    plt.ylabel('Pressure (MPa)')
+    plt.title('Xylem pressure')
+    filename = filename.split('.')[0]+'_xylem_pressure.png'
+    plt.savefig(fname=filename, format='png')
+
+
+def plot_phloem_pressure_top_bottom(filename: str):
+    data = xr.open_dataset(filename)
+    p_top = np.asarray(data.pressure[:, 0, 1])*1e-6
+    p_bottom = np.asarray(data.pressure[:, 39, 1])*1e-6
+
+    sim_time = np.asarray(data.simulation_time)
+
+    plt.plot(sim_time, p_top, 'k-', label='Top')
+    plt.plot(sim_time, p_bottom, 'r-', label='Bottom')
+    plt.legend()
+    plt.xlabel('Time (s)')
+    plt.ylabel('Pressure (MPa)')
+    plt.title('Phloem pressure')
+    filename = filename.split('.')[0]+'_phloem_pressure.png'
+    plt.savefig(fname=filename, format='png')
