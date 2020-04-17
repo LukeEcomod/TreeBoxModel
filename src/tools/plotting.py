@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 
+font = {'size': 12}
+plt.rc('font', **font)
+
 
 def plot_xylem_pressure_top_bottom(filename: str):
     data = xr.open_dataset(filename)
@@ -11,14 +14,16 @@ def plot_xylem_pressure_top_bottom(filename: str):
 
     sim_time = np.asarray(data.simulation_time)
 
-    plt.plot(sim_time, p_top, 'k-', label='Top')
-    plt.plot(sim_time, p_bottom, 'r-', label='Bottom')
+    plt.plot(sim_time/3600, p_top, 'k-', label='Top')
+    plt.plot(sim_time/3600, p_bottom, 'r-', label='Bottom')
     plt.legend()
-    plt.xlabel('Time (s)')
+    plt.xlabel('Time (h)')
     plt.ylabel('Pressure (MPa)')
     plt.title('Xylem pressure')
+    plt.xticks(np.linspace(0, 24, 7))
     filename = filename.split('.')[0]+'_xylem_pressure.png'
     plt.savefig(fname=filename, format='png')
+    plt.close()
 
 
 def plot_phloem_pressure_top_bottom(filename: str):
@@ -36,3 +41,4 @@ def plot_phloem_pressure_top_bottom(filename: str):
     plt.title('Phloem pressure')
     filename = filename.split('.')[0]+'_phloem_pressure.png'
     plt.savefig(fname=filename, format='png')
+    plt.close()

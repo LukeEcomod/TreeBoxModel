@@ -2,10 +2,12 @@ from typing import Dict
 import numpy as np
 import math
 import datetime
+from scipy.integrate import solve_ivp
 from .tree import Tree
-from .constants import GRAVITATIONAL_ACCELERATION, RHO_WATER, MOLAR_GAS_CONSTANT, TEMPERATURE
+from .constants import GRAVITATIONAL_ACCELERATION, HEARTWOOD_RADIUS, RHO_WATER, MOLAR_GAS_CONSTANT, TEMPERATURE
 from .tools.iotools import initialize_netcdf, write_netcdf, tree_properties_to_dict
 from .model_variables import all_variables
+from .odefun import odefun
 from netCDF4 import Dataset
 
 
@@ -30,9 +32,9 @@ class Model:
 
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
-        transport_ax: np.ndarray = k/eta/length*RHO_WATER*np.transpose(
-            np.array([self.tree.element_area([], 0),
-                      self.tree.element_area([], 1)]))
+        transport_ax: np.ndarray = k/eta/length*RHO_WATER * np.concatenate([self.tree.element_area([], 0),
+                                                                           self.tree.element_area([], 1)], axis=1)
+
         # calculate upward fluxes
         Q_ax_down: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
         Q_ax_down[0:-1, :] = (np.diff(pressures, axis=0)
@@ -43,12 +45,12 @@ class Model:
 
         Q_ax_up: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
         # TODO: Think if there is a better way to achieve this without flipping twice
-        Q_ax_up[1:len(Q_ax_up), :] = (np.flip(
+        Q_ax_up[1:, :] = (np.flip(
             np.diff(
                 np.flip(
                     pressures, axis=0), axis=0), axis=0)
             + RHO_WATER*GRAVITATIONAL_ACCELERATION*self.tree.element_height[1:].repeat(2, axis=1)
-        ) * transport_ax[1:len(Q_ax_up), :]
+        ) * transport_ax[1:, :]
         Q_ax_up[0, :] = 0  # the upward flux is handled in transpiration rate for the highest element
 
         Q_ax: np.ndarray = Q_ax_up + Q_ax_down
@@ -65,11 +67,13 @@ class Model:
         pressures: np.ndarray = self.tree.pressure
         Lr: np.ndarray = self.tree.radial_hydraulic_conductivity
         C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
-        Q_rad_phloem: np.ndarray = Lr.reshape((40, 1))*self.tree.cross_sectional_area().reshape((40, 1))\
+        Q_rad_phloem: np.ndarray = Lr.reshape((40, 1))*self.tree.element_height.reshape((40, 1))\
+            * 2.0*math.pi*(self.tree.element_radius[:, 0]+HEARTWOOD_RADIUS).reshape(40, 1)\
             * RHO_WATER * (
             np.diff(np.flip(pressures, axis=1), axis=1) + C.reshape((40, 1))*MOLAR_GAS_CONSTANT*TEMPERATURE)
 
         Q_rad_xylem: np.ndarray = -Q_rad_phloem
+
         return np.concatenate((Q_rad_xylem, Q_rad_phloem), axis=1)
 
     def run(self, time_start: float = 1e-3, time_end: float = 120.0, dt: float = 0.01, output_interval: float = 60):
@@ -97,10 +101,31 @@ class Model:
                     * (dmdt_ax[i, 1]
                        * self.tree.solutes[i, 1].concentration/RHO_WATER
                        + self.tree.sugar_loading_rate[i]
-                       + self.tree.sugar_unloading_rate[i])
-            self.tree.sugar_unloading_rate[-5] = (self.tree.solutes[-5, 1].concentration - 10)*1e-9
+                       - self.tree.sugar_unloading_rate[i])
+                if(i > self.tree.num_elements - 6):
+                    self.tree.sugar_unloading_rate[i] = (self.tree.solutes[i, 1].concentration
+                                                         - self.tree.sugar_target_concentration)*1e-5
             self.tree.element_radius += (dmdt_ax + dmdt_rad)\
                 / (math.pi*RHO_WATER * np.repeat(self.tree.element_height, 2, axis=1) * self.tree.element_radius)
 
             # update sap viscosity
             self.tree.update_sap_viscosity()
+
+    def run_scipy(self, time_start: float = 1e-3, time_end: float = 120.0, ind: int = 0):
+        # Initial values from model.tree
+        initial_values = [self.tree.pressure,
+                          self.tree.sugar_concentration_as_numpy_array().reshape(40, 1),
+                          self.tree.element_radius]
+        # broadcast initial values into 1D array
+        yinit = np.concatenate([initial_values[0].reshape(self.tree.num_elements*2, order='F'),
+                                initial_values[1].reshape(self.tree.num_elements, order='F'),
+                                initial_values[2].reshape(self.tree.num_elements*2, order='F')])
+
+        sol = solve_ivp(lambda t, y: odefun(t, y, self), (time_start, time_end), yinit, method='BDF',
+                        rtol=1e-12, atol=1e-12)
+        # save the tree status
+        print(datetime.datetime.now(), "\t", time_end)
+        results = tree_properties_to_dict(self.tree)
+        results['simulation_time'] = time_start
+        results['model_index'] = ind
+        write_netcdf(self.ncf, results)
