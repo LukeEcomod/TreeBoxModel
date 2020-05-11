@@ -11,6 +11,7 @@ class Tree:
     def __init__(self, height, initial_radius, num_elements, transpiration_profile,
                  photosynthesis_profile, sugar_profile,
                  sugar_loading_profile, sugar_unloading_profile, sugar_target_concentration,
+                 sugar_unloading_slope,
                  axial_permeability_profile,
                  radial_hydraulic_conductivity_profile,
                  elastic_modulus_profile,
@@ -38,21 +39,26 @@ class Tree:
         self.solutes: np.ndarray = np.asarray([[Solute('', 0, 0, 0),
                                                 Solute('Sucrose', M_SUCROSE, RHO_SUCROSE, s_conc)]
                                                for s_conc in sugar_profile])
-
-        # (num_elements,1) array of sugar loading rates in phloem
-        # unit: mol/s
+        # Sugar loading rate and initial unloading rate, unit: mol/s
         self.sugar_loading_rate: np.ndarray = np.asarray(sugar_loading_profile).reshape(40, 1)
 
-        # (num_elements,1) array of sugar unloading rates in phloem
-        # unit: mol/s
         self.sugar_unloading_rate: np.ndarray = np.asarray(sugar_unloading_profile).reshape(40, 1)
 
+        # Sugar target_concentration and unloading slope for calculating
+        # unloading rate dynamically
+        # unit: mol/m3, m3/s
         self.sugar_target_concentration: float = sugar_target_concentration
 
-        self.axial_permeability: np.ndarray = np.asarray(axial_permeability_profile)
+        self.sugar_unloading_slope: float = sugar_unloading_slope
 
+        self.axial_permeability: np.ndarray = np.asarray(axial_permeability_profile)
+        # Radial hydraulinc conductivity between xylem and phloem
+        # unit: m/(Pa s)
         self.radial_hydraulic_conductivity: np.ndarray = np.asarray(radial_hydraulic_conductivity_profile)
 
+        # Elastic modulus of xylem and phloem
+        # higher modulus means higher pressure change wrt. sap flux
+        # unit: Pa
         self.elastic_modulus: np.ndarray = np.asarray(elastic_modulus_profile)
 
         self.ground_water_potential: float = ground_water_potential
@@ -63,8 +69,9 @@ class Tree:
         # order 1 = top of the tree, N = base of the tree
 
         self.pressure = np.asarray([self.ground_water_potential
-                                    - i*RHO_WATER*GRAVITATIONAL_ACCELERATION*self.height/self.num_elements
-                                    for i in range(self.num_elements)]).reshape(self.num_elements, 1)
+                                   - i*RHO_WATER*GRAVITATIONAL_ACCELERATION*self.height/self.num_elements
+                                   for i in range(self.num_elements)]).reshape(self.num_elements, 1)
+        # self.pressure = np.asarray([0 for i in range(self.num_elements)]).reshape(self.num_elements, 1)
         # reverse pressure so the order is correct (elemenent N has pressure equal to ground water potential)
         self.pressure = np.concatenate((np.flip(self.pressure),
                                         np.flip(self.pressure)),
@@ -83,7 +90,7 @@ class Tree:
 
     def sugar_concentration_as_numpy_array(self) -> np.ndarray:
         get_concentration = np.vectorize(lambda s: s.concentration)
-        return get_concentration(self.solutes[:, 1])
+        return get_concentration(self.solutes[:, 1]).reshape(self.num_elements, 1)
 
     def update_sugar_concentration(self, new_concentration: np.ndarray) -> None:
 
@@ -134,16 +141,19 @@ class Tree:
 
     def cross_sectional_area(self, ind: List[int] = None) -> np.ndarray:
         """ calculates the cross sectional area between xylem and phloem
-
+            i.e., the surface are of the xylem
             if no ind is given returns the cross sectional area for every axial element
         """
         if ind is None:
             ind = []
-        phloem_element_height = self.element_height
-        if len(ind) > 0:
-            phloem_element_height = phloem_element_height[ind]
 
-        return XYLEM_PHLOEM_CONTACT_ANGLE/(2.0*math.pi)*phloem_element_height
+        element_heights = self.element_height
+        element_radii = self.element_radius[:, 0].reshape(self.num_elements, 1)
+        if len(ind) > 0:
+            element_heights = element_heights[ind]
+            element_radii = element_radii[ind]
+
+        return element_heights*2.0*math.pi*element_radii
 
     def update_sap_viscosity(self) -> None:
         """ Updates the viscosity in column 1 of self.elements (the phloem)
@@ -151,8 +161,9 @@ class Tree:
         # TODO: refactor into solution class
 
         # calculate sugar volume in sap
-        sugar_volume_fraction: np.ndarray = np.sum(self.sugar_concentration_as_numpy_array()) * M_SUCROSE / RHO_SUCROSE
+        sugar_volume_fraction: np.ndarray = self.sugar_concentration_as_numpy_array() * M_SUCROSE / RHO_SUCROSE
+        sugar_volume_fraction = sugar_volume_fraction.reshape(self.num_elements, 1)
 
         viscosity: np.ndarray = VISCOSITY_WATER * np.exp(4.68 * 0.956 * sugar_volume_fraction /
                                                          (1 - 0.956 * sugar_volume_fraction))
-        self.viscosity[:, 1] = viscosity
+        self.viscosity[:, 1] = viscosity.reshape(self.num_elements,)

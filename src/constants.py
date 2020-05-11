@@ -16,7 +16,7 @@ MOLAR_GAS_CONSTANT: float = 8.3145  # molar gas constant unit: J/K/mol
 # From Hölttä et al., (2016)
 HEARTWOOD_RADIUS: float = 60e-3
 XYLEM_RADIUS: float = 80e-3
-PHLOEM_RADIUS: float = 8e-4
+PHLOEM_RADIUS: float = 1e-3
 
 MAX_ELEMENT_COLUMNS: int = 2  # Max number of columns in tree.elements
 

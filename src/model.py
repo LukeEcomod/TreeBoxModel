@@ -29,7 +29,6 @@ class Model:
         eta: np.ndarray = self.tree.viscosity
         length: np.ndarray = self.tree.element_height
         E: np.ndarray = self.tree.transpiration_rate
-
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
         transport_ax: np.ndarray = k/eta/length*RHO_WATER * np.concatenate([self.tree.element_area([], 0),
@@ -122,10 +121,12 @@ class Model:
                                 initial_values[2].reshape(self.tree.num_elements*2, order='F')])
 
         sol = solve_ivp(lambda t, y: odefun(t, y, self), (time_start, time_end), yinit, method='BDF',
-                        rtol=1e-12, atol=1e-12)
+                        rtol=1e-3, atol=1e-1)
         # save the tree status
         print(datetime.datetime.now(), "\t", time_end)
         results = tree_properties_to_dict(self.tree)
         results['simulation_time'] = time_start
         results['model_index'] = ind
+        results['dqrad'] = self.radial_fluxes()
+        results['dqax'] = self.axial_fluxes()
         write_netcdf(self.ncf, results)

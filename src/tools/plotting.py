@@ -33,12 +33,13 @@ def plot_phloem_pressure_top_bottom(filename: str):
 
     sim_time = np.asarray(data.simulation_time)
 
-    plt.plot(sim_time, p_top, 'k-', label='Top')
-    plt.plot(sim_time, p_bottom, 'r-', label='Bottom')
+    plt.plot(sim_time/3600, p_top, 'k-', label='Top')
+    plt.plot(sim_time/3600, p_bottom, 'r-', label='Bottom')
     plt.legend()
     plt.xlabel('Time (s)')
     plt.ylabel('Pressure (MPa)')
     plt.title('Phloem pressure')
+    plt.xticks(np.linspace(0, 24, 7))
     filename = filename.split('.')[0]+'_phloem_pressure.png'
     plt.savefig(fname=filename, format='png')
     plt.close()
