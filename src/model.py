@@ -4,7 +4,8 @@ import math
 import datetime
 from scipy.integrate import solve_ivp
 from .tree import Tree
-from .constants import GRAVITATIONAL_ACCELERATION, HEARTWOOD_RADIUS, RHO_WATER, MOLAR_GAS_CONSTANT, TEMPERATURE
+from .constants import GRAVITATIONAL_ACCELERATION, HEARTWOOD_RADIUS, RHO_WATER,\
+    MOLAR_GAS_CONSTANT, TEMPERATURE, MAX_ELEMENT_COLUMNS
 from .tools.iotools import initialize_netcdf, write_netcdf, tree_properties_to_dict
 from .model_variables import all_variables
 from .odefun import odefun
@@ -29,17 +30,19 @@ class Model:
         eta: np.ndarray = self.tree.viscosity
         length: np.ndarray = self.tree.element_height
         E: np.ndarray = self.tree.transpiration_rate
+        C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
+        C = np.concatenate([np.zeros((self.tree.num_elements, 1)), C], axis=1)
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
         transport_ax: np.ndarray = k/eta/length*RHO_WATER * np.concatenate([self.tree.element_area([], 0),
-                                                                           self.tree.element_area([], 1)], axis=1)
+                                                                            self.tree.element_area([], 1)], axis=1)
 
         # calculate upward fluxes
         Q_ax_down: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
         Q_ax_down[0:-1, :] = (np.diff(pressures, axis=0)
                               - RHO_WATER*GRAVITATIONAL_ACCELERATION*self.tree.element_height[0:-1].repeat(2, axis=1)
                               ) * transport_ax[0:-1, :]
-        Q_ax_down[-1, 0] = (self.tree.ground_water_potential-pressures[-1, 0])*transport_ax[-1, 0]
+        Q_ax_down[-1, 0] = (self.tree.ground_water_potential-pressures[-1, 0]) * transport_ax[-1, 0]
         Q_ax_down[-1, 1] = 0  # no flux from phloem to soil
 
         Q_ax_up: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
@@ -49,11 +52,11 @@ class Model:
                 np.flip(
                     pressures, axis=0), axis=0), axis=0)
             + RHO_WATER*GRAVITATIONAL_ACCELERATION*self.tree.element_height[1:].repeat(2, axis=1)
-        ) * transport_ax[1:, :]
+        ) * transport_ax[0:-1, :]
         Q_ax_up[0, :] = 0  # the upward flux is handled in transpiration rate for the highest element
 
-        Q_ax: np.ndarray = Q_ax_up + Q_ax_down
-        Q_ax[:, 0] = Q_ax[:, 0] - E.reshape(40,)  # subtract transpiration
+        Q_ax: np.ndarray = (Q_ax_up + Q_ax_down)
+        Q_ax[:, 0] = Q_ax[:, 0] - E.reshape(self.tree.num_elements,)  # subtract transpiration
         return Q_ax
 
     def radial_fluxes(self) -> np.ndarray:
@@ -66,17 +69,19 @@ class Model:
         pressures: np.ndarray = self.tree.pressure
         Lr: np.ndarray = self.tree.radial_hydraulic_conductivity
         C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
-        Q_rad_phloem: np.ndarray = Lr.reshape((40, 1))*self.tree.element_height.reshape((40, 1))\
-            * 2.0*math.pi*(self.tree.element_radius[:, 0]+HEARTWOOD_RADIUS).reshape(40, 1)\
-            * RHO_WATER * (
-            np.diff(np.flip(pressures, axis=1), axis=1) + C.reshape((40, 1))*MOLAR_GAS_CONSTANT*TEMPERATURE)
-
-        Q_rad_xylem: np.ndarray = -Q_rad_phloem
-
+        Q_rad_phloem: np.ndarray = Lr.reshape(
+            (self.tree.num_elements, 1)) * self.tree.element_height.reshape(
+                (self.tree.num_elements, 1)) * 2.0*math.pi*(
+                    self.tree.element_radius[:, 0]+HEARTWOOD_RADIUS).reshape(
+                        self.tree.num_elements, 1) * RHO_WATER * (
+            np.diff(np.flip(pressures, axis=1), axis=1) + C.reshape((self.tree.num_elements, 1))
+            * MOLAR_GAS_CONSTANT*TEMPERATURE)
+        Q_rad_xylem: np.ndarray = -(Q_rad_phloem.copy())
         return np.concatenate((Q_rad_xylem, Q_rad_phloem), axis=1)
 
     def run(self, time_start: float = 1e-3, time_end: float = 120.0, dt: float = 0.01, output_interval: float = 60):
         # TODO: do not use explicit euler method
+        # FIXME: This function needs to be updated so that dr/dt is calculated like in odefun.py
         for (ind, time) in enumerate(np.linspace(time_start, time_end, int((time_end-time_start)/dt))):
             # get the change in every elements mass
             dmdt_ax: np.ndarray = self.axial_fluxes()
@@ -111,9 +116,19 @@ class Model:
             self.tree.update_sap_viscosity()
 
     def run_scipy(self, time_start: float = 1e-3, time_end: float = 120.0, ind: int = 0):
+        # If time < 0 save the first stage of the tree
+        if(time_start < 1e-3):
+            print(datetime.datetime.now(), "\t", time_end)
+            results = tree_properties_to_dict(self.tree)
+            results['simulation_time'] = time_end
+            results['model_index'] = ind
+            results['dqrad'] = self.radial_fluxes()
+            results['dqax'] = self.axial_fluxes()
+            write_netcdf(self.ncf, results)
+
         # Initial values from model.tree
         initial_values = [self.tree.pressure,
-                          self.tree.sugar_concentration_as_numpy_array().reshape(40, 1),
+                          self.tree.sugar_concentration_as_numpy_array().reshape(self.tree.num_elements, 1),
                           self.tree.element_radius]
         # broadcast initial values into 1D array
         yinit = np.concatenate([initial_values[0].reshape(self.tree.num_elements*2, order='F'),
@@ -121,11 +136,22 @@ class Model:
                                 initial_values[2].reshape(self.tree.num_elements*2, order='F')])
 
         sol = solve_ivp(lambda t, y: odefun(t, y, self), (time_start, time_end), yinit, method='BDF',
-                        rtol=1e-3, atol=1e-1)
+                        rtol=1e-6, atol=1e-3)
+        last_tree_stage = sol.y[:, -1]
+        pressures = last_tree_stage[0:self.tree.num_elements*2].reshape(
+            self.tree.num_elements, MAX_ELEMENT_COLUMNS, order='F')
+        sugar_concentration = last_tree_stage[self.tree.num_elements*2:self.tree.num_elements*3].reshape(
+            self.tree.num_elements, 1, order='F')
+        element_radius = last_tree_stage[self.tree.num_elements*3:].reshape(self.tree.num_elements,
+                                                                            MAX_ELEMENT_COLUMNS, order='F')
+        self.tree.pressure = pressures
+        self.tree.update_sugar_concentration(sugar_concentration)
+        self.tree.element_radius = element_radius
+        self.tree.update_sap_viscosity()
         # save the tree status
         print(datetime.datetime.now(), "\t", time_end)
         results = tree_properties_to_dict(self.tree)
-        results['simulation_time'] = time_start
+        results['simulation_time'] = time_end
         results['model_index'] = ind
         results['dqrad'] = self.radial_fluxes()
         results['dqax'] = self.axial_fluxes()

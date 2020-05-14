@@ -19,9 +19,9 @@ def odefun(t, y, model):
         * np.max(np.concatenate([np.zeros((model.tree.num_elements, 1)), model.tree.sugar_unloading_slope
                                  * (model.tree.sugar_concentration_as_numpy_array()
                                     - model.tree.sugar_target_concentration)], axis=1), axis=1).reshape(
-                                        model.tree.num_elements, 1)
+        model.tree.num_elements, 1)
     model.tree.sugar_unloading_rate[-1] *= 10
-    model.tree.sugar_unloading_rate[0:20] = 0.0
+    model.tree.sugar_unloading_rate[0:10] = np.zeros((10,1))
     dmdt_ax: np.ndarray = model.axial_fluxes()
     dmdt_rad: np.ndarray = model.radial_fluxes()
 
@@ -33,23 +33,28 @@ def odefun(t, y, model):
         np.array([model.tree.element_volume([], 0),
                   model.tree.element_volume([], 1)])) * RHO_WATER) * (dmdt_ax + dmdt_rad)
 
-    dydt[1] = 1.0 / model.tree.element_volume([], 1).reshape(40, 1) * (dmdt_ax[:, 1].reshape(40, 1)
-                                                                       * model.tree.sugar_concentration_as_numpy_array()
-                                                                       .reshape(40, 1)
-                                                                       / RHO_WATER
-                                                                       + model.tree.sugar_loading_rate.reshape(40, 1)
-                                                                       - model.tree.sugar_unloading_rate.reshape(40, 1))
-    dmdt = (dmdt_ax + dmdt_rad)
-    dydt[2][:, 0] = ((dmdt[:, 0].reshape(40, 1)) / (2.0*math.pi*RHO_WATER * model.tree.element_height
-                                                    * (model.tree.element_radius[:, 0].reshape(40, 1)
-                                                       + HEARTWOOD_RADIUS))).reshape(model.tree.num_elements,)
+    dydt[1] = 1.0 / model.tree.element_volume([], 1).reshape(model.tree.num_elements, 1)\
+        * (dmdt_ax[:, 1].reshape(model.tree.num_elements, 1)
+           * model.tree.sugar_concentration_as_numpy_array()
+           .reshape(model.tree.num_elements, 1)
+           / RHO_WATER
+           + model.tree.sugar_loading_rate.reshape(model.tree.num_elements, 1)
+           - model.tree.sugar_unloading_rate.reshape(model.tree.num_elements, 1))
 
-    dydt[2][:, 1] = ((dmdt[:, 1].reshape(40, 1)) / (2.0*math.pi*RHO_WATER*model.tree.element_height) *
-                     ((HEARTWOOD_RADIUS*model.tree.element_radius[:, 0].reshape(40, 1)
-                       - model.tree.element_radius[:, 0].reshape(40, 1))
-                      / ((HEARTWOOD_RADIUS+model.tree.element_radius[:, 0].reshape(40, 1))
-                         * (HEARTWOOD_RADIUS+model.tree.element_radius[:, 0].reshape(40, 1)
-                            + model.tree.element_radius[:, 1].reshape(40, 1))))).reshape(model.tree.num_elements,)
+    dmdt = (dmdt_ax + dmdt_rad)
+    dydt[2][:, 0] = ((dmdt[:, 0].reshape(model.tree.num_elements, 1))
+                     / (2.0*math.pi*RHO_WATER * model.tree.element_height
+                        * (model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1)
+                           + HEARTWOOD_RADIUS))).reshape(model.tree.num_elements,)
+
+    dydt[2][:, 1] = ((dmdt[:, 1].reshape(model.tree.num_elements, 1))
+                     / (2.0*math.pi*RHO_WATER*model.tree.element_height) *
+                     ((HEARTWOOD_RADIUS*model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1)
+                       - model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1))
+                      / ((HEARTWOOD_RADIUS+model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1))
+                         * (HEARTWOOD_RADIUS+model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1)
+                            + model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1))))
+                     ).reshape(model.tree.num_elements,)
 
     dydt = np.concatenate([dydt[0].reshape(model.tree.num_elements*2, order='F'),
                            dydt[1].reshape(model.tree.num_elements, order='F'),

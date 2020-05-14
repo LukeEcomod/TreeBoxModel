@@ -70,5 +70,7 @@ def tree_properties_to_dict(tree: Tree) -> Dict:
     properties['elastic_modulus'] = tree.elastic_modulus
     properties['pressure'] = tree.pressure
     properties['radius'] = tree.element_radius
+    properties['area'] = np.concatenate([tree.element_area([], 0), tree.element_area([], 1)], axis=1)
+    properties['volume'] = np.concatenate([tree.element_volume([], 0), tree.element_volume([], 1)], axis=1)
 
     return properties

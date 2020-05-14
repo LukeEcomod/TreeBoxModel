@@ -4,7 +4,7 @@ from typing import List
 from .solute import Solute
 from .constants import M_SUCROSE, PHLOEM_RADIUS, RHO_SUCROSE, RHO_WATER,\
     GRAVITATIONAL_ACCELERATION, HEARTWOOD_RADIUS, MAX_ELEMENT_COLUMNS, VISCOSITY_WATER,\
-    XYLEM_PHLOEM_CONTACT_ANGLE, XYLEM_RADIUS, TEMPERATURE, MOLAR_GAS_CONSTANT
+    XYLEM_RADIUS, TEMPERATURE, MOLAR_GAS_CONSTANT
 
 
 class Tree:
@@ -28,11 +28,11 @@ class Tree:
 
         # (num_elements,1) array of transpiration rates in the xylem
         # unit: kg/s
-        self.transpiration_rate: np.ndarray = np.asarray(transpiration_profile).reshape(40, 1)
+        self.transpiration_rate: np.ndarray = np.asarray(transpiration_profile).reshape(self.num_elements, 1)
 
         # (num_elements,1) array of photosynth. rate in the phloem
         # unit: mol/s
-        self.photosynthesis_rate: np.ndarray = np.asarray(photosynthesis_profile).reshape(40, 1)
+        self.photosynthesis_rate: np.ndarray = np.asarray(photosynthesis_profile).reshape(self.num_elements, 1)
 
         # (num_elements,1) array of sugar conc. at t=0s in phloem
         # unit: mol/m3
@@ -40,9 +40,9 @@ class Tree:
                                                 Solute('Sucrose', M_SUCROSE, RHO_SUCROSE, s_conc)]
                                                for s_conc in sugar_profile])
         # Sugar loading rate and initial unloading rate, unit: mol/s
-        self.sugar_loading_rate: np.ndarray = np.asarray(sugar_loading_profile).reshape(40, 1)
+        self.sugar_loading_rate: np.ndarray = np.asarray(sugar_loading_profile).reshape(self.num_elements, 1)
 
-        self.sugar_unloading_rate: np.ndarray = np.asarray(sugar_unloading_profile).reshape(40, 1)
+        self.sugar_unloading_rate: np.ndarray = np.asarray(sugar_unloading_profile).reshape(self.num_elements, 1)
 
         # Sugar target_concentration and unloading slope for calculating
         # unloading rate dynamically
@@ -68,10 +68,10 @@ class Tree:
         # equals ground water potential
         # order 1 = top of the tree, N = base of the tree
 
-        self.pressure = np.asarray([self.ground_water_potential
-                                   - i*RHO_WATER*GRAVITATIONAL_ACCELERATION*self.height/self.num_elements
-                                   for i in range(self.num_elements)]).reshape(self.num_elements, 1)
-        # self.pressure = np.asarray([0 for i in range(self.num_elements)]).reshape(self.num_elements, 1)
+        # self.pressure = np.asarray([self.ground_water_potential
+        #                          - i*RHO_WATER*GRAVITATIONAL_ACCELERATION*self.height/self.num_elements
+        #                            for i in range(self.num_elements)]).reshape(self.num_elements, 1)
+        self.pressure = np.asarray([0 for i in range(self.num_elements)]).reshape(self.num_elements, 1)
         # reverse pressure so the order is correct (elemenent N has pressure equal to ground water potential)
         self.pressure = np.concatenate((np.flip(self.pressure),
                                         np.flip(self.pressure)),
@@ -148,7 +148,7 @@ class Tree:
             ind = []
 
         element_heights = self.element_height
-        element_radii = self.element_radius[:, 0].reshape(self.num_elements, 1)
+        element_radii = (self.element_radius[:, 0]+HEARTWOOD_RADIUS).reshape(self.num_elements, 1)
         if len(ind) > 0:
             element_heights = element_heights[ind]
             element_radii = element_radii[ind]

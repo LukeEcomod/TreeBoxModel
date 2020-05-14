@@ -33,6 +33,10 @@ all_variables = {'height': ['height of the tree', 'm', ("index"), 'f4'],
                  'simulation_time':
                  ['Time in simulation', 's', ("index"), 'f4'],
                  'model_index':
-                 ['number of index in the model loop', '#', ("index"), 'i4']}
+                 ['number of index in the model loop', '#', ("index"), 'i4'],
+                 'area':
+                 ['Element base area', 'm^2', ("index", "axial_layers", "radial_layers"), 'f4'],
+                 'volume':
+                 ['Element volume', 'm^3', ("index", "axial_layers", "radial_layers"), 'f4']}
 
 index_dim_vars = [key for key in all_variables.keys() if all_variables[key][2] == ("index")]

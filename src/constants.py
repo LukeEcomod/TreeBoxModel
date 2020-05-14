@@ -14,12 +14,10 @@ MOLAR_GAS_CONSTANT: float = 8.3145  # molar gas constant unit: J/K/mol
 # These are needed for water volume calculation
 # TODO: add these to treeElement parameters
 # From Hölttä et al., (2016)
-HEARTWOOD_RADIUS: float = 60e-3
-XYLEM_RADIUS: float = 80e-3
+HEARTWOOD_RADIUS: float = 0.55e-2
+XYLEM_RADIUS: float = 0.52e-2
 PHLOEM_RADIUS: float = 1e-3
 
 MAX_ELEMENT_COLUMNS: int = 2  # Max number of columns in tree.elements
 
-XYLEM_PHLOEM_CONTACT_ANGLE = 36.0*math.pi/180.0  # Corresponds to 10 % from circumference
-
-TEMPERATURE: float = 293.0  # Temperature of the tree unit: K
+TEMPERATURE: float = 298.0  # Temperature of the tree unit: K
