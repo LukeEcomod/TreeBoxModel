@@ -4,10 +4,128 @@
 \let\spxentry \sphinxstyleindexentry
 \let\spxextra \sphinxstyleindexextra
 
+  \bigletter A
+  \item \spxentry{axial\_fluxes()}\spxextra{src.model.Model method}, \hyperpage{11}
+  \item \spxentry{axial\_permeability}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+
+  \indexspace
+  \bigletter C
+  \item \spxentry{concentration}\spxextra{src.solute.Solute attribute}, \hyperpage{16}
+  \item \spxentry{cross\_sectional\_area()}\spxextra{src.tree.Tree method}, \hyperpage{15}
+
+  \indexspace
+  \bigletter D
+  \item \spxentry{density}\spxextra{src.solute.Solute attribute}, \hyperpage{16}
+
+  \indexspace
+  \bigletter E
+  \item \spxentry{elastic\_modulus}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+  \item \spxentry{element\_area()}\spxextra{src.tree.Tree method}, \hyperpage{15}
+  \item \spxentry{element\_height}\spxextra{src.tree.Tree attribute}, \hyperpage{15}
+  \item \spxentry{element\_radius}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+  \item \spxentry{element\_volume()}\spxextra{src.tree.Tree method}, \hyperpage{15}
+
+  \indexspace
+  \bigletter G
+  \item \spxentry{ground\_water\_potential}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+
+  \indexspace
+  \bigletter H
+  \item \spxentry{height}\spxextra{src.tree.Tree attribute}, \hyperpage{13}
+
+  \indexspace
+  \bigletter I
+  \item \spxentry{initialize\_netcdf()}\spxextra{in module src.tools.iotools}, \hyperpage{16}
+
+  \indexspace
   \bigletter M
   \item \spxentry{main}
     \subitem \spxentry{module}, \hyperpage{9}
+  \item \spxentry{Model}\spxextra{class in src.model}, \hyperpage{11}
   \item \spxentry{module}
     \subitem \spxentry{main}, \hyperpage{9}
+    \subitem \spxentry{src.constants}, \hyperpage{16}
+    \subitem \spxentry{src.model}, \hyperpage{11}
+    \subitem \spxentry{src.model\_variables}, \hyperpage{16}
+    \subitem \spxentry{src.tools.iotools}, \hyperpage{16}
+    \subitem \spxentry{src.tools.plotting}, \hyperpage{17}
+    \subitem \spxentry{src.tree}, \hyperpage{12}
+  \item \spxentry{molar\_mass}\spxextra{src.solute.Solute attribute}, \hyperpage{16}
+
+  \indexspace
+  \bigletter N
+  \item \spxentry{name}\spxextra{src.solute.Solute attribute}, \hyperpage{16}
+  \item \spxentry{ncf}\spxextra{src.model.Model attribute}, \hyperpage{11}
+  \item \spxentry{num\_elements}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+
+  \indexspace
+  \bigletter O
+  \item \spxentry{odefun()}\spxextra{in module src.odefun}, \hyperpage{16}
+  \item \spxentry{outputfile}\spxextra{src.model.Model attribute}, \hyperpage{11}
+
+  \indexspace
+  \bigletter P
+  \item \spxentry{photosynthesis\_rate}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+  \item \spxentry{plot\_phloem\_pressure\_top\_bottom()}\spxextra{in module src.tools.plotting}, 
+		\hyperpage{17}
+  \item \spxentry{plot\_simulation\_results()}\spxextra{in module src.tools.plotting}, 
+		\hyperpage{17}
+  \item \spxentry{plot\_variable\_vs\_time()}\spxextra{in module src.tools.plotting}, 
+		\hyperpage{17}
+  \item \spxentry{plot\_xylem\_pressure\_top\_bottom()}\spxextra{in module src.tools.plotting}, 
+		\hyperpage{17}
+  \item \spxentry{pressure}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+
+  \indexspace
+  \bigletter R
+  \item \spxentry{radial\_fluxes()}\spxextra{src.model.Model method}, \hyperpage{11}
+  \item \spxentry{radial\_hydraulic\_conductivity}\spxextra{src.tree.Tree attribute}, 
+		\hyperpage{14}
+  \item \spxentry{run()}\spxextra{src.model.Model method}, \hyperpage{12}
+  \item \spxentry{run\_scipy()}\spxextra{src.model.Model method}, \hyperpage{12}
+
+  \indexspace
+  \bigletter S
+  \item \spxentry{Solute}\spxextra{class in src.solute}, \hyperpage{16}
+  \item \spxentry{solutes}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+  \item \spxentry{src.constants}
+    \subitem \spxentry{module}, \hyperpage{16}
+  \item \spxentry{src.model}
+    \subitem \spxentry{module}, \hyperpage{11}
+  \item \spxentry{src.model\_variables}
+    \subitem \spxentry{module}, \hyperpage{16}
+  \item \spxentry{src.tools.iotools}
+    \subitem \spxentry{module}, \hyperpage{16}
+  \item \spxentry{src.tools.plotting}
+    \subitem \spxentry{module}, \hyperpage{17}
+  \item \spxentry{src.tree}
+    \subitem \spxentry{module}, \hyperpage{12}
+  \item \spxentry{sugar\_concentration\_as\_numpy\_array()}\spxextra{src.tree.Tree method}, 
+		\hyperpage{15}
+  \item \spxentry{sugar\_loading\_rate}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+  \item \spxentry{sugar\_target\_concentration}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+  \item \spxentry{sugar\_unloading\_rate}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+  \item \spxentry{sugar\_unloading\_slope}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+
+  \indexspace
+  \bigletter T
+  \item \spxentry{transpiration\_rate}\spxextra{src.tree.Tree attribute}, \hyperpage{14}
+  \item \spxentry{Tree}\spxextra{class in src.tree}, \hyperpage{12}
+  \item \spxentry{tree}\spxextra{src.model.Model attribute}, \hyperpage{11}
+  \item \spxentry{tree\_properties\_to\_dict()}\spxextra{in module src.tools.iotools}, 
+		\hyperpage{16}
+
+  \indexspace
+  \bigletter U
+  \item \spxentry{update\_sap\_viscosity()}\spxextra{src.tree.Tree method}, \hyperpage{16}
+  \item \spxentry{update\_sugar\_concentration()}\spxextra{src.tree.Tree method}, \hyperpage{16}
+
+  \indexspace
+  \bigletter V
+  \item \spxentry{viscosity}\spxextra{src.tree.Tree attribute}, \hyperpage{15}
+
+  \indexspace
+  \bigletter W
+  \item \spxentry{write\_netcdf()}\spxextra{in module src.tools.iotools}, \hyperpage{16}
 
 \end{sphinxtheindex}

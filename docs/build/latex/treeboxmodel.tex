@@ -73,7 +73,7 @@
 
 
 \title{Tree Box Model}
-\date{May 20, 2020}
+\date{May 26, 2020}
 \release{0.3}
 \author{Olli\sphinxhyphen{}Pekka Tikkanen}
 \newcommand{\sphinxlogo}{\vbox{}}
@@ -126,26 +126,782 @@ run main.py
 \end{sphinxVerbatim}
 
 
-\chapter{Modules \& functions}
-\label{\detokenize{index:module-main}}\label{\detokenize{index:modules-functions}}\index{module@\spxentry{module}!main@\spxentry{main}}\index{main@\spxentry{main}!module@\spxentry{module}}
-
-\section{main.py}
-\label{\detokenize{index:main-py}}\begin{quote}\begin{description}
-\item[{author}] \leavevmode
-Olli\sphinxhyphen{}Pekka Tikkanen
-
-\item[{synopsis}] \leavevmode
-This is the main program to run the model
-
-\end{description}\end{quote}
-
+\chapter{main.py}
+\label{\detokenize{index:module-main}}\label{\detokenize{index:main-py}}\index{module@\spxentry{module}!main@\spxentry{main}}\index{main@\spxentry{main}!module@\spxentry{module}}
 The purpose of this main file is to provide an easy way to run the model.
+
 All the model parameters are set in the file and are taken from \sphinxhref{https://link.springer.com/article/10.1007/s00468-005-0014-6}{Hölttä et. al. 2006}
 or \sphinxhref{https://academic.oup.com/aob/article/114/4/653/2769025}{Nikinmaa et. al., (2014)}.
 
 A sine\sphinxhyphen{}like behaviour is assumed for the transpiration and photosynthesis
 
-\sphinxhref{transpiration\_rate.png}{\sphinxincludegraphics{{transpiration_rate}.png}}
+\sphinxhref{../../source/\_static/transpiration\_rate.png}{\sphinxincludegraphics{{../../source/_static/transpiration_rate}.png}}
+
+
+\chapter{Modules, Classes \& functions}
+\label{\detokenize{index:module-src.model}}\label{\detokenize{index:modules-classes-functions}}\index{module@\spxentry{module}!src.model@\spxentry{src.model}}\index{src.model@\spxentry{src.model}!module@\spxentry{module}}\index{Model (class in src.model)@\spxentry{Model}\spxextra{class in src.model}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.model.Model}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class }}\sphinxcode{\sphinxupquote{src.model.}}\sphinxbfcode{\sphinxupquote{Model}}}{\emph{\DUrole{n}{tree}\DUrole{p}{:} \DUrole{n}{{\hyperref[\detokenize{index:src.tree.Tree}]{\sphinxcrossref{src.tree.Tree}}}}}, \emph{\DUrole{n}{outputfile}\DUrole{p}{:} \DUrole{n}{str} \DUrole{o}{=} \DUrole{default_value}{\textquotesingle{}a.nc\textquotesingle{}}}}{}
+Calculates the next time step for given tree and saves the tree stage.
+
+Provides functionality for solving the ordinary differential equations (ODE) describing
+the behaviour of the \sphinxhref{modelled\_system.html}{modelled system}.
+\begin{quote}\begin{description}
+\item[{Parameters}] \leavevmode\begin{itemize}
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{tree}} ({\hyperref[\detokenize{index:src.tree.Tree}]{\sphinxcrossref{\sphinxstyleliteralemphasis{\sphinxupquote{Tree}}}}}) \textendash{} instance of the tree class for which the ODEs are solved
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{outputfile}} (\sphinxstyleliteralemphasis{\sphinxupquote{str}}) \textendash{} name of the file where the NETCDF4 output is written
+
+\end{itemize}
+
+\end{description}\end{quote}
+\index{tree (src.model.Model attribute)@\spxentry{tree}\spxextra{src.model.Model attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.model.Model.tree}}\pysigline{\sphinxbfcode{\sphinxupquote{tree}}}
+instance of the tree class for which the ODEs are solved
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+{\hyperref[\detokenize{index:src.tree.Tree}]{\sphinxcrossref{Tree}}}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{outputfile (src.model.Model attribute)@\spxentry{outputfile}\spxextra{src.model.Model attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.model.Model.outputfile}}\pysigline{\sphinxbfcode{\sphinxupquote{outputfile}}}
+name of the file where the output is written
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+str
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{ncf (src.model.Model attribute)@\spxentry{ncf}\spxextra{src.model.Model attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.model.Model.ncf}}\pysigline{\sphinxbfcode{\sphinxupquote{ncf}}}
+the output file
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+netCDF4.Dataset
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{axial\_fluxes() (src.model.Model method)@\spxentry{axial\_fluxes()}\spxextra{src.model.Model method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.model.Model.axial_fluxes}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{axial\_fluxes}}}{}{{ $\rightarrow$ numpy.ndarray}}
+Calculates axial sap mass flux for every element.
+
+The axial flux in the xylem and phloem are calculated independently from the sum of bottom and top fluxes
+\begin{equation*}
+\begin{split}Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i}\end{split}
+\end{equation*}\begin{align*}\!\begin{aligned}
+Q_{ax,bottom,i} = \frac{k_i \: A_{ax,i} \: \rho_w}{\eta_i \: l_i}(P_{i+1} - P{i} - P_h)\\
+Q_{ax,top,i} = \frac{k_i \: A_{ax,i+1} \: \rho_w}{\eta_i \: l_i}(P_{i-1} - P{i} + P_h)\\
+\end{aligned}\end{align*}
+where
+
+\(k_i\): axial permeability of the ith element (\(m^2\))
+\(A_{ax,i}\): base surface area of xylem or phloem (\(m^2\))
+\(\rho_w\): liquid phase density of water (\(\frac{kg}{m^3}\))
+\(\eta\): viscosity of the sap in the ith element (\(Pa \: s\))
+\(l_i\): length (height) of the ith element (\(m\))
+\(P_{i}\): Pressure in the ith element (\(Pa\))
+\(P_h\): Hydrostatic pressure (\(Pa\)) \(P_h = \rho_w a_{gravitation} l_i\)
+\begin{quote}\begin{description}
+\item[{Returns}] \leavevmode
+The axial fluxes in units kg/s
+
+\item[{Return type}] \leavevmode
+numpy.ndarray (dtype=float, ndim=2){[}self.tree.num\_elements, 2{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{radial\_fluxes() (src.model.Model method)@\spxentry{radial\_fluxes()}\spxextra{src.model.Model method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.model.Model.radial_fluxes}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{radial\_fluxes}}}{}{{ $\rightarrow$ numpy.ndarray}}
+Calculates radial sap mass flux for every element.
+
+The radial flux for the phloem of the ith axial is calculated similar to
+\sphinxhref{https://link.springer.com/article/10.1007/s00468-005-0014-6}{Hölttä et. al. 2006}
+\begin{equation*}
+\begin{split}Q_{radial,phloem} = L_r A_{rad,i}\rho_{w}
+[P_{i,xylem} - P_{i,phloem} - \sigma(C_{i,xylem} - C_{i,phloem})RT)]\end{split}
+\end{equation*}
+where
+
+\(L_r\): radial hydraulic conductivity (\(\frac{m}{Pa \: s}\))
+\(A_{rad,i}\): lateral surface area of the xylem (\(m^2\))
+\(\rho_w\): liquid phase density of water (\(\frac{kg}{m^3}\))
+\(P_{i}\): Pressure in the ith element (\(Pa\))
+\(\sigma\): Reflection coefficient (Van’t hoff factor) (unitless)
+\(C_{i}\): Sucrose concentration in the ith element (\(\frac{mol}{m^3}\))
+\(R\): Universal gas constant (\(\frac{J}{K \: mol}\))
+\(T\): Ambient temperature (\(K\))
+
+The radial flux for the xylem is equal to the additive inverse of the phloem flux
+\begin{equation*}
+\begin{split}Q_{radial,xylem} = -Q_{radial,phloem}\end{split}
+\end{equation*}\begin{quote}\begin{description}
+\item[{Returns}] \leavevmode
+The radial fluxes in units kg/s
+
+\item[{Return type}] \leavevmode
+numpy.ndarray (dtype=float, ndim=2){[}self.tree.num\_elements, 2{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{run() (src.model.Model method)@\spxentry{run()}\spxextra{src.model.Model method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.model.Model.run}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{run}}}{\emph{\DUrole{n}{time\_start}\DUrole{p}{:} \DUrole{n}{float} \DUrole{o}{=} \DUrole{default_value}{0.001}}, \emph{\DUrole{n}{time\_end}\DUrole{p}{:} \DUrole{n}{float} \DUrole{o}{=} \DUrole{default_value}{120.0}}, \emph{\DUrole{n}{dt}\DUrole{p}{:} \DUrole{n}{float} \DUrole{o}{=} \DUrole{default_value}{0.01}}, \emph{\DUrole{n}{output\_interval}\DUrole{p}{:} \DUrole{n}{float} \DUrole{o}{=} \DUrole{default_value}{60}}}{{ $\rightarrow$ None}}
+Propagates the tree in time using explicit Euler method (very slow).
+
+NB! This function needs to be updated. Use run\_scipy instead!
+\begin{quote}\begin{description}
+\item[{Parameters}] \leavevmode\begin{itemize}
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{time\_start}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Time in seconds where to start the simulation.
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{time\_ned}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Time in seconds where to end the simulation.
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{dt}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} time step in seconds
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{output\_interval}} \textendash{} Time interval in seconds when to save the tree stage
+
+\end{itemize}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{run\_scipy() (src.model.Model method)@\spxentry{run\_scipy()}\spxextra{src.model.Model method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.model.Model.run_scipy}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{run\_scipy}}}{\emph{\DUrole{n}{time\_start}\DUrole{p}{:} \DUrole{n}{float} \DUrole{o}{=} \DUrole{default_value}{0.001}}, \emph{\DUrole{n}{time\_end}\DUrole{p}{:} \DUrole{n}{float} \DUrole{o}{=} \DUrole{default_value}{120.0}}, \emph{\DUrole{n}{ind}\DUrole{p}{:} \DUrole{n}{int} \DUrole{o}{=} \DUrole{default_value}{0}}}{{ $\rightarrow$ None}}
+Propagates the tree in time using the solve\_ivp function in the SciPy package.
+
+The stage of the tree is saved only at the start of the simulation if time\_start \textless{} 1e\sphinxhyphen{}3 and at time\_end.
+If the tree stage is desired on multiple time points the function needs to be called recurrently by splitting
+the time interval into multiple sub intervals.
+\begin{quote}\begin{description}
+\item[{Parameters}] \leavevmode\begin{itemize}
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{time\_start}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Time in seconds where to start the simulation.
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{time\_ned}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Time in seconds where to end the simulation.
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{ind}} (\sphinxstyleliteralemphasis{\sphinxupquote{int}}) \textendash{} index which refers to the index in model.outputfile.
+The last stage of the tree is saved to model.outputfile{[}ind{]}.
+
+\end{itemize}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\phantomsection\label{\detokenize{index:module-src.tree}}\index{module@\spxentry{module}!src.tree@\spxentry{src.tree}}\index{src.tree@\spxentry{src.tree}!module@\spxentry{module}}\index{Tree (class in src.tree)@\spxentry{Tree}\spxextra{class in src.tree}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class }}\sphinxcode{\sphinxupquote{src.tree.}}\sphinxbfcode{\sphinxupquote{Tree}}}{\emph{\DUrole{n}{height}\DUrole{p}{:} \DUrole{n}{float}}, \emph{\DUrole{n}{initial\_radius}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}float\DUrole{p}{{]}}}}, \emph{\DUrole{n}{num\_elements}\DUrole{p}{:} \DUrole{n}{int}}, \emph{\DUrole{n}{transpiration\_profile}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}float\DUrole{p}{{]}}}}, \emph{\DUrole{n}{photosynthesis\_profile}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}float\DUrole{p}{{]}}}}, \emph{\DUrole{n}{sugar\_profile}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}float\DUrole{p}{{]}}}}, \emph{\DUrole{n}{sugar\_loading\_profile}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}float\DUrole{p}{{]}}}}, \emph{\DUrole{n}{sugar\_unloading\_profile}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}float\DUrole{p}{{]}}}}, \emph{\DUrole{n}{sugar\_target\_concentration}\DUrole{p}{:} \DUrole{n}{float}}, \emph{\DUrole{n}{sugar\_unloading\_slope}\DUrole{p}{:} \DUrole{n}{float}}, \emph{\DUrole{n}{axial\_permeability\_profile}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}List\DUrole{p}{{[}}float\DUrole{p}{{]}}\DUrole{p}{{]}}}}, \emph{\DUrole{n}{radial\_hydraulic\_conductivity\_profile}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}float\DUrole{p}{{]}}}}, \emph{\DUrole{n}{elastic\_modulus\_profile}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}List\DUrole{p}{{[}}float\DUrole{p}{{]}}\DUrole{p}{{]}}}}, \emph{\DUrole{n}{ground\_water\_potential}\DUrole{p}{:} \DUrole{n}{float}}}{}
+Model of a tree.
+
+Provides properties and functionality for saving and editing the modelled tree. Arguments whose
+type is List{[}float{]} or List{[}List{[}float{]}{]} are converted to numpy.ndarray with numpy.asarray method.
+Thus, also numpy.ndarray is a valid type for these arguments.
+
+For arguemnts whose type is List{[}float{]} (except for initial\_radius) the length of the arguments must
+be equal to num\_elements. The order of the list should be from the top of the tree (the first item) to the
+bottom of the tree (the last item)
+
+For arguments whose type is List{[}List{[}float{]}{]} the length of the arguemnts must be equal to num\_elements
+and each sub list must contain two elements, one for the xylem and one for the phloem in this order. The
+order of the sub lists should be from the top of the tree (the first sub list) to the bottom of the tree
+(the last sub list).
+\begin{quote}\begin{description}
+\item[{Parameters}] \leavevmode\begin{itemize}
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{height}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} total tree height (\(m\))
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{initial\_radius}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{{]} or }}\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} 
+the radius of the xylem and the phloem (\(m\)) in this order.
+See from the \sphinxhref{modelled\_system.html}{modelled system}, how the radii should be given. Only two values can
+be given and the radius of each element is set to be the same in the tree initialization.
+
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{num\_elements}} (\sphinxstyleliteralemphasis{\sphinxupquote{int}}) \textendash{} number of vertical elemenets in the tree.
+The height of an element is determined by
+\(\text{element height} = \frac{\text{tree height}}{\text{number of elements}}\)
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{transpiration\_profile}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{{]} or }}\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} The rate of transpiration (\(\frac{kg}{s}\)) in the
+xylem. The length of the list must be equal to num\_elements and the order is from the top of the tree
+(first value) in the list to the bottom of the tree (last value in the list).
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{photosynthesis\_profile}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{{]}}}) \textendash{} The rate of photosynthesis (\(\frac{mol}{s}\)). Currently this
+variable is not used and the rate of photosynthesis should be equal to the sugar\_loading\_profile.
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{sugar\_profile}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{{]}}}\sphinxstyleliteralemphasis{\sphinxupquote{{]} or }}\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} The initial sugar (sucrose) concentration in the phloem
+(\(\frac{mol}{m^3}\))
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{sugar\_loading\_profile}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{{]}}}\sphinxstyleliteralemphasis{\sphinxupquote{{]} or }}\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} the rate at which sugar concentration increases
+in each phloem element (\(\frac{mol}{s}\))
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{sugar\_unloading\_profile}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{{]} or }}\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} The initial sugar unloading rate (the rate at which the
+sugar concentration decreases in a given phloem element) (\(\frac{mol}{s}\)). The unloading rate is
+updated in \sphinxhref{index.html\#src.odefun.odefun}{src.odefun.odefun}.
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{sugar\_target\_concentration}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} the target concentration after which the sugar unloading
+starts (\(\frac{mol}{m^3}\))
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{sugar\_unloading\_slope}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} 
+the slope parameter for unloading (see
+\sphinxhref{https://academic.oup.com/aob/article/114/4/653/2769025}{Nikinmaa et. al., (2014)}).
+
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{axial\_permeability\_profile}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{{]}}}\sphinxstyleliteralemphasis{\sphinxupquote{{]} or }}\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} axial permeabilities of both xylem and phloem
+(\(m^2\))
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{radial\_hydraulic\_conductivity\_profile}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{{]}}}\sphinxstyleliteralemphasis{\sphinxupquote{{]} or }}\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} radial hydraulic conductivity between the
+xylem and the phloem (\(\frac{m}{Pa \: s}\))
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{elastic\_modulus\_profile}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{{]}}}\sphinxstyleliteralemphasis{\sphinxupquote{{]} or }}\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} Elastic modulus of every element (\(Pa\)).
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{ground\_water\_potential}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} The water potential in the soil. This is used to calculate the sap flux between
+soil and the bottom xylem element.
+
+\end{itemize}
+
+\end{description}\end{quote}
+\index{height (src.tree.Tree attribute)@\spxentry{height}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.height}}\pysigline{\sphinxbfcode{\sphinxupquote{height}}}
+total tree height (\(m\))
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+float
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{num\_elements (src.tree.Tree attribute)@\spxentry{num\_elements}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.num_elements}}\pysigline{\sphinxbfcode{\sphinxupquote{num\_elements}}}
+number of vertical elemenets in the tree.
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+float
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{transpiration\_rate (src.tree.Tree attribute)@\spxentry{transpiration\_rate}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.transpiration_rate}}\pysigline{\sphinxbfcode{\sphinxupquote{transpiration\_rate}}}
+The rate of transpiration
+(\(\frac{kg}{s}\)) in the xylem.
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}tree.num\_elements, 1{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{photosynthesis\_rate (src.tree.Tree attribute)@\spxentry{photosynthesis\_rate}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.photosynthesis_rate}}\pysigline{\sphinxbfcode{\sphinxupquote{photosynthesis\_rate}}}
+The rate of photosynthesis
+(\(\frac{mol}{s}\)). Currently this variable is not used.
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}tree.num\_elements, 1{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{sugar\_loading\_rate (src.tree.Tree attribute)@\spxentry{sugar\_loading\_rate}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.sugar_loading_rate}}\pysigline{\sphinxbfcode{\sphinxupquote{sugar\_loading\_rate}}}
+The rate at which sugar
+concentration increases in each phloem element (\(\frac{mol}{s}\)).
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}tree.num\_elements, 1{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{sugar\_unloading\_rate (src.tree.Tree attribute)@\spxentry{sugar\_unloading\_rate}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.sugar_unloading_rate}}\pysigline{\sphinxbfcode{\sphinxupquote{sugar\_unloading\_rate}}}
+The rate at which the
+sugar concentration decreases in a given phloem element (\(\frac{mol}{s}\)).
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}tree.num\_elements, 1{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{sugar\_target\_concentration (src.tree.Tree attribute)@\spxentry{sugar\_target\_concentration}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.sugar_target_concentration}}\pysigline{\sphinxbfcode{\sphinxupquote{sugar\_target\_concentration}}}
+The target concentration after which the sugar unloading
+starts (\(\frac{mol}{m^3}\)).
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+float
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{sugar\_unloading\_slope (src.tree.Tree attribute)@\spxentry{sugar\_unloading\_slope}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.sugar_unloading_slope}}\pysigline{\sphinxbfcode{\sphinxupquote{sugar\_unloading\_slope}}}
+The slope parameter for unloading (see
+{[}Nikinmaa et. al., (2014){]}(\sphinxurl{https://academic.oup.com/aob/article/114/4/653/2769025})).
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+float
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{solutes (src.tree.Tree attribute)@\spxentry{solutes}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.solutes}}\pysigline{\sphinxbfcode{\sphinxupquote{solutes}}}
+Array of
+src.solute.Solute which contain the solutes in the sap of xylem and phloem.
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=src.solute.Solute, ndim=2) {[}tree.num\_elements, 2{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{axial\_permeability (src.tree.Tree attribute)@\spxentry{axial\_permeability}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.axial_permeability}}\pysigline{\sphinxbfcode{\sphinxupquote{axial\_permeability}}}
+Axial permeabilities of both
+xylem and phloem (\(m^2\)).
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}tree.num\_elements, 2{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{radial\_hydraulic\_conductivity (src.tree.Tree attribute)@\spxentry{radial\_hydraulic\_conductivity}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.radial_hydraulic_conductivity}}\pysigline{\sphinxbfcode{\sphinxupquote{radial\_hydraulic\_conductivity}}}
+Radial hydraulic
+conductivity between the xylem and the phloem (\(\frac{m}{Pa \: s}\)).
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}tree.num\_elements, 1{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{elastic\_modulus (src.tree.Tree attribute)@\spxentry{elastic\_modulus}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.elastic_modulus}}\pysigline{\sphinxbfcode{\sphinxupquote{elastic\_modulus}}}
+Elastic modulus of every element
+(\(Pa\)).
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}tree.num\_elements, 2{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{ground\_water\_potential (src.tree.Tree attribute)@\spxentry{ground\_water\_potential}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.ground_water_potential}}\pysigline{\sphinxbfcode{\sphinxupquote{ground\_water\_potential}}}
+The water potential in the soil.
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+float
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{pressure (src.tree.Tree attribute)@\spxentry{pressure}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.pressure}}\pysigline{\sphinxbfcode{\sphinxupquote{pressure}}}
+Pressure of each element (\(Pa\))
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}tree.num\_elements, 2{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{element\_radius (src.tree.Tree attribute)@\spxentry{element\_radius}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.element_radius}}\pysigline{\sphinxbfcode{\sphinxupquote{element\_radius}}}
+Radius of each element (\(m\))
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}tree.num\_elements, 2{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{element\_height (src.tree.Tree attribute)@\spxentry{element\_height}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.element_height}}\pysigline{\sphinxbfcode{\sphinxupquote{element\_height}}}
+Height of each element (\(m\))
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}tree.num\_elements, 2{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{viscosity (src.tree.Tree attribute)@\spxentry{viscosity}\spxextra{src.tree.Tree attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.viscosity}}\pysigline{\sphinxbfcode{\sphinxupquote{viscosity}}}
+The dynamic viscosity of each element
+(\(Pa \: s\))
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}tree.num\_elements, 2{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{cross\_sectional\_area() (src.tree.Tree method)@\spxentry{cross\_sectional\_area()}\spxextra{src.tree.Tree method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.cross_sectional_area}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cross\_sectional\_area}}}{\emph{\DUrole{n}{ind}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}int\DUrole{p}{{]}}} \DUrole{o}{=} \DUrole{default_value}{None}}}{{ $\rightarrow$ numpy.ndarray}}
+Calculates the cross\sphinxhyphen{}sectional area between the xylemn and the phloem.
+
+The cross sectional area is equal to lateral surface area of the xylem.
+\begin{quote}\begin{description}
+\item[{Parameters}] \leavevmode
+\sphinxstyleliteralstrong{\sphinxupquote{ind}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{int}}\sphinxstyleliteralemphasis{\sphinxupquote{{]} or }}\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{(}}\sphinxstyleliteralemphasis{\sphinxupquote{dtype=int}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{ndim=1}}\sphinxstyleliteralemphasis{\sphinxupquote{)}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} the indices of the elements
+for which the cross\sphinxhyphen{}sectinoal area is calculated. If no ind is given, the
+cross\sphinxhyphen{}sectional area is calculated for every element.
+
+\item[{Returns}] \leavevmode
+Cross\sphinxhyphen{}sectional area
+between the xylem and phloem elements (\(m^2\))
+
+\item[{Return type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}len(ind) or self.num\_elements, 1{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{element\_area() (src.tree.Tree method)@\spxentry{element\_area()}\spxextra{src.tree.Tree method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.element_area}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{element\_area}}}{\emph{\DUrole{n}{ind}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}int\DUrole{p}{{]}}} \DUrole{o}{=} \DUrole{default_value}{None}}, \emph{\DUrole{n}{column}\DUrole{p}{:} \DUrole{n}{int} \DUrole{o}{=} \DUrole{default_value}{0}}}{{ $\rightarrow$ numpy.ndarray}}
+Calculates the base area of the xylem or the phloem.
+\begin{quote}\begin{description}
+\item[{Parameters}] \leavevmode\begin{itemize}
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{ind}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{int}}\sphinxstyleliteralemphasis{\sphinxupquote{{]} or }}\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{(}}\sphinxstyleliteralemphasis{\sphinxupquote{dtype=int}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{ndim=1}}\sphinxstyleliteralemphasis{\sphinxupquote{)}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} the indices of the elements
+for which the base area is calculated. If no ind is given, the base area is calculated
+for every element.
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{column}} (\sphinxstyleliteralemphasis{\sphinxupquote{int}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} The column in the tree grid for which the base area is calculated.
+use column=0 for the xylem and column=1 for the phloem. If not column is given returns
+the base area for the xylem.
+
+\end{itemize}
+
+\item[{Returns}] \leavevmode
+Base area of either
+the xylem or the phloem (\(m^2\))
+
+\item[{Return type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}len(ind) or self.num\_elements, 1{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{element\_volume() (src.tree.Tree method)@\spxentry{element\_volume()}\spxextra{src.tree.Tree method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.element_volume}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{element\_volume}}}{\emph{\DUrole{n}{ind}\DUrole{p}{:} \DUrole{n}{List\DUrole{p}{{[}}int\DUrole{p}{{]}}} \DUrole{o}{=} \DUrole{default_value}{None}}, \emph{\DUrole{n}{column}\DUrole{p}{:} \DUrole{n}{int} \DUrole{o}{=} \DUrole{default_value}{0}}}{{ $\rightarrow$ numpy.ndarray}}
+Calculates the volume of the xylem or the phloem.
+\begin{quote}\begin{description}
+\item[{Parameters}] \leavevmode\begin{itemize}
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{ind}} (\sphinxstyleliteralemphasis{\sphinxupquote{List}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{int}}\sphinxstyleliteralemphasis{\sphinxupquote{{]} or }}\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{(}}\sphinxstyleliteralemphasis{\sphinxupquote{dtype=int}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{ndim=1}}\sphinxstyleliteralemphasis{\sphinxupquote{)}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} the indices of the elements
+for which the volume is calculated. If no ind is given, the volume is calculated
+for every element.
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{column}} (\sphinxstyleliteralemphasis{\sphinxupquote{int}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} The column in the tree grid for which the volume is calculated.
+use column=0 for the xylem and column=1 for the phloem. If not column is given returns
+the volume for the xylem.
+
+\end{itemize}
+
+\item[{Returns}] \leavevmode
+Volume of either
+the xylem or the phloem (\(m^3\))
+
+\item[{Return type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}len(ind) or self.num\_elements, 1{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{sugar\_concentration\_as\_numpy\_array() (src.tree.Tree method)@\spxentry{sugar\_concentration\_as\_numpy\_array()}\spxextra{src.tree.Tree method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.sugar_concentration_as_numpy_array}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{sugar\_concentration\_as\_numpy\_array}}}{}{{ $\rightarrow$ numpy.ndarray}}
+Transforms the phloem sugar concentration in \sphinxhref{index.html\#src.tree.Tree.solutes}{self.solutes}
+into numpy.ndarray.
+\begin{quote}\begin{description}
+\item[{Returns}] \leavevmode
+The sugar concentration in the phloem.
+(\(\frac{mol}{m^3}\))
+
+\item[{Return type}] \leavevmode
+numpy.ndarray(dtype=float, ndim=2) {[}self.num\_elements, 1{]}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{update\_sap\_viscosity() (src.tree.Tree method)@\spxentry{update\_sap\_viscosity()}\spxextra{src.tree.Tree method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.update_sap_viscosity}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{update\_sap\_viscosity}}}{}{{ $\rightarrow$ None}}
+Calculates and sets the viscosity in the phloem according to the sugar concenration.
+
+The sap viscosity is calculated according to Morrison (2002)
+\begin{equation*}
+\begin{split}\eta = \eta_w \exp{\frac{4.68 \cdot 0.956 \Phi_s}{1-0.956 \Phi_s}}\end{split}
+\end{equation*}\begin{description}
+\item[{where}] \leavevmode
+\(\eta_w\): Dynamic viscosity of water (\(\eta_w \approx 0.001\))
+\(\Phi_s\): Volume fraction of sugar (sucrose) in the phloem sap.
+
+\end{description}
+\subsubsection*{References}
+
+Morison, Ken R. “Viscosity equations for sucrose solutions: old and new 2002.”
+Proceedings of the 9th APCChE Congress and CHEMECA. 2002.
+
+\end{fulllineitems}
+
+\index{update\_sugar\_concentration() (src.tree.Tree method)@\spxentry{update\_sugar\_concentration()}\spxextra{src.tree.Tree method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tree.Tree.update_sugar_concentration}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{update\_sugar\_concentration}}}{\emph{\DUrole{n}{new\_concentration}\DUrole{p}{:} \DUrole{n}{numpy.ndarray}}}{{ $\rightarrow$ None}}
+Sets the sugar concentration in \sphinxhref{index.html\#src.tree.Tree.solutes}{self.solutes} to new\_concentration.
+\begin{quote}\begin{description}
+\item[{Parameters}] \leavevmode
+\sphinxstyleliteralstrong{\sphinxupquote{new\_concentration}} (\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{(}}\sphinxstyleliteralemphasis{\sphinxupquote{dtype=float}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{ndim=2}}\sphinxstyleliteralemphasis{\sphinxupquote{)}}\sphinxstyleliteralemphasis{\sphinxupquote{{[}}}\sphinxstyleliteralemphasis{\sphinxupquote{self.num\_elements}}\sphinxstyleliteralemphasis{\sphinxupquote{,}}\sphinxstyleliteralemphasis{\sphinxupquote{1}}\sphinxstyleliteralemphasis{\sphinxupquote{{]}}}) \textendash{} new concentration values.
+the order is from top of the tree (first element, new\_concentration{[}0{]}) to bottom of the tree
+(last element, new\_concentration{[}self.num\_elements\sphinxhyphen{}1{]}) (\(\frac{mol}{m^3}\))
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\index{Solute (class in src.solute)@\spxentry{Solute}\spxextra{class in src.solute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.solute.Solute}}\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class }}\sphinxcode{\sphinxupquote{src.solute.}}\sphinxbfcode{\sphinxupquote{Solute}}}{\emph{\DUrole{n}{name}\DUrole{p}{:} \DUrole{n}{str}}, \emph{\DUrole{n}{molar\_mass}\DUrole{p}{:} \DUrole{n}{float}}, \emph{\DUrole{n}{density}\DUrole{p}{:} \DUrole{n}{float}}, \emph{\DUrole{n}{concentration}\DUrole{p}{:} \DUrole{n}{float}}}{}
+Contains the variables to model a solute compound
+\begin{quote}\begin{description}
+\item[{Parameters}] \leavevmode\begin{itemize}
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{name}} (\sphinxstyleliteralemphasis{\sphinxupquote{str}}) \textendash{} Name of the compound
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{molar\_mass}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Molar mass of the compound (\(\frac{kg}{mol}\))
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{density}} \textendash{} Liquid phase density of the compound (\(\frac{kg}{m^3}\))
+
+\item {} 
+\sphinxstyleliteralstrong{\sphinxupquote{concentration}} \textendash{} Concentration of the compound in the sap solution (\(\frac{mol}{m^3}\))
+
+\end{itemize}
+
+\end{description}\end{quote}
+\index{name (src.solute.Solute attribute)@\spxentry{name}\spxextra{src.solute.Solute attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.solute.Solute.name}}\pysigline{\sphinxbfcode{\sphinxupquote{name}}}
+Name of the compound
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+str
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{molar\_mass (src.solute.Solute attribute)@\spxentry{molar\_mass}\spxextra{src.solute.Solute attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.solute.Solute.molar_mass}}\pysigline{\sphinxbfcode{\sphinxupquote{molar\_mass}}}
+Molar mass of the compound (\(\frac{kg}{mol}\))
+\begin{quote}\begin{description}
+\item[{Type}] \leavevmode
+float
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{density (src.solute.Solute attribute)@\spxentry{density}\spxextra{src.solute.Solute attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.solute.Solute.density}}\pysigline{\sphinxbfcode{\sphinxupquote{density}}}
+Liquid phase density of the compound (\(\frac{kg}{m^3}\))
+
+\end{fulllineitems}
+
+\index{concentration (src.solute.Solute attribute)@\spxentry{concentration}\spxextra{src.solute.Solute attribute}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.solute.Solute.concentration}}\pysigline{\sphinxbfcode{\sphinxupquote{concentration}}}
+Concentration of the compound in the sap solution (\(\frac{mol}{m^3}\))
+
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\index{odefun() (in module src.odefun)@\spxentry{odefun()}\spxextra{in module src.odefun}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.odefun.odefun}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{src.odefun.}}\sphinxbfcode{\sphinxupquote{odefun}}}{\emph{\DUrole{n}{t}}, \emph{\DUrole{n}{y}}, \emph{\DUrole{n}{model}}}{}
+Calculates the right hand side of the model ODEs.
+
+\end{fulllineitems}
+
+\phantomsection\label{\detokenize{index:module-src.constants}}\index{module@\spxentry{module}!src.constants@\spxentry{src.constants}}\index{src.constants@\spxentry{src.constants}!module@\spxentry{module}}\phantomsection\label{\detokenize{index:module-src.model_variables}}\index{module@\spxentry{module}!src.model\_variables@\spxentry{src.model\_variables}}\index{src.model\_variables@\spxentry{src.model\_variables}!module@\spxentry{module}}\phantomsection\label{\detokenize{index:module-src.tools.iotools}}\index{module@\spxentry{module}!src.tools.iotools@\spxentry{src.tools.iotools}}\index{src.tools.iotools@\spxentry{src.tools.iotools}!module@\spxentry{module}}\index{initialize\_netcdf() (in module src.tools.iotools)@\spxentry{initialize\_netcdf()}\spxextra{in module src.tools.iotools}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tools.iotools.initialize_netcdf}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{src.tools.iotools.}}\sphinxbfcode{\sphinxupquote{initialize\_netcdf}}}{\emph{\DUrole{n}{model}}, \emph{\DUrole{n}{variables}\DUrole{p}{:} \DUrole{n}{Dict}}}{{ $\rightarrow$ netCDF4.\_netCDF4.Dataset}}
+\end{fulllineitems}
+
+\index{tree\_properties\_to\_dict() (in module src.tools.iotools)@\spxentry{tree\_properties\_to\_dict()}\spxextra{in module src.tools.iotools}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tools.iotools.tree_properties_to_dict}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{src.tools.iotools.}}\sphinxbfcode{\sphinxupquote{tree\_properties\_to\_dict}}}{\emph{\DUrole{n}{tree}\DUrole{p}{:} \DUrole{n}{{\hyperref[\detokenize{index:src.tree.Tree}]{\sphinxcrossref{src.tree.Tree}}}}}}{{ $\rightarrow$ Dict}}
+cast tree properties to dictionary for saving
+
+\end{fulllineitems}
+
+\index{write\_netcdf() (in module src.tools.iotools)@\spxentry{write\_netcdf()}\spxextra{in module src.tools.iotools}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tools.iotools.write_netcdf}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{src.tools.iotools.}}\sphinxbfcode{\sphinxupquote{write\_netcdf}}}{\emph{\DUrole{n}{ncf}\DUrole{p}{:} \DUrole{n}{netCDF4.\_netCDF4.Dataset}}, \emph{\DUrole{n}{results}\DUrole{p}{:} \DUrole{n}{Dict}}}{{ $\rightarrow$ None}}
+\end{fulllineitems}
+
+\phantomsection\label{\detokenize{index:module-src.tools.plotting}}\index{module@\spxentry{module}!src.tools.plotting@\spxentry{src.tools.plotting}}\index{src.tools.plotting@\spxentry{src.tools.plotting}!module@\spxentry{module}}\index{plot\_phloem\_pressure\_top\_bottom() (in module src.tools.plotting)@\spxentry{plot\_phloem\_pressure\_top\_bottom()}\spxextra{in module src.tools.plotting}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tools.plotting.plot_phloem_pressure_top_bottom}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{src.tools.plotting.}}\sphinxbfcode{\sphinxupquote{plot\_phloem\_pressure\_top\_bottom}}}{\emph{\DUrole{n}{filename}\DUrole{p}{:} \DUrole{n}{str}}}{}
+\end{fulllineitems}
+
+\index{plot\_simulation\_results() (in module src.tools.plotting)@\spxentry{plot\_simulation\_results()}\spxextra{in module src.tools.plotting}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tools.plotting.plot_simulation_results}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{src.tools.plotting.}}\sphinxbfcode{\sphinxupquote{plot\_simulation\_results}}}{\emph{\DUrole{n}{filename}\DUrole{p}{:} \DUrole{n}{str}}, \emph{\DUrole{n}{foldername}\DUrole{p}{:} \DUrole{n}{str}}}{}
+\end{fulllineitems}
+
+\index{plot\_variable\_vs\_time() (in module src.tools.plotting)@\spxentry{plot\_variable\_vs\_time()}\spxextra{in module src.tools.plotting}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tools.plotting.plot_variable_vs_time}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{src.tools.plotting.}}\sphinxbfcode{\sphinxupquote{plot\_variable\_vs\_time}}}{\emph{\DUrole{n}{filename}\DUrole{p}{:} \DUrole{n}{str}}, \emph{\DUrole{n}{params}\DUrole{p}{:} \DUrole{n}{Dict} \DUrole{o}{=} \DUrole{default_value}{None}}}{}
+\end{fulllineitems}
+
+\index{plot\_xylem\_pressure\_top\_bottom() (in module src.tools.plotting)@\spxentry{plot\_xylem\_pressure\_top\_bottom()}\spxextra{in module src.tools.plotting}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:src.tools.plotting.plot_xylem_pressure_top_bottom}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{src.tools.plotting.}}\sphinxbfcode{\sphinxupquote{plot\_xylem\_pressure\_top\_bottom}}}{\emph{\DUrole{n}{filename}\DUrole{p}{:} \DUrole{n}{str}}}{}
+\end{fulllineitems}
+
 
 
 \renewcommand{\indexname}{Python Module Index}
@@ -153,6 +909,14 @@ A sine\sphinxhyphen{}like behaviour is assumed for the transpiration and photosy
 \let\bigletter\sphinxstyleindexlettergroup
 \bigletter{m}
 \item\relax\sphinxstyleindexentry{main}\sphinxstyleindexpageref{index:\detokenize{module-main}}
+\indexspace
+\bigletter{s}
+\item\relax\sphinxstyleindexentry{src.constants}\sphinxstyleindexpageref{index:\detokenize{module-src.constants}}
+\item\relax\sphinxstyleindexentry{src.model}\sphinxstyleindexpageref{index:\detokenize{module-src.model}}
+\item\relax\sphinxstyleindexentry{src.model\_variables}\sphinxstyleindexpageref{index:\detokenize{module-src.model_variables}}
+\item\relax\sphinxstyleindexentry{src.tools.iotools}\sphinxstyleindexpageref{index:\detokenize{module-src.tools.iotools}}
+\item\relax\sphinxstyleindexentry{src.tools.plotting}\sphinxstyleindexpageref{index:\detokenize{module-src.tools.plotting}}
+\item\relax\sphinxstyleindexentry{src.tree}\sphinxstyleindexpageref{index:\detokenize{module-src.tree}}
 \end{sphinxtheindex}
 
 \renewcommand{\indexname}{Index}
