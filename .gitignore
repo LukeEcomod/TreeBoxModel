@@ -22,7 +22,7 @@ latexmkrc
 *.xdy
 *.aux
 *.idx
-*.fbd_latexmk
+*.fdb_latexmk
 *.fls
 *.ilg
 *.ind
