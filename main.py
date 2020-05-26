@@ -1,3 +1,17 @@
+''' The purpose of this main file is to provide an easy way to run the model.
+
+All the model parameters are set in the file and are taken from [Hölttä et. al. 2006](https://link.springer.com/article/10.1007/s00468-005-0014-6)
+or [Nikinmaa et. al., (2014)](https://academic.oup.com/aob/article/114/4/653/2769025).
+
+A sine-like behaviour is assumed for the transpiration and photosynthesis
+
+![Transpiration rate](../../source/_static/transpiration_rate.png "transpiration rate")
+
+Todo:
+    * make own tree profiles which are called from the main file
+
+'''
+
 from src.constants import PHLOEM_RADIUS, XYLEM_RADIUS
 from src.model import Model
 from src.tree import Tree

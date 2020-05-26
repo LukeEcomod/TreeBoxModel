@@ -1,0 +1,13 @@
+\begin{sphinxtheindex}
+\let\bigletter\sphinxstyleindexlettergroup
+\let\spxpagem \sphinxstyleindexpagemain
+\let\spxentry \sphinxstyleindexentry
+\let\spxextra \sphinxstyleindexextra
+
+  \bigletter M
+  \item \spxentry{main}
+    \subitem \spxentry{module}, \hyperpage{9}
+  \item \spxentry{module}
+    \subitem \spxentry{main}, \hyperpage{9}
+
+\end{sphinxtheindex}

@@ -1,4 +1,3 @@
-from typing import Dict
 import numpy as np
 import math
 import datetime
@@ -13,16 +12,51 @@ from netCDF4 import Dataset
 
 
 class Model:
+    """ Calculates the next time step for given tree and saves the tree stage.
+
+    Provides functionality for solving the ordinary differential equations (ODE) describing
+    the behaviour of the [modelled system](modelled_system.html).
+
+    Args:
+        tree (Tree): instance of the tree class for which the ODEs are solved
+        outputfile (str): name of the file where the NETCDF4 output is written
+
+    Attributes:
+        tree (Tree): instance of the tree class for which the ODEs are solved
+        outputfile (str): name of the file where the output is written
+        ncf (netCDF4.Dataset): the output file
+    """
+
     def __init__(self, tree: Tree, outputfile: str = "a.nc"):
         self.tree: Tree = tree
         self.outputfile: str = outputfile
         self.ncf: Dataset = initialize_netcdf(self, all_variables)
 
     def axial_fluxes(self) -> np.ndarray:
-        """ calculates axial change in sap mass of every element
+        """Calculates axial sap mass flux for every element.
 
-        variable names in this function's scope are the same as in Hölttä et al. (2006)
-        shorter variable names are used to make errror prone calculations more readable
+        The axial flux in the xylem and phloem are calculated independently from the sum of bottom and top fluxes
+
+        .. math::
+            Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i}
+
+        .. math::
+            Q_{ax,bottom,i} = \\frac{k_i \\: A_{ax,i} \\: \\rho_w}{\eta_i \\: l_i}(P_{i+1} - P{i} - P_h)
+
+            Q_{ax,top,i} = \\frac{k_i \\: A_{ax,i+1} \\: \\rho_w}{\eta_i \\: l_i}(P_{i-1} - P{i} + P_h)
+
+        where
+
+        :math:`k_i`: axial permeability of the ith element (:math:`m^2`)<br />
+        :math:`A_{ax,i}`: base surface area of xylem or phloem (:math:`m^2`)<br />
+        :math:`\\rho_w`: liquid phase density of water (:math:`\\frac{kg}{m^3}`)<br />
+        :math:`\\eta`: viscosity of the sap in the ith element (:math:`Pa \\: s`)<br/>
+        :math:`l_i`: length (height) of the ith element (:math:`m`)<br />
+        :math:`P_{i}`: Pressure in the ith element (:math:`Pa`)<br />
+        :math:`P_h`: Hydrostatic pressure (:math:`Pa`) :math:`P_h = \\rho_w a_{gravitation} l_i`
+
+        Returns:
+            numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 2]: The axial fluxes in units kg/s
         """
 
         pressures: np.ndarray = self.tree.pressure
@@ -60,10 +94,34 @@ class Model:
         return Q_ax
 
     def radial_fluxes(self) -> np.ndarray:
-        """ calculates radial change in sap mass of every element
+        """ Calculates radial sap mass flux for every element.
 
-        variable names in this function's scope are the same as in Hölttä et al. (2006)
-        shorter variable names are used to make errror prone calculations more readable
+        The radial flux for the phloem of the ith axial is calculated similar to
+        [Hölttä et. al. 2006](https://link.springer.com/article/10.1007/s00468-005-0014-6)
+
+        .. math::
+            Q_{radial,phloem} = L_r A_{rad,i}\\rho_{w}
+            [P_{i,xylem} - P_{i,phloem} - \sigma(C_{i,xylem} - C_{i,phloem})RT)]
+
+        where
+
+        :math:`L_r`: radial hydraulic conductivity (:math:`\\frac{m}{Pa \\: s}`)<br />
+        :math:`A_{rad,i}`: lateral surface area of the xylem (:math:`m^2`)<br />
+        :math:`\\rho_w`: liquid phase density of water (:math:`\\frac{kg}{m^3}`)<br />
+        :math:`P_{i}`: Pressure in the ith element (:math:`Pa`)<br />
+        :math:`\\sigma`: Reflection coefficient (Van't hoff factor) (unitless)<br />
+        :math:`C_{i}`: Sucrose concentration in the ith element (:math:`\\frac{mol}{m^3}`)<br />
+        :math:`R`: Universal gas constant (:math:`\\frac{J}{K \\: mol}`)<br />
+        :math:`T`: Ambient temperature (:math:`K`)
+
+        The radial flux for the xylem is equal to the additive inverse of the phloem flux
+
+        .. math::
+            Q_{radial,xylem} = -Q_{radial,phloem}
+
+
+        Returns:
+            numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 2]: The radial fluxes in units kg/s
         """
 
         pressures: np.ndarray = self.tree.pressure
@@ -79,7 +137,19 @@ class Model:
         Q_rad_xylem: np.ndarray = -(Q_rad_phloem.copy())
         return np.concatenate((Q_rad_xylem, Q_rad_phloem), axis=1)
 
-    def run(self, time_start: float = 1e-3, time_end: float = 120.0, dt: float = 0.01, output_interval: float = 60):
+    def run(self, time_start: float = 1e-3, time_end: float = 120.0,
+            dt: float = 0.01, output_interval: float = 60) -> None:
+        """ Propagates the tree in time using explicit Euler method (very slow).
+
+        NB! This function needs to be updated. Use run_scipy instead!
+
+        Args:
+            time_start (float): Time in seconds where to start the simulation.
+            time_ned (float): Time in seconds where to end the simulation.
+            dt (float): time step in seconds
+            output_interval: Time interval in seconds when to save the tree stage
+
+        """
         # TODO: do not use explicit euler method
         # FIXME: This function needs to be updated so that dr/dt is calculated like in odefun.py
         for (ind, time) in enumerate(np.linspace(time_start, time_end, int((time_end-time_start)/dt))):
@@ -115,7 +185,20 @@ class Model:
             # update sap viscosity
             self.tree.update_sap_viscosity()
 
-    def run_scipy(self, time_start: float = 1e-3, time_end: float = 120.0, ind: int = 0):
+    def run_scipy(self, time_start: float = 1e-3, time_end: float = 120.0, ind: int = 0) -> None:
+        """ Propagates the tree in time using the solve_ivp function in the SciPy package.
+
+        The stage of the tree is saved only at the start of the simulation if time_start < 1e-3 and at time_end.
+        If the tree stage is desired on multiple time points the function needs to be called recurrently by splitting
+        the time interval into multiple sub intervals.
+
+        Args:
+            time_start (float): Time in seconds where to start the simulation.
+            time_ned (float): Time in seconds where to end the simulation.
+            ind (int): index which refers to the index in model.outputfile.
+                The last stage of the tree is saved to model.outputfile[ind].
+
+        """
         # If time < 0 save the first stage of the tree
         if(time_start < 1e-3):
             print(datetime.datetime.now(), "\t", time_end)

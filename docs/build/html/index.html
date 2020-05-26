@@ -1,0 +1,747 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Tree Box Model documentation &#8212; Tree Box Model 0.3 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Description of the modelled system" href="modelled_system.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modelled_system.html" title="Description of the modelled system"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Tree Box Model 0.3 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tree-box-model-documentation">
+<h1>Tree Box Model documentation<a class="headerlink" href="#tree-box-model-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Details of the model</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modelled_system.html">Description of the modelled system</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions_to_run.html">Instructions to run the model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="instructions_to_run.html#running-from-main-py">Running from main.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instructions_to_run.html#importing-src-model">Importing src.model</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">LukeEcomod</span><span class="o">/</span><span class="n">TreeBoxModel</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<p>or</p>
+<p>download the source <a class="reference external" href="https://github.com/LukeEcomod/TreeBoxModel">https://github.com/LukeEcomod/TreeBoxModel</a></p>
+</div>
+<div class="section" id="quick-start">
+<h2>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>run main.py</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">python</span> <span class="n">main</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="module-main">
+<span id="main-py"></span><h2>main.py<a class="headerlink" href="#module-main" title="Permalink to this headline">¶</a></h2>
+<p>The purpose of this main file is to provide an easy way to run the model.</p>
+<p>All the model parameters are set in the file and are taken from <a class="reference external" href="https://link.springer.com/article/10.1007/s00468-005-0014-6">Hölttä et. al. 2006</a>
+or <a class="reference external" href="https://academic.oup.com/aob/article/114/4/653/2769025">Nikinmaa et. al., (2014)</a>.</p>
+<p>A sine-like behaviour is assumed for the transpiration and photosynthesis</p>
+<a class="reference external image-reference" href="../../source/_static/transpiration_rate.png"><img alt="Transpiration rate" src="../../source/_static/transpiration_rate.png" /></a>
+</div>
+<div class="section" id="module-src.model">
+<span id="modules-classes-functions"></span><h2>Modules, Classes &amp; functions<a class="headerlink" href="#module-src.model" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="src.model.Model">
+<em class="property">class </em><code class="sig-prename descclassname">src.model.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tree</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.tree.Tree" title="src.tree.Tree">src.tree.Tree</a></span></em>, <em class="sig-param"><span class="n">outputfile</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'a.nc'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the next time step for given tree and saves the tree stage.</p>
+<p>Provides functionality for solving the ordinary differential equations (ODE) describing
+the behaviour of the <a class="reference external" href="modelled_system.html">modelled system</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tree</strong> (<a class="reference internal" href="#src.tree.Tree" title="src.tree.Tree"><em>Tree</em></a>) – instance of the tree class for which the ODEs are solved</p></li>
+<li><p><strong>outputfile</strong> (<em>str</em>) – name of the file where the NETCDF4 output is written</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="src.model.Model.tree">
+<code class="sig-name descname">tree</code><a class="headerlink" href="#src.model.Model.tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>instance of the tree class for which the ODEs are solved</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#src.tree.Tree" title="src.tree.Tree">Tree</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.model.Model.outputfile">
+<code class="sig-name descname">outputfile</code><a class="headerlink" href="#src.model.Model.outputfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of the file where the output is written</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.model.Model.ncf">
+<code class="sig-name descname">ncf</code><a class="headerlink" href="#src.model.Model.ncf" title="Permalink to this definition">¶</a></dt>
+<dd><p>the output file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>netCDF4.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.model.Model.axial_fluxes">
+<code class="sig-name descname">axial_fluxes</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.model.Model.axial_fluxes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates axial sap mass flux for every element.</p>
+<p>The axial flux in the xylem and phloem are calculated independently from the sum of bottom and top fluxes</p>
+<div class="math notranslate nohighlight">
+\[Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i}\]</div>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}Q_{ax,bottom,i} = \frac{k_i \: A_{ax,i} \: \rho_w}{\eta_i \: l_i}(P_{i+1} - P{i} - P_h)\\Q_{ax,top,i} = \frac{k_i \: A_{ax,i+1} \: \rho_w}{\eta_i \: l_i}(P_{i-1} - P{i} + P_h)\end{aligned}\end{align} \]</div>
+<p>where</p>
+<p><span class="math notranslate nohighlight">\(k_i\)</span>: axial permeability of the ith element (<span class="math notranslate nohighlight">\(m^2\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(A_{ax,i}\)</span>: base surface area of xylem or phloem (<span class="math notranslate nohighlight">\(m^2\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(\rho_w\)</span>: liquid phase density of water (<span class="math notranslate nohighlight">\(\frac{kg}{m^3}\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(\eta\)</span>: viscosity of the sap in the ith element (<span class="math notranslate nohighlight">\(Pa \: s\)</span>)<span class="raw-html-m2r"><br/></span>
+<span class="math notranslate nohighlight">\(l_i\)</span>: length (height) of the ith element (<span class="math notranslate nohighlight">\(m\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(P_{i}\)</span>: Pressure in the ith element (<span class="math notranslate nohighlight">\(Pa\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(P_h\)</span>: Hydrostatic pressure (<span class="math notranslate nohighlight">\(Pa\)</span>) <span class="math notranslate nohighlight">\(P_h = \rho_w a_{gravitation} l_i\)</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The axial fluxes in units kg/s</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 2]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.model.Model.radial_fluxes">
+<code class="sig-name descname">radial_fluxes</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.model.Model.radial_fluxes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates radial sap mass flux for every element.</p>
+<p>The radial flux for the phloem of the ith axial is calculated similar to
+<a class="reference external" href="https://link.springer.com/article/10.1007/s00468-005-0014-6">Hölttä et. al. 2006</a></p>
+<div class="math notranslate nohighlight">
+\[Q_{radial,phloem} = L_r A_{rad,i}\rho_{w}
+[P_{i,xylem} - P_{i,phloem} - \sigma(C_{i,xylem} - C_{i,phloem})RT)]\]</div>
+<p>where</p>
+<p><span class="math notranslate nohighlight">\(L_r\)</span>: radial hydraulic conductivity (<span class="math notranslate nohighlight">\(\frac{m}{Pa \: s}\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(A_{rad,i}\)</span>: lateral surface area of the xylem (<span class="math notranslate nohighlight">\(m^2\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(\rho_w\)</span>: liquid phase density of water (<span class="math notranslate nohighlight">\(\frac{kg}{m^3}\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(P_{i}\)</span>: Pressure in the ith element (<span class="math notranslate nohighlight">\(Pa\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(\sigma\)</span>: Reflection coefficient (Van’t hoff factor) (unitless)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(C_{i}\)</span>: Sucrose concentration in the ith element (<span class="math notranslate nohighlight">\(\frac{mol}{m^3}\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(R\)</span>: Universal gas constant (<span class="math notranslate nohighlight">\(\frac{J}{K \: mol}\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(T\)</span>: Ambient temperature (<span class="math notranslate nohighlight">\(K\)</span>)</p>
+<p>The radial flux for the xylem is equal to the additive inverse of the phloem flux</p>
+<div class="math notranslate nohighlight">
+\[Q_{radial,xylem} = -Q_{radial,phloem}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The radial fluxes in units kg/s</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 2]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.model.Model.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_start</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.001</span></em>, <em class="sig-param"><span class="n">time_end</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">120.0</span></em>, <em class="sig-param"><span class="n">dt</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">output_interval</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">60</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#src.model.Model.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagates the tree in time using explicit Euler method (very slow).</p>
+<p>NB! This function needs to be updated. Use run_scipy instead!</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time_start</strong> (<em>float</em>) – Time in seconds where to start the simulation.</p></li>
+<li><p><strong>time_ned</strong> (<em>float</em>) – Time in seconds where to end the simulation.</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – time step in seconds</p></li>
+<li><p><strong>output_interval</strong> – Time interval in seconds when to save the tree stage</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.model.Model.run_scipy">
+<code class="sig-name descname">run_scipy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_start</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.001</span></em>, <em class="sig-param"><span class="n">time_end</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">120.0</span></em>, <em class="sig-param"><span class="n">ind</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#src.model.Model.run_scipy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagates the tree in time using the solve_ivp function in the SciPy package.</p>
+<p>The stage of the tree is saved only at the start of the simulation if time_start &lt; 1e-3 and at time_end.
+If the tree stage is desired on multiple time points the function needs to be called recurrently by splitting
+the time interval into multiple sub intervals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time_start</strong> (<em>float</em>) – Time in seconds where to start the simulation.</p></li>
+<li><p><strong>time_ned</strong> (<em>float</em>) – Time in seconds where to end the simulation.</p></li>
+<li><p><strong>ind</strong> (<em>int</em>) – index which refers to the index in model.outputfile.
+The last stage of the tree is saved to model.outputfile[ind].</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-src.tree"></span><dl class="py class">
+<dt id="src.tree.Tree">
+<em class="property">class </em><code class="sig-prename descclassname">src.tree.</code><code class="sig-name descname">Tree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">height</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">initial_radius</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">num_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">transpiration_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">photosynthesis_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_loading_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_unloading_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_target_concentration</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">sugar_unloading_slope</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">axial_permeability_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>float<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">radial_hydraulic_conductivity_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">elastic_modulus_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>float<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ground_water_potential</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.tree.Tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model of a tree.</p>
+<p>Provides properties and functionality for saving and editing the modelled tree. Arguments whose
+type is List[float] or List[List[float]] are converted to numpy.ndarray with numpy.asarray method.
+Thus, also numpy.ndarray is a valid type for these arguments.</p>
+<p>For arguemnts whose type is List[float] (except for initial_radius) the length of the arguments must
+be equal to num_elements. The order of the list should be from the top of the tree (the first item) to the
+bottom of the tree (the last item)</p>
+<p>For arguments whose type is List[List[float]] the length of the arguemnts must be equal to num_elements
+and each sub list must contain two elements, one for the xylem and one for the phloem in this order. The
+order of the sub lists should be from the top of the tree (the first sub list) to the bottom of the tree
+(the last sub list).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>height</strong> (<em>float</em>) – total tree height (<span class="math notranslate nohighlight">\(m\)</span>)</p></li>
+<li><p><strong>initial_radius</strong> (<em>List</em><em>[</em><em>float</em><em>] or </em><em>numpy.ndarray</em>) – <p>the radius of the xylem and the phloem (<span class="math notranslate nohighlight">\(m\)</span>) in this order.
+See from the <a class="reference external" href="modelled_system.html">modelled system</a>, how the radii should be given. Only two values can
+be given and the radius of each element is set to be the same in the tree initialization.</p>
+</p></li>
+<li><p><strong>num_elements</strong> (<em>int</em>) – number of vertical elemenets in the tree.
+The height of an element is determined by
+<span class="math notranslate nohighlight">\(\text{element height} = \frac{\text{tree height}}{\text{number of elements}}\)</span></p></li>
+<li><p><strong>transpiration_profile</strong> (<em>List</em><em>[</em><em>float</em><em>] or </em><em>numpy.ndarray</em>) – The rate of transpiration (<span class="math notranslate nohighlight">\(\frac{kg}{s}\)</span>) in the
+xylem. The length of the list must be equal to num_elements and the order is from the top of the tree
+(first value) in the list to the bottom of the tree (last value in the list).</p></li>
+<li><p><strong>photosynthesis_profile</strong> (<em>List</em><em>[</em><em>float</em><em>]</em>) – The rate of photosynthesis (<span class="math notranslate nohighlight">\(\frac{mol}{s}\)</span>). Currently this
+variable is not used and the rate of photosynthesis should be equal to the sugar_loading_profile.</p></li>
+<li><p><strong>sugar_profile</strong> (<em>List</em><em>[</em><em>float</em><em>]</em><em>] or </em><em>numpy.ndarray</em>) – The initial sugar (sucrose) concentration in the phloem
+(<span class="math notranslate nohighlight">\(\frac{mol}{m^3}\)</span>)</p></li>
+<li><p><strong>sugar_loading_profile</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>] or </em><em>numpy.ndarray</em>) – the rate at which sugar concentration increases
+in each phloem element (<span class="math notranslate nohighlight">\(\frac{mol}{s}\)</span>)</p></li>
+<li><p><strong>sugar_unloading_profile</strong> (<em>List</em><em>[</em><em>float</em><em>] or </em><em>numpy.ndarray</em>) – The initial sugar unloading rate (the rate at which the
+sugar concentration decreases in a given phloem element) (<span class="math notranslate nohighlight">\(\frac{mol}{s}\)</span>). The unloading rate is
+updated in <a class="reference external" href="index.html#src.odefun.odefun">src.odefun.odefun</a>.</p></li>
+<li><p><strong>sugar_target_concentration</strong> (<em>float</em>) – the target concentration after which the sugar unloading
+starts (<span class="math notranslate nohighlight">\(\frac{mol}{m^3}\)</span>)</p></li>
+<li><p><strong>sugar_unloading_slope</strong> (<em>float</em>) – <p>the slope parameter for unloading (see
+<a class="reference external" href="https://academic.oup.com/aob/article/114/4/653/2769025">Nikinmaa et. al., (2014)</a>).</p>
+</p></li>
+<li><p><strong>axial_permeability_profile</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>] or </em><em>numpy.ndarray</em>) – axial permeabilities of both xylem and phloem
+(<span class="math notranslate nohighlight">\(m^2\)</span>)</p></li>
+<li><p><strong>radial_hydraulic_conductivity_profile</strong> (<em>List</em><em>[</em><em>float</em><em>]</em><em>] or </em><em>numpy.ndarray</em>) – radial hydraulic conductivity between the
+xylem and the phloem (<span class="math notranslate nohighlight">\(\frac{m}{Pa \: s\)</span>)</p></li>
+<li><p><strong>elastic_modulus_profile</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>] or </em><em>numpy.ndarray</em>) – Elastic modulus of every element (<span class="math notranslate nohighlight">\(Pa\)</span>).</p></li>
+<li><p><strong>ground_water_potential</strong> (<em>float</em>) – The water potential in the soil. This is used to calculate the sap flux between
+soil and the bottom xylem element.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="src.tree.Tree.height">
+<code class="sig-name descname">height</code><a class="headerlink" href="#src.tree.Tree.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>total tree height (<span class="math notranslate nohighlight">\(m\)</span>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.num_elements">
+<code class="sig-name descname">num_elements</code><a class="headerlink" href="#src.tree.Tree.num_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of vertical elemenets in the tree.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.transpiration_rate">
+<code class="sig-name descname">transpiration_rate</code><a class="headerlink" href="#src.tree.Tree.transpiration_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The rate of transpiration
+(<span class="math notranslate nohighlight">\(\frac{kg}{s}\)</span>) in the xylem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.photosynthesis_rate">
+<code class="sig-name descname">photosynthesis_rate</code><a class="headerlink" href="#src.tree.Tree.photosynthesis_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The rate of photosynthesis
+(<span class="math notranslate nohighlight">\(\frac{mol}{s}\)</span>). Currently this variable is not used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.sugar_loading_rate">
+<code class="sig-name descname">sugar_loading_rate</code><a class="headerlink" href="#src.tree.Tree.sugar_loading_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The rate at which sugar
+concentration increases in each phloem element (<span class="math notranslate nohighlight">\(\frac{mol}{s}\)</span>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.sugar_unloading_rate">
+<code class="sig-name descname">sugar_unloading_rate</code><a class="headerlink" href="#src.tree.Tree.sugar_unloading_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The rate at which the
+sugar concentration decreases in a given phloem element (<span class="math notranslate nohighlight">\(\frac{mol}{s}\)</span>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.sugar_target_concentration">
+<code class="sig-name descname">sugar_target_concentration</code><a class="headerlink" href="#src.tree.Tree.sugar_target_concentration" title="Permalink to this definition">¶</a></dt>
+<dd><p>The target concentration after which the sugar unloading
+starts (<span class="math notranslate nohighlight">\(\frac{mol}{m^3}\)</span>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.sugar_unloading_slope">
+<code class="sig-name descname">sugar_unloading_slope</code><a class="headerlink" href="#src.tree.Tree.sugar_unloading_slope" title="Permalink to this definition">¶</a></dt>
+<dd><p>The slope parameter for unloading (see
+[Nikinmaa et. al., (2014)](<a class="reference external" href="https://academic.oup.com/aob/article/114/4/653/2769025">https://academic.oup.com/aob/article/114/4/653/2769025</a>)).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.solutes">
+<code class="sig-name descname">solutes</code><a class="headerlink" href="#src.tree.Tree.solutes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Array of
+src.solute.Solute which contain the solutes in the sap of xylem and phloem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=src.solute.Solute, ndim=2) [tree.num_elements, 2]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.axial_permeability">
+<code class="sig-name descname">axial_permeability</code><a class="headerlink" href="#src.tree.Tree.axial_permeability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Axial permeabilities of both
+xylem and phloem (<span class="math notranslate nohighlight">\(m^2\)</span>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.radial_hydraulic_conductivity">
+<code class="sig-name descname">radial_hydraulic_conductivity</code><a class="headerlink" href="#src.tree.Tree.radial_hydraulic_conductivity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Radial hydraulic
+conductivity between the xylem and the phloem (<span class="math notranslate nohighlight">\(\frac{m}{Pa \: s\)</span>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.elastic_modulus">
+<code class="sig-name descname">elastic_modulus</code><a class="headerlink" href="#src.tree.Tree.elastic_modulus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Elastic modulus of every element
+(<span class="math notranslate nohighlight">\(Pa\)</span>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.ground_water_potential">
+<code class="sig-name descname">ground_water_potential</code><a class="headerlink" href="#src.tree.Tree.ground_water_potential" title="Permalink to this definition">¶</a></dt>
+<dd><p>The water potential in the soil.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.pressure">
+<code class="sig-name descname">pressure</code><a class="headerlink" href="#src.tree.Tree.pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pressure of each element (<span class="math notranslate nohighlight">\(Pa\)</span>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.element_radius">
+<code class="sig-name descname">element_radius</code><a class="headerlink" href="#src.tree.Tree.element_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>Radius of each element (<span class="math notranslate nohighlight">\(m\)</span>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.element_height">
+<code class="sig-name descname">element_height</code><a class="headerlink" href="#src.tree.Tree.element_height" title="Permalink to this definition">¶</a></dt>
+<dd><p>Height of each element (<span class="math notranslate nohighlight">\(m\)</span>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.tree.Tree.viscosity">
+<code class="sig-name descname">viscosity</code><a class="headerlink" href="#src.tree.Tree.viscosity" title="Permalink to this definition">¶</a></dt>
+<dd><p>The dynamic viscosity of each element
+(<span class="math notranslate nohighlight">\(Pa \: s\)</span>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.tree.Tree.cross_sectional_area">
+<code class="sig-name descname">cross_sectional_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ind</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.tree.Tree.cross_sectional_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the cross-sectional area between the xylemn and the phloem.</p>
+<p>The cross sectional area is equal to lateral surface area of the xylem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ind</strong> (<em>List</em><em>[</em><em>int</em><em>] or </em><em>numpy.ndarray</em><em>(</em><em>dtype=int</em><em>, </em><em>ndim=1</em><em>)</em><em>, </em><em>optional</em>) – the indices of the elements
+for which the cross-sectinoal area is calculated. If no ind is given, the
+cross-sectional area is calculated for every element.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Cross-sectional area
+between the xylem and phloem elements (<span class="math notranslate nohighlight">\(m^2\)</span>)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [len(ind) or self.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.tree.Tree.element_area">
+<code class="sig-name descname">element_area</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ind</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.tree.Tree.element_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the base area of the xylem or the phloem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ind</strong> (<em>List</em><em>[</em><em>int</em><em>] or </em><em>numpy.ndarray</em><em>(</em><em>dtype=int</em><em>, </em><em>ndim=1</em><em>)</em><em>, </em><em>optional</em>) – the indices of the elements
+for which the base area is calculated. If no ind is given, the base area is calculated
+for every element.</p></li>
+<li><p><strong>column</strong> (<em>int</em><em>, </em><em>optional</em>) – The column in the tree grid for which the base area is calculated.
+use column=0 for the xylem and column=1 for the phloem. If not column is given returns
+the base area for the xylem.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Base area of either
+the xylem or the phloem (<span class="math notranslate nohighlight">\(m^2\)</span>)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [len(ind) or self.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.tree.Tree.element_volume">
+<code class="sig-name descname">element_volume</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ind</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.tree.Tree.element_volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the volume of the xylem or the phloem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ind</strong> (<em>List</em><em>[</em><em>int</em><em>] or </em><em>numpy.ndarray</em><em>(</em><em>dtype=int</em><em>, </em><em>ndim=1</em><em>)</em><em>, </em><em>optional</em>) – the indices of the elements
+for which the volume is calculated. If no ind is given, the volume is calculated
+for every element.</p></li>
+<li><p><strong>column</strong> (<em>int</em><em>, </em><em>optional</em>) – The column in the tree grid for which the volume is calculated.
+use column=0 for the xylem and column=1 for the phloem. If not column is given returns
+the volume for the xylem.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Volume of either
+the xylem or the phloem (<span class="math notranslate nohighlight">\(m^3\)</span>)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [len(ind) or self.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.tree.Tree.sugar_concentration_as_numpy_array">
+<code class="sig-name descname">sugar_concentration_as_numpy_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.tree.Tree.sugar_concentration_as_numpy_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms the phloem sugar concentration in <a class="reference external" href="index.html#src.tree.Tree.solutes">self.solutes</a>
+into numpy.ndarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The sugar concentration in the phloem.
+(<span class="math notranslate nohighlight">\(\frac{mol}{m^3}\)</span>)</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.tree.Tree.update_sap_viscosity">
+<code class="sig-name descname">update_sap_viscosity</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#src.tree.Tree.update_sap_viscosity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates and sets the viscosity in the phloem according to the sugar concenration.</p>
+<p>The sap viscosity is calculated according to Morrison (2002)</p>
+<div class="math notranslate nohighlight">
+\[\eta = \eta_w \exp{\frac{4.68 \cdot 0.956 \Phi_s}{1-0.956 \Phi_s}}\]</div>
+<dl class="simple">
+<dt>where</dt><dd><p><span class="math notranslate nohighlight">\(\eta_w\)</span>: Dynamic viscosity of water (<span class="math notranslate nohighlight">\(\eta_w \approx 0.001\)</span>)<span class="raw-html-m2r"><br /></span>
+<span class="math notranslate nohighlight">\(\Phi_s\)</span>: Volume fraction of sugar (succrose) in the phloem sap.</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>Morison, Ken R. “Viscosity equations for sucrose solutions: old and new 2002.”
+Proceedings of the 9th APCChE Congress and CHEMECA. 2002.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.tree.Tree.update_sugar_concentration">
+<code class="sig-name descname">update_sugar_concentration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_concentration</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#src.tree.Tree.update_sugar_concentration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the sugar concentration in <a class="reference external" href="index.html#src.tree.Tree.solutes">self.solutes</a> to new_concentration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>new_concentration</strong> (<em>numpy.ndarray</em><em>(</em><em>dtype=float</em><em>, </em><em>ndim=2</em><em>)</em><em>[</em><em>self.num_elements</em><em>,</em><em>1</em><em>]</em>) – new concentration values.
+the order is from top of the tree (first element, new_concentration[0]) to bottom of the tree
+(last element, new_concentration[self.num_elements-1]) (<span class="math notranslate nohighlight">\(\frac{mol}{m^3}\)</span>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="src.solute.Solute">
+<em class="property">class </em><code class="sig-prename descclassname">src.solute.</code><code class="sig-name descname">Solute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">molar_mass</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">density</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">concentration</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.solute.Solute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains the variables to model a solute compound</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the compound</p></li>
+<li><p><strong>molar_mass</strong> (<em>float</em>) – Molar mass of the compound (<span class="math notranslate nohighlight">\(\frac{kg}{mol}\)</span>)</p></li>
+<li><p><strong>density</strong> – Liquid phase density of the compound (<span class="math notranslate nohighlight">\(\frac{kg}{m^3}\)</span>)</p></li>
+<li><p><strong>concentration</strong> – Concentration of the compound in the sap solution (<span class="math notranslate nohighlight">\(\frac{mol}{m^3}\)</span>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="src.solute.Solute.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#src.solute.Solute.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the compound</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.solute.Solute.molar_mass">
+<code class="sig-name descname">molar_mass</code><a class="headerlink" href="#src.solute.Solute.molar_mass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Molar mass of the compound (<span class="math notranslate nohighlight">\(\frac{kg}{mol}\)</span>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.solute.Solute.density">
+<code class="sig-name descname">density</code><a class="headerlink" href="#src.solute.Solute.density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Liquid phase density of the compound (<span class="math notranslate nohighlight">\(\frac{kg}{m^3}\)</span>)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.solute.Solute.concentration">
+<code class="sig-name descname">concentration</code><a class="headerlink" href="#src.solute.Solute.concentration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concentration of the compound in the sap solution (<span class="math notranslate nohighlight">\(\frac{mol}{m^3}\)</span>)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="src.odefun.odefun">
+<code class="sig-prename descclassname">src.odefun.</code><code class="sig-name descname">odefun</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.odefun.odefun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the right hand side of the model ODEs.</p>
+</dd></dl>
+
+<span class="target" id="module-src.constants"></span><span class="target" id="module-src.model_variables"></span><span class="target" id="module-src.tools.iotools"></span><dl class="py function">
+<dt id="src.tools.iotools.initialize_netcdf">
+<code class="sig-prename descclassname">src.tools.iotools.</code><code class="sig-name descname">initialize_netcdf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">variables</span><span class="p">:</span> <span class="n">Dict</span></em><span class="sig-paren">)</span> &#x2192; netCDF4._netCDF4.Dataset<a class="headerlink" href="#src.tools.iotools.initialize_netcdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="src.tools.iotools.tree_properties_to_dict">
+<code class="sig-prename descclassname">src.tools.iotools.</code><code class="sig-name descname">tree_properties_to_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tree</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.tree.Tree" title="src.tree.Tree">src.tree.Tree</a></span></em><span class="sig-paren">)</span> &#x2192; Dict<a class="headerlink" href="#src.tools.iotools.tree_properties_to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>cast tree properties to dictionary for saving</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="src.tools.iotools.write_netcdf">
+<code class="sig-prename descclassname">src.tools.iotools.</code><code class="sig-name descname">write_netcdf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ncf</span><span class="p">:</span> <span class="n">netCDF4._netCDF4.Dataset</span></em>, <em class="sig-param"><span class="n">results</span><span class="p">:</span> <span class="n">Dict</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#src.tools.iotools.write_netcdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-src.tools.plotting"></span><dl class="py function">
+<dt id="src.tools.plotting.plot_phloem_pressure_top_bottom">
+<code class="sig-prename descclassname">src.tools.plotting.</code><code class="sig-name descname">plot_phloem_pressure_top_bottom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.tools.plotting.plot_phloem_pressure_top_bottom" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="src.tools.plotting.plot_simulation_results">
+<code class="sig-prename descclassname">src.tools.plotting.</code><code class="sig-name descname">plot_simulation_results</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">foldername</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.tools.plotting.plot_simulation_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="src.tools.plotting.plot_variable_vs_time">
+<code class="sig-prename descclassname">src.tools.plotting.</code><code class="sig-name descname">plot_variable_vs_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.tools.plotting.plot_variable_vs_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="src.tools.plotting.plot_xylem_pressure_top_bottom">
+<code class="sig-prename descclassname">src.tools.plotting.</code><code class="sig-name descname">plot_xylem_pressure_top_bottom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.tools.plotting.plot_xylem_pressure_top_bottom" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tree Box Model documentation</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#quick-start">Quick start</a></li>
+<li><a class="reference internal" href="#module-main">main.py</a></li>
+<li><a class="reference internal" href="#module-src.model">Modules, Classes &amp; functions</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="modelled_system.html"
+                        title="next chapter">Description of the modelled system</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modelled_system.html" title="Description of the modelled system"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Tree Box Model 0.3 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Olli-Pekka Tikkanen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
+    </div>
+  </body>
+</html>

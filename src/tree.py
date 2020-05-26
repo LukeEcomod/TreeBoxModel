@@ -2,20 +2,99 @@ import numpy as np
 import math
 from typing import List
 from .solute import Solute
-from .constants import M_SUCROSE, PHLOEM_RADIUS, RHO_SUCROSE, RHO_WATER,\
-    GRAVITATIONAL_ACCELERATION, HEARTWOOD_RADIUS, MAX_ELEMENT_COLUMNS, VISCOSITY_WATER,\
-    XYLEM_RADIUS, TEMPERATURE, MOLAR_GAS_CONSTANT
+from .constants import M_SUCROSE, RHO_SUCROSE,\
+    HEARTWOOD_RADIUS, MAX_ELEMENT_COLUMNS, VISCOSITY_WATER
 
 
 class Tree:
-    def __init__(self, height, initial_radius, num_elements, transpiration_profile,
-                 photosynthesis_profile, sugar_profile,
-                 sugar_loading_profile, sugar_unloading_profile, sugar_target_concentration,
-                 sugar_unloading_slope,
-                 axial_permeability_profile,
-                 radial_hydraulic_conductivity_profile,
-                 elastic_modulus_profile,
-                 ground_water_potential):
+    """ Model of a tree.
+
+    Provides properties and functionality for saving and editing the modelled tree. Arguments whose
+    type is List[float] or List[List[float]] are converted to numpy.ndarray with numpy.asarray method.
+    Thus, also numpy.ndarray is a valid type for these arguments.
+
+    For arguemnts whose type is List[float] (except for initial_radius) the length of the arguments must
+    be equal to num_elements. The order of the list should be from the top of the tree (the first item) to the
+    bottom of the tree (the last item)
+
+    For arguments whose type is List[List[float]] the length of the arguemnts must be equal to num_elements
+    and each sub list must contain two elements, one for the xylem and one for the phloem in this order. The
+    order of the sub lists should be from the top of the tree (the first sub list) to the bottom of the tree
+    (the last sub list).
+
+    Args:
+        height (float): total tree height (:math:`m`)
+        initial_radius (List[float] or numpy.ndarray): the radius of the xylem and the phloem (:math:`m`) in this order.
+            See from the [modelled system](modelled_system.html), how the radii should be given. Only two values can
+            be given and the radius of each element is set to be the same in the tree initialization.
+        num_elements (int): number of vertical elemenets in the tree.
+            The height of an element is determined by
+            :math:`\\text{element height} = \\frac{\\text{tree height}}{\\text{number of elements}}`
+        transpiration_profile (List[float] or numpy.ndarray): The rate of transpiration (:math:`\\frac{kg}{s}`) in the
+            xylem. The length of the list must be equal to num_elements and the order is from the top of the tree
+            (first value) in the list to the bottom of the tree (last value in the list).
+        photosynthesis_profile (List[float]): The rate of photosynthesis (:math:`\\frac{mol}{s}`). Currently this
+            variable is not used and the rate of photosynthesis should be equal to the sugar_loading_profile.
+        sugar_profile (List[float]] or numpy.ndarray): The initial sugar (sucrose) concentration in the phloem
+            (:math:`\\frac{mol}{m^3}`)
+        sugar_loading_profile (List[List[float]] or numpy.ndarray): the rate at which sugar concentration increases
+            in each phloem element (:math:`\\frac{mol}{s}`)
+        sugar_unloading_profile (List[float] or numpy.ndarray): The initial sugar unloading rate (the rate at which the
+            sugar concentration decreases in a given phloem element) (:math:`\\frac{mol}{s}`). The unloading rate is
+            updated in [src.odefun.odefun](index.html#src.odefun.odefun).
+        sugar_target_concentration (float): the target concentration after which the sugar unloading
+            starts (:math:`\\frac{mol}{m^3}`)
+        sugar_unloading_slope (float): the slope parameter for unloading (see
+            [Nikinmaa et. al., (2014)](https://academic.oup.com/aob/article/114/4/653/2769025)).
+        axial_permeability_profile (List[List[float]] or numpy.ndarray): axial permeabilities of both xylem and phloem
+            (:math:`m^2`)
+        radial_hydraulic_conductivity_profile (List[float]] or numpy.ndarray): radial hydraulic conductivity between the
+            xylem and the phloem (:math:`\\frac{m}{Pa \\: s`)
+        elastic_modulus_profile (List[List[float]] or numpy.ndarray): Elastic modulus of every element (:math:`Pa`).
+        ground_water_potential (float): The water potential in the soil. This is used to calculate the sap flux between
+            soil and the bottom xylem element.
+
+    Attributes:
+        height (float): total tree height (:math:`m`)
+        num_elements (float): number of vertical elemenets in the tree.
+        transpiration_rate (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]): The rate of transpiration
+            (:math:`\\frac{kg}{s}`) in the xylem.
+        photosynthesis_rate (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]): The rate of photosynthesis
+            (:math:`\\frac{mol}{s}`). Currently this variable is not used.
+        sugar_loading_rate (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]): The rate at which sugar
+            concentration increases in each phloem element (:math:`\\frac{mol}{s}`).
+        sugar_unloading_rate (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]): The rate at which the
+            sugar concentration decreases in a given phloem element (:math:`\\frac{mol}{s}`).
+        sugar_target_concentration (float): The target concentration after which the sugar unloading
+            starts (:math:`\\frac{mol}{m^3}`).
+        sugar_unloading_slope (float): The slope parameter for unloading (see
+            [Nikinmaa et. al., (2014)](https://academic.oup.com/aob/article/114/4/653/2769025)).
+        solutes (numpy.ndarray(dtype=src.solute.Solute, ndim=2) [tree.num_elements, 2]): Array of
+            src.solute.Solute which contain the solutes in the sap of xylem and phloem.
+        axial_permeability (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): Axial permeabilities of both
+            xylem and phloem (:math:`m^2`).
+        radial_hydraulic_conductivity (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]): Radial hydraulic
+            conductivity between the xylem and the phloem (:math:`\\frac{m}{Pa \\: s`).
+        elastic_modulus (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): Elastic modulus of every element
+            (:math:`Pa`).
+        ground_water_potential (float): The water potential in the soil.
+        pressure (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): Pressure of each element (:math:`Pa`)
+        element_radius (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): Radius of each element (:math:`m`)
+        element_height (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): Height of each element (:math:`m`)
+        viscosity (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): The dynamic viscosity of each element
+            (:math:`Pa \\: s`)
+
+    """
+
+    def __init__(self, height: float, initial_radius: List[float],
+                 num_elements: int, transpiration_profile: List[float],
+                 photosynthesis_profile: List[float], sugar_profile: List[float],
+                 sugar_loading_profile: List[float], sugar_unloading_profile: List[float],
+                 sugar_target_concentration: float, sugar_unloading_slope: float,
+                 axial_permeability_profile: List[List[float]],
+                 radial_hydraulic_conductivity_profile: List[float],
+                 elastic_modulus_profile: List[List[float]],
+                 ground_water_potential: float):
 
         # for all arrays/lists the first column is for xylem and the second for phloem
         # all the arrays/lists have num_elements rows
@@ -24,58 +103,34 @@ class Tree:
 
         self.num_elements: int = num_elements  # number of tree elements
 
-        self.initial_radius: np.ndarray = np.asarray(initial_radius)  # initial radius of the xylem and phloem
-
-        # (num_elements,1) array of transpiration rates in the xylem
-        # unit: kg/s
         self.transpiration_rate: np.ndarray = np.asarray(transpiration_profile).reshape(self.num_elements, 1)
 
-        # (num_elements,1) array of photosynth. rate in the phloem
-        # unit: mol/s
         self.photosynthesis_rate: np.ndarray = np.asarray(photosynthesis_profile).reshape(self.num_elements, 1)
 
-        # (num_elements,1) array of sugar conc. at t=0s in phloem
-        # unit: mol/m3
         self.solutes: np.ndarray = np.asarray([[Solute('', 0, 0, 0),
                                                 Solute('Sucrose', M_SUCROSE, RHO_SUCROSE, s_conc)]
                                                for s_conc in sugar_profile])
-        # Sugar loading rate and initial unloading rate, unit: mol/s
+
         self.sugar_loading_rate: np.ndarray = np.asarray(sugar_loading_profile).reshape(self.num_elements, 1)
 
         self.sugar_unloading_rate: np.ndarray = np.asarray(sugar_unloading_profile).reshape(self.num_elements, 1)
 
-        # Sugar target_concentration and unloading slope for calculating
-        # unloading rate dynamically
-        # unit: mol/m3, m3/s
         self.sugar_target_concentration: float = sugar_target_concentration
 
         self.sugar_unloading_slope: float = sugar_unloading_slope
 
-        self.axial_permeability: np.ndarray = np.asarray(axial_permeability_profile)
-        # Radial hydraulinc conductivity between xylem and phloem
-        # unit: m/(Pa s)
-        self.radial_hydraulic_conductivity: np.ndarray = np.asarray(radial_hydraulic_conductivity_profile)
+        self.axial_permeability: np.ndarray = np.asarray(axial_permeability_profile).reshape(self.num_elements, 2)
 
-        # Elastic modulus of xylem and phloem
-        # higher modulus means higher pressure change wrt. sap flux
-        # unit: Pa
-        self.elastic_modulus: np.ndarray = np.asarray(elastic_modulus_profile)
+        self.radial_hydraulic_conductivity: np.ndarray = np.asarray(radial_hydraulic_conductivity_profile)\
+            .reshape(self.num_elements, 1)
+
+        self.elastic_modulus: np.ndarray = np.asarray(elastic_modulus_profile).reshape(self.num_elements, 2)
 
         self.ground_water_potential: float = ground_water_potential
 
-        # calculate what the pressure in the xylem will be
-        # assuming that at the base of the tree water potential
-        # equals ground water potential
-        # order 1 = top of the tree, N = base of the tree
-
-        # self.pressure = np.asarray([self.ground_water_potential
-        #                          - i*RHO_WATER*GRAVITATIONAL_ACCELERATION*self.height/self.num_elements
-        #                            for i in range(self.num_elements)]).reshape(self.num_elements, 1)
-        self.pressure = np.asarray([0 for i in range(self.num_elements)]).reshape(self.num_elements, 1)
-        # reverse pressure so the order is correct (elemenent N has pressure equal to ground water potential)
-        self.pressure = np.concatenate((np.flip(self.pressure),
-                                        np.flip(self.pressure)),
-                                       axis=1)
+        # initialize pressure to be 0
+        self.pressure = np.asarray([0 for i in range(self.num_elements)]).reshape(self.num_elements, 1)\
+            .repeat(2, axis=1)
 
         # calculate radius and height for every element in the tree
         self.element_radius: np.ndarray = np.asarray([initial_radius]*self.num_elements)
@@ -89,10 +144,24 @@ class Tree:
         self.update_sap_viscosity()
 
     def sugar_concentration_as_numpy_array(self) -> np.ndarray:
+        """ Transforms the phloem sugar concentration in [self.solutes](index.html#src.tree.Tree.solutes)
+        into numpy.ndarray.
+
+        Returns:
+            numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]: The sugar concentration in the phloem.
+            (:math:`\\frac{mol}{m^3}`)
+        """
         get_concentration = np.vectorize(lambda s: s.concentration)
         return get_concentration(self.solutes[:, 1]).reshape(self.num_elements, 1)
 
     def update_sugar_concentration(self, new_concentration: np.ndarray) -> None:
+        """ Sets the sugar concentration in [self.solutes](index.html#src.tree.Tree.solutes) to new_concentration.
+
+        Args:
+            new_concentration (numpy.ndarray(dtype=float, ndim=2)[self.num_elements,1]): new concentration values.
+                the order is from top of the tree (first element, new_concentration[0]) to bottom of the tree
+                (last element, new_concentration[self.num_elements-1]) (:math:`\\frac{mol}{m^3}`)
+        """
 
         def update_concentration(ele, new_value):
             ele.concentration = new_value
@@ -100,10 +169,19 @@ class Tree:
         update(self.solutes[:, 1], new_concentration.reshape(self.num_elements,))
 
     def element_area(self, ind: List[int] = None, column: int = 0) -> np.ndarray:
-        """ returns element areas specified in parameter ind and column of self.elements.
+        """ Calculates the base area of the xylem or the phloem.
 
-            If no ind is given returns the areas for every element.
-            If no column is given returns the areas in column 0 of self.elements (the xylem)
+        Args:
+            ind (List[int] or numpy.ndarray(dtype=int, ndim=1), optional): the indices of the elements
+                for which the base area is calculated. If no ind is given, the base area is calculated
+                for every element.
+            column (int, optional): The column in the tree grid for which the base area is calculated.
+                use column=0 for the xylem and column=1 for the phloem. If not column is given returns
+                the base area for the xylem.
+
+        Returns:
+            numpy.ndarray(dtype=float, ndim=2) [len(ind) or self.num_elements, 1]: Base area of either
+            the xylem or the phloem (:math:`m^2`)
         """
         if ind is None:
             ind = []
@@ -124,10 +202,19 @@ class Tree:
         return math.pi*(total_area - inner_radius**2)
 
     def element_volume(self, ind: List[int] = None, column: int = 0) -> np.ndarray:
-        """ returns element volumes specified in parameter ind and column of self.elements.
+        """ Calculates the volume of the xylem or the phloem.
 
-            If no ind is given returns the volume of every element.
-            If no column is given returns the volumes in column 0 of self.elements (the xylem)
+        Args:
+            ind (List[int] or numpy.ndarray(dtype=int, ndim=1), optional): the indices of the elements
+                for which the volume is calculated. If no ind is given, the volume is calculated
+                for every element.
+            column (int, optional): The column in the tree grid for which the volume is calculated.
+                use column=0 for the xylem and column=1 for the phloem. If not column is given returns
+                the volume for the xylem.
+
+        Returns:
+            numpy.ndarray(dtype=float, ndim=2) [len(ind) or self.num_elements, 1]: Volume of either
+            the xylem or the phloem (:math:`m^3`)
         """
         # TODO: refactor the self.element_radius finding to own function (used multiple times)
         if ind is None:
@@ -140,9 +227,18 @@ class Tree:
         return self.element_area(ind, column) * heights
 
     def cross_sectional_area(self, ind: List[int] = None) -> np.ndarray:
-        """ calculates the cross sectional area between xylem and phloem
-            i.e., the surface are of the xylem
-            if no ind is given returns the cross sectional area for every axial element
+        """ Calculates the cross-sectional area between the xylemn and the phloem.
+
+        The cross sectional area is equal to lateral surface area of the xylem.
+
+        Args:
+            ind (List[int] or numpy.ndarray(dtype=int, ndim=1), optional): the indices of the elements
+                for which the cross-sectinoal area is calculated. If no ind is given, the
+                cross-sectional area is calculated for every element.
+
+        Returns:
+            numpy.ndarray(dtype=float, ndim=2) [len(ind) or self.num_elements, 1]: Cross-sectional area
+            between the xylem and phloem elements (:math:`m^2`)
         """
         if ind is None:
             ind = []
@@ -156,7 +252,20 @@ class Tree:
         return element_heights*2.0*math.pi*element_radii
 
     def update_sap_viscosity(self) -> None:
-        """ Updates the viscosity in column 1 of self.elements (the phloem)
+        """ Calculates and sets the viscosity in the phloem according to the sugar concenration.
+
+            The sap viscosity is calculated according to Morrison (2002)
+
+            .. math::
+                \\eta = \\eta_w \\exp{\\frac{4.68 \\cdot 0.956 \\Phi_s}{1-0.956 \\Phi_s}}
+
+            where
+                :math:`\\eta_w`: Dynamic viscosity of water (:math:`\\eta_w \\approx 0.001`)<br />
+                :math:`\\Phi_s`: Volume fraction of sugar (succrose) in the phloem sap.
+
+            References:
+                Morison, Ken R. "Viscosity equations for sucrose solutions: old and new 2002."
+                Proceedings of the 9th APCChE Congress and CHEMECA. 2002.
         """
         # TODO: refactor into solution class
 

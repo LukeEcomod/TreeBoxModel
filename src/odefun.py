@@ -4,6 +4,8 @@ from src.constants import HEARTWOOD_RADIUS, RHO_WATER, MAX_ELEMENT_COLUMNS
 
 
 def odefun(t, y, model):
+    """ Calculates the right hand side of the model ODEs."""
+
     # Update model tree parameters
     pressures = y[0:model.tree.num_elements*2].reshape(model.tree.num_elements, MAX_ELEMENT_COLUMNS, order='F')
     sugar_concentration = y[model.tree.num_elements*2:model.tree.num_elements*3].reshape(model.tree.num_elements, 1,
@@ -21,7 +23,7 @@ def odefun(t, y, model):
                                     - model.tree.sugar_target_concentration)], axis=1), axis=1).reshape(
         model.tree.num_elements, 1)
     model.tree.sugar_unloading_rate[-1] *= 10
-    model.tree.sugar_unloading_rate[0:10] = np.zeros((10,1))
+    model.tree.sugar_unloading_rate[0:10] = np.zeros((10, 1))
     dmdt_ax: np.ndarray = model.axial_fluxes()
     dmdt_rad: np.ndarray = model.radial_fluxes()
 
