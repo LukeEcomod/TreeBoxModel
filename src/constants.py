@@ -16,10 +16,11 @@ AVOGADROS_CONSTANT: float = 6.022e23  # avogadro's constant unit: 1/mol
 MOLAR_GAS_CONSTANT: float = 8.3145  # molar gas constant unit: J/K/mol
 
 # These are needed for water volume calculation
-# TODO: add these to treeElement parameters
+# TODO: add these to tree parameters
 # From Hölttä et al., (2016)
-HEARTWOOD_RADIUS: float = 0.55e-2
-XYLEM_RADIUS: float = 0.52e-2
+# HEARTWOOD_RADIUS: float = 0.55e-2  # for nikinmaa
+HEARTWOOD_RADIUS = 4.44e-2
+XYLEM_RADIUS: float = 0.52e-2  # for nikinmaa
 PHLOEM_RADIUS: float = 1e-3
 
 MAX_ELEMENT_COLUMNS: int = 2  # Max number of columns in tree.elements

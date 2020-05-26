@@ -100,7 +100,7 @@ def plot_simulation_results(filename: str, foldername: str):
                       'axial_layers': [0, 39],
                       'radial_layers': [1]},
               'folder': foldername,
-              'xticks': np.linspace(0, 3, 7),
+              'xticks': np.linspace(0, 10, 11),
               'xlabel': 'Time (d)'}
 
     plt.rcParams.update({'font.size': 22})
@@ -113,25 +113,25 @@ def plot_simulation_results(filename: str, foldername: str):
     ylabels = ['Pressure (Mpa)', 'Pressure (Mpa)', 'Sugar concentration (mol/L)', 'Flux (g/s)', 'Flux (g/s)',
                'Flux (g/s)']
     variable_divides = [1e6, 1e6, 1e3, 1e-3, 1e-3, 1e-3]
-    end_index = 1153
-    start_index = 288
+    end_index = 433
+    start_index = 5
     cuts = [{'index': range(start_index, end_index, 1),
-             'axial_layers': [0, 39, 19],
+             'axial_layers': [1, 59, 30],
              'radial_layers': [0]},
             {'index': range(start_index, end_index, 1),
-             'axial_layers': [0, 39, 19],
+             'axial_layers': [1, 59, 30],
              'radial_layers': [1]},
             {'index': range(start_index, end_index, 1),
-             'axial_layers': [0, 39, 19],
+             'axial_layers': [1, 59, 30],
              'radial_layers': [1]},
             {'index': range(start_index, end_index, 1),
-             'axial_layers': [0, 39, 19],
+             'axial_layers': [1, 59, 30],
              'radial_layers': [0]},
             {'index': range(start_index, end_index, 1),
-             'axial_layers': [0, 39, 19],
+             'axial_layers': [1, 59, 30],
              'radial_layers': [1]},
             {'index': range(start_index, end_index, 1),
-             'axial_layers': [0, 39, 19],
+             'axial_layers': [1, 59, 30],
              'radial_layers': [1]}]
 
     for (ind, var) in enumerate(variable_names):

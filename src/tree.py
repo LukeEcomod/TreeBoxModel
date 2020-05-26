@@ -2,8 +2,8 @@ import numpy as np
 import math
 from typing import List
 from .solute import Solute
-from .constants import M_SUCROSE, RHO_SUCROSE,\
-    HEARTWOOD_RADIUS, MAX_ELEMENT_COLUMNS, VISCOSITY_WATER
+from .constants import MOLAR_GAS_CONSTANT, M_SUCROSE, RHO_SUCROSE,\
+    HEARTWOOD_RADIUS, MAX_ELEMENT_COLUMNS, TEMPERATURE, VISCOSITY_WATER
 
 
 class Tree:
@@ -49,7 +49,7 @@ class Tree:
         axial_permeability_profile (List[List[float]] or numpy.ndarray): axial permeabilities of both xylem and phloem
             (:math:`m^2`)
         radial_hydraulic_conductivity_profile (List[float]] or numpy.ndarray): radial hydraulic conductivity between the
-            xylem and the phloem (:math:`\\frac{m}{Pa \\: s`)
+            xylem and the phloem (:math:`\\frac{m}{Pa \\: s}`)
         elastic_modulus_profile (List[List[float]] or numpy.ndarray): Elastic modulus of every element (:math:`Pa`).
         ground_water_potential (float): The water potential in the soil. This is used to calculate the sap flux between
             soil and the bottom xylem element.
@@ -74,7 +74,7 @@ class Tree:
         axial_permeability (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): Axial permeabilities of both
             xylem and phloem (:math:`m^2`).
         radial_hydraulic_conductivity (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]): Radial hydraulic
-            conductivity between the xylem and the phloem (:math:`\\frac{m}{Pa \\: s`).
+            conductivity between the xylem and the phloem (:math:`\\frac{m}{Pa \\: s}`).
         elastic_modulus (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): Elastic modulus of every element
             (:math:`Pa`).
         ground_water_potential (float): The water potential in the soil.
@@ -131,6 +131,9 @@ class Tree:
         # initialize pressure to be 0
         self.pressure = np.asarray([0 for i in range(self.num_elements)]).reshape(self.num_elements, 1)\
             .repeat(2, axis=1)
+
+        self.pressure[:, 1] = (self.sugar_concentration_as_numpy_array()*MOLAR_GAS_CONSTANT*TEMPERATURE
+                               ).reshape(self.num_elements,)
 
         # calculate radius and height for every element in the tree
         self.element_radius: np.ndarray = np.asarray([initial_radius]*self.num_elements)
@@ -261,7 +264,7 @@ class Tree:
 
             where
                 :math:`\\eta_w`: Dynamic viscosity of water (:math:`\\eta_w \\approx 0.001`)<br />
-                :math:`\\Phi_s`: Volume fraction of sugar (succrose) in the phloem sap.
+                :math:`\\Phi_s`: Volume fraction of sugar (sucrose) in the phloem sap.
 
             References:
                 Morison, Ken R. "Viscosity equations for sucrose solutions: old and new 2002."

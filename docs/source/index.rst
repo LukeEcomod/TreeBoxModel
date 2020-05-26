@@ -57,7 +57,6 @@ Modules, Classes \& functions
 .. automodule:: src.tools.plotting
    :members:
    :undoc-members:
-
 .. * :ref:`genindex`
 .. * :ref:`modindex`
 .. * :ref:`search`

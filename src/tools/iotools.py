@@ -58,13 +58,13 @@ def tree_properties_to_dict(tree: Tree) -> Dict:
     properties['ground_water_potential'] = tree.ground_water_potential
     properties['transpiration_rate'] = tree.transpiration_rate
     properties['photosynthesis_rate'] = tree.photosynthesis_rate
-    sugar_conc = tree.sugar_concentration_as_numpy_array().reshape(40, 1)
-    zeros = np.zeros((40, 1))
+    sugar_conc = tree.sugar_concentration_as_numpy_array().reshape(tree.num_elements, 1)
+    zeros = np.zeros((tree.num_elements, 1))
     properties['sugar_concentration'] = np.concatenate((zeros, sugar_conc), axis=1)
     properties['sugar_loading_rate'] = tree.sugar_loading_rate
     properties['sugar_unloading_rate'] = tree.sugar_unloading_rate
     properties['axial_permeability'] = tree.axial_permeability
-    properties['radial_hydraulic_conductivity'] = np.repeat(tree.radial_hydraulic_conductivity.reshape(40, 1),
+    properties['radial_hydraulic_conductivity'] = np.repeat(tree.radial_hydraulic_conductivity.reshape(tree.num_elements, 1),
                                                             2, axis=1)
     properties['viscosity'] = tree.viscosity
     properties['elastic_modulus'] = tree.elastic_modulus

@@ -12,6 +12,7 @@ Todo:
 
 '''
 
+from src.tools.iotools import tree_properties_to_dict, write_netcdf
 from src.constants import PHLOEM_RADIUS, XYLEM_RADIUS
 from src.model import Model
 from src.tree import Tree
@@ -40,6 +41,7 @@ if __name__ == "__main__":
     sugar_profile[0:20, 0] = 1400
     sugar_profile[20:30, 0] = 1000
     sugar_profile[30:40, 0] = 800
+
     sugar_loading_profile = photosynth_profile
 
     sugar_unloading_profile: List[float] = [0.0 for i in range(num_elements)]
@@ -84,14 +86,14 @@ if __name__ == "__main__":
     outputfname = 'test_'
     outputfname = outputfname + datetime.now().strftime("%y-%m-%dT%H:%M:%S") + ".nc"
     model = Model(tree, outputfile=outputfname)
-    for day in range(0, 4):
+    for day in range(0, 2):
         for (ind, time) in enumerate(daytime[0:-1]):
             # set new transpiration rate
-            transpiration_rate = transpiration_profile
+            transpiration_rate = transpiration_profile.copy()
             transpiration_rate[0:10] = [transpiration[ind]]*10
             model.tree.transpiration_rate = np.asarray(transpiration_rate).reshape(40, 1)
 
-            photosynthesis_rate = photosynth_profile
+            photosynthesis_rate = photosynth_profile.copy()
             photosynthesis_rate[0:10] = [photosynthesis[ind]]*10
             model.tree.photosynthesis_rate = np.asarray(photosynthesis_rate).reshape(40, 1)
 
