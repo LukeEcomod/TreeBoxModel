@@ -3,8 +3,31 @@ import math
 from src.constants import HEARTWOOD_RADIUS, RHO_WATER, MAX_ELEMENT_COLUMNS
 
 
-def odefun(t, y, model):
-    """ Calculates the right hand side of the model ODEs."""
+def odefun(t: float, y: np.ndarray, model) -> np.ndarray:
+    """ Calculates the right hand side of the model ODEs.
+
+    The modelled systen and the ODEs are described in the [modelled system](modelled_system.html).
+    The scipy.solve_ivp() function in src.model.Model.run_scipy() method calls this function during
+    the simulation.
+
+    Args:
+      t (float): time in the model simulation
+      y (numpy.ndarray(dtype=float, ndims=1)[5 :math:`\\cdot` model.tree.num_elements,]): 1D array where elements
+         0:2 :math:`\\cdot` model.tree.num_elements are the pressures in the xylem and phloem of the tree, elements
+         2 :math:`\\cdot` model.tree.num_elements:3 :math:`\\cdot` model.tree.num_elements are for the sucrose
+         concentration in the phloem and elements 3 :math:`\\cdot` model.tree.num_elements:5 :math:`\\cdot`
+         model.tree.num_elements are for the element radii both in the xylem and the phloem.
+      model (src.model.Model): Instace of the model class
+
+    Returns:
+      (numpy.ndarray(dtype=float,ndims=1)[5 :math:`\\cdot` model.tree.num_elements,]): 1D array of the right hand side
+      values of the model ODEs where the elements 0:2 :math:`\\cdot` model.tree.num_elements are
+      :math:`\\frac{\\text{d(pressure)}}{\\text{dt}}`, elements 2 :math:`\\cdot` model.tree.num_elements:
+      3 :math:`\\cdot` model.tree.num_elements are :math:`\\frac{\\text{d[C(sucrose)]}}{\\text{dt}}` and elements
+      3 :math:`\\cdot` model.tree.num_elements:5 :math:`\\cdot` model.tree.num_elements are
+      :math:`\\frac{\\text{d(radius)}}{\\text{dt}}`
+
+    """
 
     # Update model tree parameters
     pressures = y[0:model.tree.num_elements*2].reshape(model.tree.num_elements, MAX_ELEMENT_COLUMNS, order='F')

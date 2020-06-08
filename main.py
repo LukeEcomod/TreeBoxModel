@@ -1,6 +1,7 @@
 ''' The purpose of this main file is to provide an easy way to run the model.
 
-All the model parameters are set in the file and are taken from [Hölttä et. al. 2006](https://link.springer.com/article/10.1007/s00468-005-0014-6)
+All the model parameters are set in the file and are taken from
+[Hölttä et. al. 2006](https://link.springer.com/article/10.1007/s00468-005-0014-6)
 or [Nikinmaa et. al., (2014)](https://academic.oup.com/aob/article/114/4/653/2769025).
 
 A sine-like behaviour is assumed for the transpiration and photosynthesis
@@ -27,22 +28,22 @@ if __name__ == "__main__":
 
     num_elements: int = 40
 
-    radii: List[float] = [XYLEM_RADIUS, PHLOEM_RADIUS]
     transpiration_profile: List[float] = [0.0 for i in range(num_elements)]
-    transpiration_max = 0.9e-3/600.0  # kg/s
-    # daytime = np.linspace(0, 12, 12*12+1)  # hours starting from 06:00 AM, 5 minute interval
-    daytime = np.linspace(0, 24, 12*24+1)
-    transpiration = np.sin(daytime*math.pi/24.0)*transpiration_max
     photosynth_profile: List[float] = [0 for i in range(num_elements)]
-    photosynthesis_max = 2.5e-5/10.0
-    photosynthesis = np.sin(daytime*math.pi/24.0)*photosynthesis_max
+    sugar_loading_profile = photosynth_profile
+
+    transpiration_max = 0.9e-3/600.0  # kg/s
+    photosynthesis_max = 2.5e-5/10.0  # mol/s
+
+    time = np.linspace(0, 24, 12*24+1)
+
+    transpiration = np.sin(time*math.pi/24.0)*transpiration_max
+    photosynthesis = np.sin(time*math.pi/24.0)*photosynthesis_max
 
     sugar_profile: np.ndarray = np.zeros((num_elements, 1))
     sugar_profile[0:20, 0] = 1400
     sugar_profile[20:30, 0] = 1000
     sugar_profile[30:40, 0] = 800
-
-    sugar_loading_profile = photosynth_profile
 
     sugar_unloading_profile: List[float] = [0.0 for i in range(num_elements)]
 
@@ -66,6 +67,8 @@ if __name__ == "__main__":
 
     elastic_modulus_profile: List[List[float]] = [[1000e6, 30e6]] * num_elements
 
+    radii: List[float] = [XYLEM_RADIUS, PHLOEM_RADIUS]
+
     ground_water_potential: float = 0.0
 
     tree = Tree(height=height,
@@ -87,7 +90,7 @@ if __name__ == "__main__":
     outputfname = outputfname + datetime.now().strftime("%y-%m-%dT%H:%M:%S") + ".nc"
     model = Model(tree, outputfile=outputfname)
     for day in range(0, 2):
-        for (ind, time) in enumerate(daytime[0:-1]):
+        for (ind, time) in enumerate(time[0:-1]):
             # set new transpiration rate
             transpiration_rate = transpiration_profile.copy()
             transpiration_rate[0:10] = [transpiration[ind]]*10
@@ -96,17 +99,8 @@ if __name__ == "__main__":
             photosynthesis_rate = photosynth_profile.copy()
             photosynthesis_rate[0:10] = [photosynthesis[ind]]*10
             model.tree.photosynthesis_rate = np.asarray(photosynthesis_rate).reshape(40, 1)
+            model.tree.sugar_loading_rate = model.tree.photosynthesis_rate.copy()
 
-            model.run_scipy(time_start=(day*60*60*24)+time*60*60, time_end=(day*60*60*24)+daytime[ind+1]*60*60, ind=ind)
-
-        # # set transpiration to zero
-        # model.tree.transpiration_rate = np.asarray([0.0 for i in range(num_elements)]).reshape(40, 1)
-        # model.tree.photosynthesis_rate = np.asarray([0.0 for i in range(num_elements)]).reshape(40, 1)
-        # model.tree.sugar_loading_rate = model.tree.photosynthesis_rate
-        # nighttime = np.linspace(12.0001, 24, 12*12+1)
-
-        # for (ind, time) in enumerate(nighttime[0:-1]):
-        #     model.run_scipy(time_start=(day*60*60*24)+time*60*60,
-        #                     time_end=(day*60*60*24)+nighttime[ind+1]*60*60, ind=ind)
+            model.run_scipy(time_start=(day*60*60*24)+time*60*60, time_end=(day*60*60*24)+time[ind+1]*60*60, ind=ind)
 
     print('Model simulation finished')

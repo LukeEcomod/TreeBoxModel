@@ -51,6 +51,7 @@ autodoc_parameter_order = 'alphabetical'
 
 # napoleon options
 napoleon_google_docstring = True
+napoleon_use_rtype = False
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -85,3 +86,4 @@ def docstring(app, what, name, obj, options, lines):
 
 def setup(app):
     app.connect('autodoc-process-docstring', docstring)
+

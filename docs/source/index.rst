@@ -15,11 +15,25 @@ Tree Box Model documentation
 
 Installation
 ------------
+Download the source
+^^^^^^^^^^^^^^^^^^^
 >>> git clone git@github.com:LukeEcomod/TreeBoxModel.git
 
 or
 
 download the source https://github.com/LukeEcomod/TreeBoxModel
+
+Install the required packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Ideally you have created a new virtual environment for this project.
+
+To install all the packages required for the model to run use 
+
+>>> pip install -r requirements.txt
+
+or
+
+>>> conda install --file requirements.txt
 
 Quick start
 -----------
@@ -42,13 +56,34 @@ Modules, Classes \& functions
    :members:
    :undoc-members:
 
-.. autoclass:: src.solute.Solute
+.. automodule:: src.solute
 
 .. autofunction:: src.odefun.odefun
 
-.. automodule:: src.constants
+.. autodata:: src.constants.MAX_ELEMENT_COLUMNS
 
-.. automodule:: src.model_variables
+.. autodata:: src.constants.HEARTWOOD_RADIUS
+
+.. autodata:: src.constants.TEMPERATURE
+
+.. autodata:: src.constants.M_WATER
+
+.. autodata:: src.constants.RHO_WATER
+
+.. autodata:: src.constants.VISCOSITY_WATER
+
+.. autodata:: src.constants.M_SUCROSE
+
+.. autodata:: src.constants.RHO_SUCROSE
+
+.. autodata:: src.constants.GRAVITATIONAL_ACCELERATION
+
+.. autodata:: src.constants.AVOGADROS_CONSTANT
+
+.. autodata:: src.constants.MOLAR_GAS_CONSTANT
+
+.. autodata:: src.model_variables
+   :annotation: = Name, descriptions, unit, dimension and precision of each variable that is saved to the netcdf dataset
 
 .. automodule:: src.tools.iotools
    :members:
@@ -57,6 +92,7 @@ Modules, Classes \& functions
 .. automodule:: src.tools.plotting
    :members:
    :undoc-members:
+
 .. * :ref:`genindex`
 .. * :ref:`modindex`
 .. * :ref:`search`

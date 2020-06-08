@@ -8,18 +8,35 @@ import os.path
 import numpy as np
 
 
-def initialize_netcdf(model, variables: Dict) -> Dataset:
+def initialize_netcdf(filename: str, axial_elements: int, variables: Dict) -> Dataset:
+    """ Initializes a netcdf file to be ready for saving simulation results.
 
+        Args:
+            filename (str): name of the NETCDF4 file that is created
+            axial_elements (int): Number of axial elements in the Tree
+            variables (Dict): The names, descriptions, units, dimensions and precision of each variable that is saved
+                to the netcdf file. The key of each dictionary element is used to label the variables.
+                The value of each dictionary element needs to be a list where <br />
+                list[0] (str) Description of the variable <br />
+                list[1] (str): unit of the variable  <br />
+                list[2] (Tuple): NETCDF dimensions of the variable  <br />
+                list[3] (str): Datatype (precision) of the variable  <br />
+                The possible NETCDF dimensions are "index", "radial_layers" and "axial_layers".
+
+        Returns:
+            (NETCDF4.Dataset): A NETCDF4 file where the simulation results can be saved.
+
+        """
     # create the file if it does not exist
-    if os.path.isfile(model.outputfile):
-        ncf = Dataset(model.outputfile, "a")
+    if os.path.isfile(filename):
+        ncf = Dataset(filename, "a")
     else:
-        ncf = Dataset(model.outputfile, "w", format="NETCDF4")
+        ncf = Dataset(filename, "w", format="NETCDF4")
 
     # create dimensions
     ncf.createDimension("index", 0)
     ncf.createDimension("radial_layers", MAX_ELEMENT_COLUMNS)
-    ncf.createDimension("axial_layers", model.tree.num_elements)
+    ncf.createDimension("axial_layers", axial_elements)
 
     # create the index variable
     ind: Variable = ncf.createVariable('index', 'i4', ('index'))
@@ -38,6 +55,16 @@ def initialize_netcdf(model, variables: Dict) -> Dataset:
 
 
 def write_netcdf(ncf: Dataset, results: Dict) -> None:
+    """ Write a simulation result dictionary into a netcdf file.
+
+    The variables that can be written are defined in the src.model_variables file
+
+    Args:
+        ncf (netCDF4.Dataset): the netcdf file where the results are written
+        results (Dict): the results dictionary. Use the [tree_properties_to_dict](index.html#src.tools.iotools.tree_properties_to_dict) function
+            to create the dictionary.
+
+    """
     ind: int = ncf['index'].shape[0]
     ncf['index'][ind] = ind
     for key in results.keys():
@@ -51,7 +78,15 @@ def write_netcdf(ncf: Dataset, results: Dict) -> None:
 
 
 def tree_properties_to_dict(tree: Tree) -> Dict:
-    """ cast tree properties to dictionary for saving"""
+    """ Transfers tree properties into a dictionary.
+
+    Args:
+        tree (Tree): Instance of the tree class.
+
+    Returns:
+        (Dict): Dictionary of the tree properties.
+
+    """
     properties = {}
     properties['height'] = tree.height
     properties['num_elements'] = tree.num_elements

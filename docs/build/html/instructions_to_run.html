@@ -40,12 +40,161 @@
             
   <div class="section" id="instructions-to-run-the-model">
 <h1>Instructions to run the model<a class="headerlink" href="#instructions-to-run-the-model" title="Permalink to this headline">¶</a></h1>
-<p>There are two options to run the model</p>
+<p>There are two options to run the model. To quickest and easiest way is to run main.py
+which has a single profile loaded. The more challenging way is the import the src.model
+module, create instances of tree and model classes and run the model.</p>
 <div class="section" id="running-from-main-py">
 <h2>Running from main.py<a class="headerlink" href="#running-from-main-py" title="Permalink to this headline">¶</a></h2>
+<p>The main.py can be run with command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;</span>&gt;&gt; python main.py
+</pre></div>
+</div>
+<p>Below the main.py is discussed line by line. Simulations that require only parameter value changes can be run
+by editing the main.py.</p>
 </div>
 <div class="section" id="importing-src-model">
 <h2>Importing src.model<a class="headerlink" href="#importing-src-model" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="imports">
+<h3>Imports<a class="headerlink" href="#imports" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">src.tools.iotools</span> <span class="kn">import</span> <span class="n">tree_properties_to_dict</span><span class="p">,</span> <span class="n">write_netcdf</span>
+<span class="kn">from</span> <span class="nn">src.constants</span> <span class="kn">import</span> <span class="n">PHLOEM_RADIUS</span><span class="p">,</span> <span class="n">XYLEM_RADIUS</span>
+<span class="kn">from</span> <span class="nn">src.model</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">src.tree</span> <span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+</pre></div>
+</div>
+<p>The iotools module is used to write the simulation results to a NetCDF file. PHLOEM_RADIUS and XYLEM_RADIUS are used
+to define the radii of the tree horizontal elements. The Model and Tree classes are needed to create the instances
+of the modelled tree and to run the model. Datetime is used to output the current time when running the model and for
+setting the name of the output file.</p>
+</div>
+<div class="section" id="define-tree-properties">
+<h3>Define tree properties<a class="headerlink" href="#define-tree-properties" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">height</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.37</span>
+
+<span class="n">num_elements</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">40</span>
+</pre></div>
+</div>
+<p>Set the total height of the modelled tree and number of elements in the tree.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">transpiration_profile</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_elements</span><span class="p">)]</span>
+<span class="n">photosynth_profile</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_elements</span><span class="p">)]</span>
+<span class="n">sugar_loading_profile</span> <span class="o">=</span> <span class="n">photosynth_profile</span>
+</pre></div>
+</div>
+<p>Set the initial values for both transpiration in the xylem and photosynthesis in the tree. Note that
+currently sugar loading profile must equal photosynthesis profile.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">transpiration_max</span> <span class="o">=</span> <span class="mf">0.9e-3</span><span class="o">/</span><span class="mf">600.0</span>  <span class="c1"># kg/s</span>
+<span class="n">photosynthesis_max</span> <span class="o">=</span> <span class="mf">2.5e-5</span><span class="o">/</span><span class="mf">10.0</span>  <span class="c1"># mol/s</span>
+
+<span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">12</span><span class="o">*</span><span class="mi">24</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">transpiration</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">time</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">24.0</span><span class="p">)</span><span class="o">*</span><span class="n">transpiration_max</span>
+<span class="n">photosynthesis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">time</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">24.0</span><span class="p">)</span><span class="o">*</span><span class="n">photosynthesis_max</span>
+</pre></div>
+</div>
+<p>Define the positive sine shaped curves for 24h our period that peak at the values
+set to maximum values (transpiration_max and photosynthesis_max). The time step in the
+time vector is 5 minutes.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sugar_profile</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_elements</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">sugar_profile</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1400</span>
+<span class="n">sugar_profile</span><span class="p">[</span><span class="mi">20</span><span class="p">:</span><span class="mi">30</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">sugar_profile</span><span class="p">[</span><span class="mi">30</span><span class="p">:</span><span class="mi">40</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">800</span>
+</pre></div>
+</div>
+<p>Set the initial sugar concentration in the phloem. Note that the tree properties can be set either as a list
+(as done for e.g. transpiration profile) or as NumPy arrays. In the Tree class all properties are converted
+to NumPy arrays with numpy.asarray function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sugar_unloading_profile</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_elements</span><span class="p">)]</span>
+
+<span class="n">sugar_target_concentration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1200</span>
+
+<span class="n">sugar_unloading_slope</span> <span class="o">=</span> <span class="mf">3.5e-7</span>
+</pre></div>
+</div>
+<p>Set the initial sugar unloading rate and parameters for calculating the unloading rate further.
+The sugar_target_concentration is a concentration after which sugar unloading starts and
+sugar_unloading_slope is the slope parameter (units m/s) for the unloading. See
+<a class="reference external" href="https://academic.oup.com/aob/article/114/4/653/2769025">Nikinmaa et. al., (2014)</a> for further details.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">axial_permeability_profile</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_elements</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">axial_permeability_profile</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">1.5e-13</span>
+<span class="n">axial_permeability_profile</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">1.2e-13</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">permeability</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axial_permeability_profile</span><span class="p">):</span>
+    <span class="n">axial_permeability_profile</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">permeability</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                    <span class="n">permeability</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">1</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">num_elements</span><span class="o">*</span><span class="p">(</span><span class="n">row</span><span class="o">+</span><span class="mi">1</span><span class="p">))])</span>
+    <span class="n">axial_permeability_profile</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">permeability</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                                    <span class="n">permeability</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">1</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">height</span><span class="o">/</span><span class="n">num_elements</span><span class="o">*</span><span class="p">(</span><span class="n">row</span><span class="o">+</span><span class="mi">1</span><span class="p">))])</span>
+
+<span class="n">axial_permeability_profile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">axial_permeability_profile</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Define an axial permeability for the modelled tree. In this case the axial permeabilities are inversely proportional
+to the square root of distance of an element from the ground.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">radial_hydr_conductivity</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1e-13</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_elements</span>
+
+<span class="n">elastic_modulus_profile</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1000e6</span><span class="p">,</span> <span class="mf">30e6</span><span class="p">]]</span> <span class="o">*</span> <span class="n">num_elements</span>
+
+<span class="n">radii</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">XYLEM_RADIUS</span><span class="p">,</span> <span class="n">PHLOEM_RADIUS</span><span class="p">]</span>
+
+<span class="n">ground_water_potential</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+</pre></div>
+</div>
+<p>Define the missing properties for the modelled tree. If there are multiple elements the first element
+is always for the xylem and the second for the phloem.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tree</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+            <span class="n">num_elements</span><span class="o">=</span><span class="n">num_elements</span><span class="p">,</span>
+            <span class="n">initial_radius</span><span class="o">=</span><span class="n">radii</span><span class="p">,</span>
+            <span class="n">transpiration_profile</span><span class="o">=</span><span class="n">transpiration_profile</span><span class="p">,</span>
+            <span class="n">photosynthesis_profile</span><span class="o">=</span><span class="n">photosynth_profile</span><span class="p">,</span>
+            <span class="n">sugar_profile</span><span class="o">=</span><span class="n">sugar_profile</span><span class="p">,</span>
+            <span class="n">sugar_loading_profile</span><span class="o">=</span><span class="n">sugar_loading_profile</span><span class="p">,</span>
+            <span class="n">sugar_unloading_profile</span><span class="o">=</span><span class="n">sugar_unloading_profile</span><span class="p">,</span>
+            <span class="n">sugar_target_concentration</span><span class="o">=</span><span class="n">sugar_target_concentration</span><span class="p">,</span>
+            <span class="n">sugar_unloading_slope</span><span class="o">=</span><span class="n">sugar_unloading_slope</span><span class="p">,</span>
+            <span class="n">axial_permeability_profile</span><span class="o">=</span><span class="n">axial_permeability_profile</span><span class="p">,</span>
+            <span class="n">radial_hydraulic_conductivity_profile</span><span class="o">=</span><span class="n">radial_hydr_conductivity</span><span class="p">,</span>
+            <span class="n">elastic_modulus_profile</span><span class="o">=</span><span class="n">elastic_modulus_profile</span><span class="p">,</span>
+            <span class="n">ground_water_potential</span><span class="o">=</span><span class="n">ground_water_potential</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Create an instance of the Tree class with the desired properties.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">outputfname</span> <span class="o">=</span> <span class="s1">&#39;test_&#39;</span>
+<span class="n">outputfname</span> <span class="o">=</span> <span class="n">outputfname</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.nc&quot;</span>
+</pre></div>
+</div>
+<p>Define name of the output file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">outputfile</span><span class="o">=</span><span class="n">outputfname</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Create an instance of the model class.</p>
+</div>
+<div class="section" id="run-the-model">
+<h3>Run the model<a class="headerlink" href="#run-the-model" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">day</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="c1"># set new transpiration rate</span>
+        <span class="n">transpiration_rate</span> <span class="o">=</span> <span class="n">transpiration_profile</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">transpiration_rate</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">transpiration</span><span class="p">[</span><span class="n">ind</span><span class="p">]]</span><span class="o">*</span><span class="mi">10</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">transpiration_rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">transpiration_rate</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">photosynthesis_rate</span> <span class="o">=</span> <span class="n">photosynth_profile</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">photosynthesis_rate</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">photosynthesis</span><span class="p">[</span><span class="n">ind</span><span class="p">]]</span><span class="o">*</span><span class="mi">10</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">photosynthesis_rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">photosynthesis_rate</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">sugar_loading_rate</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">photosynthesis_rate</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">run_scipy</span><span class="p">(</span><span class="n">time_start</span><span class="o">=</span><span class="p">(</span><span class="n">day</span><span class="o">*</span><span class="mi">60</span><span class="o">*</span><span class="mi">60</span><span class="o">*</span><span class="mi">24</span><span class="p">)</span><span class="o">+</span><span class="n">time</span><span class="o">*</span><span class="mi">60</span><span class="o">*</span><span class="mi">60</span><span class="p">,</span> <span class="n">time_end</span><span class="o">=</span><span class="p">(</span><span class="n">day</span><span class="o">*</span><span class="mi">60</span><span class="o">*</span><span class="mi">60</span><span class="o">*</span><span class="mi">24</span><span class="p">)</span><span class="o">+</span><span class="n">time</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">60</span><span class="o">*</span><span class="mi">60</span><span class="p">,</span> <span class="n">ind</span><span class="o">=</span><span class="n">ind</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The model is run by calling the model.run_scipy method repeatedly. The outer loop defines how many days the model is run
+and the inner loop defines the current simulation time in a day.</p>
+<p>In every time step new values for the transpiration rate and photosynthesis rate are set. Note that the sugar_loading_rate is
+set equal to the photosynthesis rate as is required in the current version of the model.</p>
+<p>Finally the model is run from time_start to time_end which is always a 5 minute time interval. Afterwards, the last stage of
+the tree is saved in the model.run_scipy method.</p>
+</div>
 </div>
 </div>
 
@@ -59,7 +208,12 @@
   <ul>
 <li><a class="reference internal" href="#">Instructions to run the model</a><ul>
 <li><a class="reference internal" href="#running-from-main-py">Running from main.py</a></li>
-<li><a class="reference internal" href="#importing-src-model">Importing src.model</a></li>
+<li><a class="reference internal" href="#importing-src-model">Importing src.model</a><ul>
+<li><a class="reference internal" href="#imports">Imports</a></li>
+<li><a class="reference internal" href="#define-tree-properties">Define tree properties</a></li>
+<li><a class="reference internal" href="#run-the-model">Run the model</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

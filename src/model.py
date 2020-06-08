@@ -23,14 +23,12 @@ class Model:
 
     Attributes:
         tree (Tree): instance of the tree class for which the ODEs are solved
-        outputfile (str): name of the file where the output is written
         ncf (netCDF4.Dataset): the output file
     """
 
     def __init__(self, tree: Tree, outputfile: str = "a.nc"):
         self.tree: Tree = tree
-        self.outputfile: str = outputfile
-        self.ncf: Dataset = initialize_netcdf(self, all_variables)
+        self.ncf: Dataset = initialize_netcdf(outputfile, tree.num_elements, all_variables)
 
     def axial_fluxes(self) -> np.ndarray:
         """Calculates axial sap mass flux for every element.
@@ -38,25 +36,27 @@ class Model:
         The axial flux in the xylem and phloem are calculated independently from the sum of bottom and top fluxes
 
         .. math::
-            Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i}
+            Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i} - E
 
         .. math::
-            Q_{ax,bottom,i} = \\frac{k_i \\: A_{ax,i} \\: \\rho_w}{\eta_i \\: l_i}(P_{i+1} - P{i} - P_h)
+            Q_{ax,bottom,i} = \\frac{k_i \\: A_{ax,i} \\: \\rho_w}{\eta_i \\: l_i}(P_{i+1} - P_{i} - P_h)
 
-            Q_{ax,top,i} = \\frac{k_i \\: A_{ax,i+1} \\: \\rho_w}{\eta_i \\: l_i}(P_{i-1} - P{i} + P_h)
+            Q_{ax,top,i} = \\frac{k_i \\: A_{ax,i+1} \\: \\rho_w}{\eta_i \\: l_i}(P_{i-1} - P_{i} + P_h)
 
         where
-
-        :math:`k_i`: axial permeability of the ith element (:math:`m^2`)<br />
-        :math:`A_{ax,i}`: base surface area of xylem or phloem (:math:`m^2`)<br />
-        :math:`\\rho_w`: liquid phase density of water (:math:`\\frac{kg}{m^3}`)<br />
-        :math:`\\eta`: viscosity of the sap in the ith element (:math:`Pa \\: s`)<br/>
-        :math:`l_i`: length (height) of the ith element (:math:`m`)<br />
-        :math:`P_{i}`: Pressure in the ith element (:math:`Pa`)<br />
-        :math:`P_h`: Hydrostatic pressure (:math:`Pa`) :math:`P_h = \\rho_w a_{gravitation} l_i`
+        
+        * :math:`E_i`: transpiration rate of the ith element (:math:`\\frac{kg}{s}`)
+        * :math:`k_i`: axial permeability of the ith element (:math:`m^2`)
+        * :math:`A_{ax,i}`: base surface area of xylem or phloem (:math:`m^2`)
+        * :math:`\\rho_w`: liquid phase density of water (:math:`\\frac{kg}{m^3}`)
+        * :math:`\\eta`: viscosity of the sap in the ith element (:math:`Pa \\: s`)
+        * :math:`l_i`: length (height) of the ith element (:math:`m`)
+        * :math:`P_{i}`: Pressure in the ith element (:math:`Pa`)
+        * :math:`P_h`: Hydrostatic pressure (:math:`Pa`) :math:`P_h = \\rho_w a_{gravitation} l_i`
 
         Returns:
             numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 2]: The axial fluxes in units kg/s
+
         """
 
         pressures: np.ndarray = self.tree.pressure
@@ -105,14 +105,14 @@ class Model:
 
         where
 
-        :math:`L_r`: radial hydraulic conductivity (:math:`\\frac{m}{Pa \\: s}`)<br />
-        :math:`A_{rad,i}`: lateral surface area of the xylem (:math:`m^2`)<br />
-        :math:`\\rho_w`: liquid phase density of water (:math:`\\frac{kg}{m^3}`)<br />
-        :math:`P_{i}`: Pressure in the ith element (:math:`Pa`)<br />
-        :math:`\\sigma`: Reflection coefficient (Van't hoff factor) (unitless)<br />
-        :math:`C_{i}`: Sucrose concentration in the ith element (:math:`\\frac{mol}{m^3}`)<br />
-        :math:`R`: Universal gas constant (:math:`\\frac{J}{K \\: mol}`)<br />
-        :math:`T`: Ambient temperature (:math:`K`)
+        * :math:`L_r`: radial hydraulic conductivity (:math:`\\frac{m}{Pa \\: s}`)
+        * :math:`A_{rad,i}`: lateral surface area of the xylem (:math:`m^2`)
+        * :math:`\\rho_w`: liquid phase density of water (:math:`\\frac{kg}{m^3}`)
+        * :math:`P_{i}`: Pressure in the ith element (:math:`Pa`)
+        * :math:`\\sigma`: Reflection coefficient (Van't hoff factor) (unitless)
+        * :math:`C_{i}`: Sucrose concentration in the ith element (:math:`\\frac{mol}{m^3}`)
+        * :math:`R`: Universal gas constant (:math:`\\frac{J}{K \\: mol}`)
+        * :math:`T`: Ambient temperature (:math:`K`)
 
         The radial flux for the xylem is equal to the additive inverse of the phloem flux
 

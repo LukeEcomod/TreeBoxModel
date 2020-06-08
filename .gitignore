@@ -30,3 +30,7 @@ latexmkrc
 *.out
 *.tex
 *.toc
+*.toctree
+*.txt
+*.doctree
+*.pickle

@@ -263,8 +263,8 @@ class Tree:
                 \\eta = \\eta_w \\exp{\\frac{4.68 \\cdot 0.956 \\Phi_s}{1-0.956 \\Phi_s}}
 
             where
-                :math:`\\eta_w`: Dynamic viscosity of water (:math:`\\eta_w \\approx 0.001`)<br />
-                :math:`\\Phi_s`: Volume fraction of sugar (sucrose) in the phloem sap.
+            * :math:`\\eta_w`: Dynamic viscosity of water (:math:`\\eta_w \\approx 0.001`)
+            * :math:`\\Phi_s`: Volume fraction of sugar (sucrose) in the phloem sap.
 
             References:
                 Morison, Ken R. "Viscosity equations for sucrose solutions: old and new 2002."
