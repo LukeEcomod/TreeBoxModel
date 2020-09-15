@@ -34,3 +34,5 @@ latexmkrc
 *.txt
 *.doctree
 *.pickle
+
+runs/

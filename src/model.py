@@ -39,12 +39,12 @@ class Model:
             Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i} - E
 
         .. math::
-            Q_{ax,bottom,i} = \\frac{k_i \\: A_{ax,i} \\: \\rho_w}{\eta_i \\: l_i}(P_{i+1} - P_{i} - P_h)
+            Q_{ax,bottom,i} = \\frac{k_i \\: A_{ax,i} \\: \\rho_w}{\\eta_i \\: l_i}(P_{i+1} - P_{i} - P_h)
 
-            Q_{ax,top,i} = \\frac{k_i \\: A_{ax,i+1} \\: \\rho_w}{\eta_i \\: l_i}(P_{i-1} - P_{i} + P_h)
+            Q_{ax,top,i} = \\frac{k_i \\: A_{ax,i+1} \\: \\rho_w}{\\eta_i \\: l_i}(P_{i-1} - P_{i} + P_h)
 
         where
-        
+
         * :math:`E_i`: transpiration rate of the ith element (:math:`\\frac{kg}{s}`)
         * :math:`k_i`: axial permeability of the ith element (:math:`m^2`)
         * :math:`A_{ax,i}`: base surface area of xylem or phloem (:math:`m^2`)
@@ -91,7 +91,7 @@ class Model:
 
         Q_ax: np.ndarray = (Q_ax_up + Q_ax_down)
         Q_ax[:, 0] = Q_ax[:, 0] - E.reshape(self.tree.num_elements,)  # subtract transpiration
-        return Q_ax
+        return Q_ax, Q_ax_up, Q_ax_down
 
     def radial_fluxes(self) -> np.ndarray:
         """ Calculates radial sap mass flux for every element.
@@ -101,7 +101,7 @@ class Model:
 
         .. math::
             Q_{radial,phloem} = L_r A_{rad,i}\\rho_{w}
-            [P_{i,xylem} - P_{i,phloem} - \sigma(C_{i,xylem} - C_{i,phloem})RT)]
+            [P_{i,xylem} - P_{i,phloem} - \\sigma(C_{i,xylem} - C_{i,phloem})RT)]
 
         where
 
@@ -152,10 +152,13 @@ class Model:
         """
         # TODO: do not use explicit euler method
         # FIXME: This function needs to be updated so that dr/dt is calculated like in odefun.py
+        dmdt_ax: np.ndarray = np.zeros((self.tree.num_elements, 2))
+        dmdt_rad: np.ndarray = np.zeros((self.tree.num_elements, 2))
         for (ind, time) in enumerate(np.linspace(time_start, time_end, int((time_end-time_start)/dt))):
             # get the change in every elements mass
-            dmdt_ax: np.ndarray = self.axial_fluxes()
-            dmdt_rad: np.ndarray = self.radial_fluxes()
+
+            dmdt_ax, _, _ = self.axial_fluxes()
+            dmdt_rad = self.radial_fluxes()
             if(np.abs(time % output_interval) < 1e-2):
                 print(datetime.datetime.now(), "\t", time)
                 results = tree_properties_to_dict(self.tree)
@@ -206,7 +209,7 @@ class Model:
             results['simulation_time'] = time_end
             results['model_index'] = ind
             results['dqrad'] = self.radial_fluxes()
-            results['dqax'] = self.axial_fluxes()
+            results['dqax'], results['dqax_up'], results['dqax_down'] = self.axial_fluxes()
             write_netcdf(self.ncf, results)
 
         # Initial values from model.tree
@@ -237,5 +240,5 @@ class Model:
         results['simulation_time'] = time_end
         results['model_index'] = ind
         results['dqrad'] = self.radial_fluxes()
-        results['dqax'] = self.axial_fluxes()
+        results['dqax'], results['dqax_up'], results['dqax_down'] = self.axial_fluxes()
         write_netcdf(self.ncf, results)

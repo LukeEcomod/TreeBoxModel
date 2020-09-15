@@ -24,6 +24,10 @@ all_variables = {'height': ['height of the tree', 'm', ("index"), 'f4'],
                  ['radial solution flux', 'kg/s', ("index", "axial_layers", "radial_layers"), 'f4'],
                  'dqax':
                  ['axial solution flux', 'kg/s', ("index", "axial_layers", "radial_layers"), 'f4'],
+                 'dqax_up':
+                 ['upward axial solution flux', 'kg/s', ("index", "axial_layers", "radial_layers"), 'f4'],
+                 'dqax_down':
+                 ['downward axial solution flux', 'kg/s', ("index", "axial_layers", "radial_layers"), 'f4'],
                  'ground_water_potential':
                  ['Ground water potential', 'Pa', ("index"), 'f4'],
                  'pressure':

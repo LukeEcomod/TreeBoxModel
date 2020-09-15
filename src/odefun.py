@@ -46,8 +46,8 @@ def odefun(t: float, y: np.ndarray, model) -> np.ndarray:
                                     - model.tree.sugar_target_concentration)], axis=1), axis=1).reshape(
         model.tree.num_elements, 1)
     model.tree.sugar_unloading_rate[-1] *= 10
-    model.tree.sugar_unloading_rate[0:20] = np.zeros((20, 1))
-    dmdt_ax: np.ndarray = model.axial_fluxes()
+    # model.tree.sugar_unloading_rate[0:20] = np.zeros((20, 1))
+    dmdt_ax: np.ndarray = model.axial_fluxes()[0]
     dmdt_rad: np.ndarray = model.radial_fluxes()
 
     dydt = [np.zeros((model.tree.num_elements, MAX_ELEMENT_COLUMNS)),

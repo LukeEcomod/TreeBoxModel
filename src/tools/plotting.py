@@ -166,6 +166,7 @@ def plot_simulation_results(filename: str, foldername: str) -> None:
             includes the simulation results.
         foldername (str): name of the folder where the figures are saved
     """
+    data = xr.open_dataset(filename)
     params = {'variable_name': '',
               'time_divide': 86400,
               'labels': [['top'], ['bottom'], ['middle']],
@@ -180,33 +181,62 @@ def plot_simulation_results(filename: str, foldername: str) -> None:
 
     plt.rcParams.update({'font.size': 22})
 
-    variable_names = ['pressure', 'pressure', 'sugar_concentration', 'dqax', 'dqax', 'dqrad']
+    variable_names = ['pressure', 'pressure', 'sugar_concentration', 'dqax', 'dqax', 'dqax_up',
+                      'dqax_up', 'dqax_down', 'dqax_down', 'dqrad', 'transpiration_rate',
+                      'photosynthesis_rate']
     filename_endings = ['xylem_pressure', 'phloem_pressure', 'sugar_concentration', 'xylem_dqax', 'phloem_dqax',
-                        'phloem_dqrad']
+                        'xylem_dqax_up', 'phloem_dqax_up', 'xylem_dqax_down', 'phloem_dqax_down',
+                        'phloem_dqrad', 'transpiration_rate', 'photosynthesis_rate']
     titles = ['Xylem pressure', 'Phloem pressure', 'Sugar concentration', 'Axial sap flux in the xylem',
-              'Axial sap flux in the phloem', 'Radial sap flux in the phloem']
+              'Axial sap flux in the phloem', 'Axial upward sap flux in the xylem',
+              'Axial upward sap flux in the phloem',
+              'Axial downward sap flux in the xylem', 'Axial downward sap flux in the phloem',
+              'Radial sap flux in the phloem', 'Transpiration rate',
+              'Photosynthesis rate']
     ylabels = ['Pressure (Mpa)', 'Pressure (Mpa)', 'Sugar concentration (mol/L)', 'Flux (g/s)', 'Flux (g/s)',
-               'Flux (g/s)']
-    variable_divides = [1e6, 1e6, 1e3, 1e-3, 1e-3, 1e-3]
+               'Flux (g/s)', 'Flux (g/s)', 'Flux (g/s)', 'Flux (g/s)', 'Flux (g/s)',
+               'Transpiration rate (g/s)', 'Photosynthesis rate ($\mu$mol/s)']
+    variable_divides = [1e6, 1e6, 1e3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-6]
     end_index = 433
-    start_index = 5
+    start_index = 10
+    bottom = int(data.num_elements[0]-1)
+    middle = int((data.num_elements[0]-1)/2)
+    top = 1
     cuts = [{'index': range(start_index, end_index, 1),
-             'axial_layers': [1, 59, 30],
+             'axial_layers': [top, bottom, middle],
              'radial_layers': [0]},
             {'index': range(start_index, end_index, 1),
-             'axial_layers': [1, 59, 30],
+             'axial_layers': [top, bottom, middle],
              'radial_layers': [1]},
             {'index': range(start_index, end_index, 1),
-             'axial_layers': [1, 59, 30],
+             'axial_layers': [top, bottom, middle],
              'radial_layers': [1]},
             {'index': range(start_index, end_index, 1),
-             'axial_layers': [1, 59, 30],
+             'axial_layers': [top, bottom, middle],
              'radial_layers': [0]},
             {'index': range(start_index, end_index, 1),
-             'axial_layers': [1, 59, 30],
+             'axial_layers': [top, bottom, middle],
              'radial_layers': [1]},
             {'index': range(start_index, end_index, 1),
-             'axial_layers': [1, 59, 30],
+             'axial_layers': [top, bottom, middle],
+             'radial_layers': [0]},
+            {'index': range(start_index, end_index, 1),
+             'axial_layers': [top, bottom, middle],
+             'radial_layers': [1]},
+            {'index': range(start_index, end_index, 1),
+             'axial_layers': [top, bottom, middle],
+             'radial_layers': [0]},
+            {'index': range(start_index, end_index, 1),
+             'axial_layers': [top, bottom, middle],
+             'radial_layers': [1]},
+            {'index': range(start_index, end_index, 1),
+             'axial_layers': [top, bottom, middle],
+             'radial_layers': [1]},
+            {'index': range(start_index, end_index, 1),
+             'axial_layers': [top, bottom, middle],
+             'radial_layers': [0]},
+            {'index': range(start_index, end_index, 1),
+             'axial_layers': [top, bottom, middle],
              'radial_layers': [1]}]
 
     for (ind, var) in enumerate(variable_names):
@@ -217,3 +247,26 @@ def plot_simulation_results(filename: str, foldername: str) -> None:
         params['cut'] = cuts[ind]
         params['filename_ending'] = filename_endings[ind]
         plot_variable_vs_time(filename, params)
+
+
+def plot_ax_up_change(filenames):
+    colors = ['k', 'r', 'b']
+    lines = ['-', '--', '-.']
+    legends = ['base case $k_{base} = 1.5 \\cdot 10^{-12}$ at bottom',
+               filenames[1][15:-3].replace('_', ' '),
+               filenames[2][15:-3].replace('_', ' ')]
+    for (ind, f) in enumerate(filenames):
+        data = xr.open_dataset(f)
+        time = np.asarray(data.simulation_time[10:]/86400)
+        middle_ind = int(data.num_elements[0]/2)
+        dqax_up = np.abs(np.asarray(data.dqax_up[10:, middle_ind, 0])*1e3)
+        plt.plot(time, dqax_up, color=colors[ind], linestyle=lines[ind], label=legends[ind])
+
+    data = xr.open_dataset(filenames[0])
+    time = np.asarray(data.simulation_time[10:]/86400)
+    e = np.sum(np.asarray(data.transpiration_rate[10:, :, 0]), axis=1)*1e3
+    plt.plot(time, e, marker='o', mec='k', mfc='k', markersize=5, linestyle='', label='Total transpiration')
+    plt.title('$|Q_{ax,up}|$ in the xylem')
+    plt.ylabel('Flux (g/s)')
+    plt.xlabel('Time (d)')
+    plt.legend()

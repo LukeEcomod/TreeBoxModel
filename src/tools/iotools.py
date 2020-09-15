@@ -61,7 +61,8 @@ def write_netcdf(ncf: Dataset, results: Dict) -> None:
 
     Args:
         ncf (netCDF4.Dataset): the netcdf file where the results are written
-        results (Dict): the results dictionary. Use the [tree_properties_to_dict](index.html#src.tools.iotools.tree_properties_to_dict) function
+        results (Dict): the results dictionary. Use the
+            [tree_properties_to_dict](index.html#src.tools.iotools.tree_properties_to_dict) function
             to create the dictionary.
 
     """
@@ -99,8 +100,8 @@ def tree_properties_to_dict(tree: Tree) -> Dict:
     properties['sugar_loading_rate'] = tree.sugar_loading_rate
     properties['sugar_unloading_rate'] = tree.sugar_unloading_rate
     properties['axial_permeability'] = tree.axial_permeability
-    properties['radial_hydraulic_conductivity'] = np.repeat(tree.radial_hydraulic_conductivity.reshape(tree.num_elements, 1),
-                                                            2, axis=1)
+    properties['radial_hydraulic_conductivity'] = np.repeat(
+        tree.radial_hydraulic_conductivity.reshape(tree.num_elements, 1), 2, axis=1)
     properties['viscosity'] = tree.viscosity
     properties['elastic_modulus'] = tree.elastic_modulus
     properties['pressure'] = tree.pressure
