@@ -26,9 +26,10 @@ class Model:
         ncf (netCDF4.Dataset): the output file
     """
 
-    def __init__(self, tree: Tree, outputfile: str = "a.nc"):
+    def __init__(self, tree: Tree, outputfile: str = ''):
         self.tree: Tree = tree
-        self.ncf: Dataset = initialize_netcdf(outputfile, tree.num_elements, all_variables)
+        if(len(outputfile) != 0):
+            self.ncf: Dataset = initialize_netcdf(outputfile, tree.num_elements, all_variables)
 
     def axial_fluxes(self) -> np.ndarray:
         """Calculates axial sap mass flux for every element.
@@ -68,10 +69,12 @@ class Model:
         C = np.concatenate([np.zeros((self.tree.num_elements, 1)), C], axis=1)
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
+
         transport_ax: np.ndarray = k/eta/length*RHO_WATER * np.concatenate([self.tree.element_area([], 0),
                                                                             self.tree.element_area([], 1)], axis=1)
 
-        # calculate upward fluxes
+        print(transport_ax)
+        # calculate downward and upward fluxes separately
         Q_ax_down: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
         Q_ax_down[0:-1, :] = (np.diff(pressures, axis=0)
                               - RHO_WATER*GRAVITATIONAL_ACCELERATION*self.tree.element_height[0:-1].repeat(2, axis=1)
@@ -80,7 +83,7 @@ class Model:
         Q_ax_down[-1, 1] = 0  # no flux from phloem to soil
 
         Q_ax_up: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
-        # TODO: Think if there is a better way to achieve this without flipping twice
+
         Q_ax_up[1:, :] = (np.flip(
             np.diff(
                 np.flip(
@@ -128,10 +131,7 @@ class Model:
         Lr: np.ndarray = self.tree.radial_hydraulic_conductivity
         C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
         Q_rad_phloem: np.ndarray = Lr.reshape(
-            (self.tree.num_elements, 1)) * self.tree.element_height.reshape(
-                (self.tree.num_elements, 1)) * 2.0*math.pi*(
-                    self.tree.element_radius[:, 0]+HEARTWOOD_RADIUS).reshape(
-                        self.tree.num_elements, 1) * RHO_WATER * (
+            (self.tree.num_elements, 1)) * self.tree.cross_sectional_area() * RHO_WATER * (
             np.diff(np.flip(pressures, axis=1), axis=1) + C.reshape((self.tree.num_elements, 1))
             * MOLAR_GAS_CONSTANT*TEMPERATURE)
         Q_rad_xylem: np.ndarray = -(Q_rad_phloem.copy())
@@ -150,7 +150,6 @@ class Model:
             output_interval: Time interval in seconds when to save the tree stage
 
         """
-        # TODO: do not use explicit euler method
         # FIXME: This function needs to be updated so that dr/dt is calculated like in odefun.py
         dmdt_ax: np.ndarray = np.zeros((self.tree.num_elements, 2))
         dmdt_rad: np.ndarray = np.zeros((self.tree.num_elements, 2))

@@ -1,11 +1,8 @@
-from ..constants import GRAVITATIONAL_ACCELERATION, HEARTWOOD_RADIUS, RHO_WATER
+from ..constants import GRAVITATIONAL_ACCELERATION, MOLAR_GAS_CONSTANT, RHO_WATER, TEMPERATURE
 import pytest
-import math
 import numpy as np
-from ..tree import Tree
-from ..model import Model
 from .test_tree import test_tree
-from typing import List
+from ..model import Model
 
 
 @pytest.fixture(scope="function")
@@ -29,18 +26,61 @@ def test_model_init(test_model):
 
 
 def test_axial_fluxes(test_model):
-    for i in range(test_model.tree.num_elements):
-        assert test_model.axial_fluxes()[i][0] == pytest.approx(10*math.pi*(1-HEARTWOOD_RADIUS**2)-1, rel=1e6)
+    flux, flux_up, flux_down = test_model.axial_fluxes()
+    transport_ax = np.asarray([10, 20]*test_model.tree.num_elements).reshape(
+        test_model.tree.num_elements, 2)/1/test_model.tree.element_height*RHO_WATER*np.concatenate(
+            [test_model.tree.element_area([], 0),
+             test_model.tree.element_area([], 1)], axis=1)
 
-    assert test_model.axial_fluxes()[-1][1] == pytest.approx(10*math.pi*(1-HEARTWOOD_RADIUS**2)*(-39)-1, rel=1e6)
+    # test flux up
+    for ind, f in enumerate(flux_up):
+        if(ind == 0):
+            assert f[0] == 0
+            assert f[1] == 0
+        else:
+            assert f[0] == transport_ax[ind, 0]*(test_model.tree.pressure[ind-1, 0]-test_model.tree.pressure[ind, 0]
+                                                 + RHO_WATER*GRAVITATIONAL_ACCELERATION
+                                                 * test_model.tree.element_height[ind, 0])
+            assert f[1] == transport_ax[ind, 1]*(test_model.tree.pressure[ind-1, 1]-test_model.tree.pressure[ind, 1]
+                                                 + RHO_WATER*GRAVITATIONAL_ACCELERATION
+                                                 * test_model.tree.element_height[ind, 0])
 
-    # The phloem axial fluxes should sum to zero
-    sumflux: np.ndarray = np.sum(test_model.axial_fluxes(), axis=0)
-    assert sumflux[1] == 0
+    # test flux down
 
-    # The xylem axial fluxes should be equal to the out/ingoing flux between the last element and soil
-    # and the sum of transpiration
-    lastpressure: float = test_model.tree.pressure[-1, 0]
-    transport_coeff: float = 10*1000*math.pi*(1-HEARTWOOD_RADIUS**2)
-    assert sumflux[0] == pytest.approx(
-        (test_model.tree.ground_water_potential - lastpressure)*transport_coeff - 40, rel=1e-6)
+    for ind, f in enumerate(flux_down):
+        if(ind == flux_down.shape[0]-1):
+            assert f[1] == 0
+            assert f[0] == transport_ax[ind, 0]\
+                * (test_model.tree.ground_water_potential - test_model.tree.pressure[39, 0])
+
+        else:
+            assert f[0] == transport_ax[ind, 0]*(test_model.tree.pressure[ind+1, 0]-test_model.tree.pressure[ind, 0]
+                                                 - RHO_WATER*GRAVITATIONAL_ACCELERATION
+                                                 * test_model.tree.element_height[ind, 0])
+            assert f[1] == transport_ax[ind, 1]*(test_model.tree.pressure[ind+1, 1]-test_model.tree.pressure[ind, 1]
+                                                 - RHO_WATER*GRAVITATIONAL_ACCELERATION
+                                                 * test_model.tree.element_height[ind, 0])
+
+    # test full flux now that up and down are correct
+
+    for ind, f in enumerate(flux):
+        assert f[0] == flux_down[ind, 0]+flux_up[ind, 0] - test_model.tree.transpiration_rate[ind, 0]
+        assert f[1] == flux_down[ind, 1] + flux_up[ind, 1]
+
+
+def test_radial_fluxes(test_model):
+
+    flux = test_model.radial_fluxes()
+    N = test_model.tree.num_elements
+    C = test_model.tree.sugar_concentration_as_numpy_array()
+    transport_rad = test_model.tree.radial_hydraulic_conductivity.reshape(N, 1)\
+        * test_model.tree.element_height.reshape(N, 1)\
+        * test_model.tree.cross_sectional_area()*RHO_WATER
+
+    for ind, f in enumerate(flux):
+
+        assert f[0] == pytest.approx(transport_rad[ind, 0]
+                                     * ((test_model.tree.pressure[ind, 1] - test_model.tree.pressure[ind, 0])
+                                        - C[ind, 0]*MOLAR_GAS_CONSTANT*TEMPERATURE), rel=1e-6)
+
+        assert f[1] == pytest.approx(-f[0], rel=1e-6)

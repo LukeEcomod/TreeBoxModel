@@ -24,9 +24,10 @@ class Tree:
 
     Args:
         height (float): total tree height (:math:`m`)
-        initial_radius (List[float] or numpy.ndarray): the radius of the xylem and the phloem (:math:`m`) in this order.
-            See from the [modelled system](modelled_system.html), how the radii should be given. Only two values can
-            be given and the radius of each element is set to be the same in the tree initialization.
+        initial_radius (List[float] or numpy.ndarray): the radius of the heartwood, xylem and phloem (:math:`m`)
+            in this order. See from the [modelled system](modelled_system.html), how the radii should be given.
+            Only three values can be given and the radius of each element is set to be the same in the tree
+            initialization.
         num_elements (int): number of vertical elemenets in the tree.
             The height of an element is determined by
             :math:`\\text{element height} = \\frac{\\text{tree height}}{\\text{number of elements}}`
@@ -79,7 +80,7 @@ class Tree:
             (:math:`Pa`).
         ground_water_potential (float): The water potential in the soil.
         pressure (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): Pressure of each element (:math:`Pa`)
-        element_radius (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): Radius of each element (:math:`m`)
+        element_radius (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 3]): Radius of each element (:math:`m`)
         element_height (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): Height of each element (:math:`m`)
         viscosity (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]): The dynamic viscosity of each element
             (:math:`Pa \\: s`)
@@ -186,22 +187,22 @@ class Tree:
             numpy.ndarray(dtype=float, ndim=2) [len(ind) or self.num_elements, 1]: Base area of either
             the xylem or the phloem (:math:`m^2`)
         """
+        num_elements = self.num_elements
         if ind is None:
             ind = []
         radii = self.element_radius
         if len(ind) > 0:
             radii = radii[ind, :]
+            num_elements = len(ind)
         if column < MAX_ELEMENT_COLUMNS:
-            radii = radii[:, 0:column+1]
+            radii = radii[:, 0:column+2]
 
         # calculate areas for every element column until desired column
-        total_area: np.ndarray = (np.sum(radii[:, 0:column+1], axis=1)+HEARTWOOD_RADIUS)**2
-        total_area = total_area.reshape(self.num_elements, 1)
-        if column == 0:
-            inner_radius: np.ndarray = np.repeat(HEARTWOOD_RADIUS, repeats=self.num_elements)\
-                .reshape(self.num_elements, 1)
-        else:
-            inner_radius: np.ndarray = radii[:, 0:column] + HEARTWOOD_RADIUS
+        total_area: np.ndarray = (np.sum(radii, axis=1))**2
+        total_area = total_area.reshape(num_elements, 1)
+
+        inner_radius: np.ndarray = np.sum(radii[:, 0:column+1], axis=1)
+        inner_radius = inner_radius.reshape(num_elements, 1)
         return math.pi*(total_area - inner_radius**2)
 
     def element_volume(self, ind: List[int] = None, column: int = 0) -> np.ndarray:
@@ -247,7 +248,7 @@ class Tree:
             ind = []
 
         element_heights = self.element_height
-        element_radii = (self.element_radius[:, 0]+HEARTWOOD_RADIUS).reshape(self.num_elements, 1)
+        element_radii = np.sum(self.element_radius[:, 0:2], axis=1).reshape(self.num_elements, 1)
         if len(ind) > 0:
             element_heights = element_heights[ind]
             element_radii = element_radii[ind]
