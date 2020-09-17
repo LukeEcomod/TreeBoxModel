@@ -69,6 +69,7 @@ def write_netcdf(ncf: Dataset, results: Dict) -> None:
     ind: int = ncf['index'].shape[0]
     ncf['index'][ind] = ind
     for key in results.keys():
+        print(key)
         if key in index_dim_vars:
             # variable has dimension ("index")
             ncf[key][ind] = results[key]
