@@ -3,7 +3,7 @@ import math
 import datetime
 from scipy.integrate import solve_ivp
 from .tree import Tree
-from .constants import GRAVITATIONAL_ACCELERATION, HEARTWOOD_RADIUS, RHO_WATER,\
+from .constants import GRAVITATIONAL_ACCELERATION, RHO_WATER,\
     MOLAR_GAS_CONSTANT, TEMPERATURE, MAX_ELEMENT_COLUMNS
 from .tools.iotools import initialize_netcdf, write_netcdf, tree_properties_to_dict
 from .model_variables import all_variables
@@ -73,7 +73,6 @@ class Model:
         transport_ax: np.ndarray = k/eta/length*RHO_WATER * np.concatenate([self.tree.element_area([], 0),
                                                                             self.tree.element_area([], 1)], axis=1)
 
-        print(transport_ax)
         # calculate downward and upward fluxes separately
         Q_ax_down: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
         Q_ax_down[0:-1, :] = (np.diff(pressures, axis=0)
@@ -218,7 +217,7 @@ class Model:
         # broadcast initial values into 1D array
         yinit = np.concatenate([initial_values[0].reshape(self.tree.num_elements*2, order='F'),
                                 initial_values[1].reshape(self.tree.num_elements, order='F'),
-                                initial_values[2].reshape(self.tree.num_elements*2, order='F')])
+                                initial_values[2].reshape(self.tree.num_elements*3, order='F')])
 
         sol = solve_ivp(lambda t, y: odefun(t, y, self), (time_start, time_end), yinit, method='BDF',
                         rtol=1e-6, atol=1e-3)
@@ -228,7 +227,7 @@ class Model:
         sugar_concentration = last_tree_stage[self.tree.num_elements*2:self.tree.num_elements*3].reshape(
             self.tree.num_elements, 1, order='F')
         element_radius = last_tree_stage[self.tree.num_elements*3:].reshape(self.tree.num_elements,
-                                                                            MAX_ELEMENT_COLUMNS, order='F')
+                                                                            MAX_ELEMENT_COLUMNS+1, order='F')
         self.tree.pressure = pressures
         self.tree.update_sugar_concentration(sugar_concentration)
         self.tree.element_radius = element_radius

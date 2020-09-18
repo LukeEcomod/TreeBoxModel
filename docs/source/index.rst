@@ -62,8 +62,6 @@ Modules, Classes \& functions
 
 .. autodata:: src.constants.MAX_ELEMENT_COLUMNS
 
-.. autodata:: src.constants.HEARTWOOD_RADIUS
-
 .. autodata:: src.constants.TEMPERATURE
 
 .. autodata:: src.constants.M_WATER

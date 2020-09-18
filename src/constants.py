@@ -23,10 +23,10 @@ MOLAR_GAS_CONSTANT: float = 8.3145  #: molar gas constant :math:`\left(\frac{J}{
 # HEARTWOOD_RADIUS = 4.44e-2  #: The radius of the heartwood :math:`\left( m \right)`
 # HEARTWOOD_RADIUS = 0.02130682  # tree 1 pyapes
 # HEARTWOOD_RADIUS = 0.03835227  # tree 2 pyapes
-HEARTWOOD_RADIUS = 0.05326705  # tree 3 pyapes
+# HEARTWOOD_RADIUS = 0.05326705  # tree 3 pyapes
 
-XYLEM_RADIUS: float = 0.52e-2  # for nikinmaa
-PHLOEM_RADIUS: float = 1e-3
+# XYLEM_RADIUS: float = 0.52e-2  # for nikinmaa
+# PHLOEM_RADIUS: float = 1e-3
 
 MAX_ELEMENT_COLUMNS: int = 2  #: Max number of columns in the [tree](index.html#src.tree.Tree) class
 

@@ -3,7 +3,7 @@ import math
 from typing import List
 from .solute import Solute
 from .constants import MOLAR_GAS_CONSTANT, M_SUCROSE, RHO_SUCROSE,\
-    HEARTWOOD_RADIUS, MAX_ELEMENT_COLUMNS, TEMPERATURE, VISCOSITY_WATER
+    MAX_ELEMENT_COLUMNS, TEMPERATURE, VISCOSITY_WATER
 
 
 class Tree:
