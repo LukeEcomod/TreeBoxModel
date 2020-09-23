@@ -22,7 +22,7 @@ class Roots:
             effective horizontal root radius in a layer
         conductance_to_soil (numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]):
             typical soil conductance in a layer CHECK UNIT!
-        soil (Soil): instance of the soil class where the roots lie
+        soil (Soil): instance of the soil class where the roots are
 
     """
 

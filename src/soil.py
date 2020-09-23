@@ -11,7 +11,6 @@ class Soil:
         self.water_potential = water_potential
         self.hydraulic_conductivity = hydraulic_conductivity
         self.num_elements = len(self.thickness)
-        self.pressure = np.asarray([0 for i in range(self.num_elements)]).reshape(self.num_elements, 1)
 
     def layer_thickness(self):
         return np.diff(self.depth)
