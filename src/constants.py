@@ -1,6 +1,3 @@
-import math
-
-
 M_WATER: float = 0.0182  #: Molar mass of water :math:`\left(\frac{kg}{mol}\right)`
 
 RHO_WATER: float = 1000  #: density of liquid water :math:`\left(\frac{kg}{m^3}\right)`

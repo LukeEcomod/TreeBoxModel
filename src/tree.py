@@ -1,3 +1,4 @@
+from .roots import Roots
 import numpy as np
 import math
 from typing import List
@@ -95,7 +96,7 @@ class Tree:
                  axial_permeability_profile: List[List[float]],
                  radial_hydraulic_conductivity_profile: List[float],
                  elastic_modulus_profile: List[List[float]],
-                 ground_water_potential: float):
+                 roots: Roots):
 
         # for all arrays/lists the first column is for xylem and the second for phloem
         # all the arrays/lists have num_elements rows
@@ -127,7 +128,11 @@ class Tree:
 
         self.elastic_modulus: np.ndarray = np.asarray(elastic_modulus_profile).reshape(self.num_elements, 2)
 
-        self.ground_water_potential: float = ground_water_potential
+        self.roots = roots
+
+        # set root elements as the roots.num_elements lowest elements
+
+        self.root_elements = np.arange(self.num_elements - self.roots.num_elements, self.num_elements)
 
         # initialize pressure to be 0
         self.pressure = np.asarray([0 for i in range(self.num_elements)]).reshape(self.num_elements, 1)\
