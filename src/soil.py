@@ -18,7 +18,7 @@ class Soil:
     def layer_thickness(self):
         return np.diff(self.depth)
 
-    def soil_conductance(self, roots: Roots, ind: List[int] = None) -> np.ndarray:
+    def conductance(self, roots: Roots, ind: List[int] = None) -> np.ndarray:
         """ Calcualtes the conductance in layer i which is :math:`k_{s,i}` in Volpe et al., (2013)
             which is the horizontal conductance in soil to the soil-root interface.
 

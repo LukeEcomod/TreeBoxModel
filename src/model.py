@@ -3,6 +3,7 @@ import math
 import datetime
 from scipy.integrate import solve_ivp
 from .tree import Tree
+from .soil import Soil
 from .constants import GRAVITATIONAL_ACCELERATION, RHO_WATER,\
     MOLAR_GAS_CONSTANT, TEMPERATURE, MAX_ELEMENT_COLUMNS
 from .tools.iotools import initialize_netcdf, write_netcdf, tree_properties_to_dict
@@ -26,15 +27,16 @@ class Model:
         ncf (netCDF4.Dataset): the output file
     """
 
-    def __init__(self, tree: Tree, outputfile: str = ''):
+    def __init__(self, tree: Tree, soil: Soil, outputfile: str = ''):
         self.tree: Tree = tree
+        self.soil = soil
         if(len(outputfile) != 0):
             self.ncf: Dataset = initialize_netcdf(outputfile, tree.num_elements, all_variables)
 
     def axial_fluxes(self) -> np.ndarray:
         """Calculates axial sap mass flux for every element.
 
-        The axial flux in the xylem and phloem are calculated independently from the sum of bottom and top fluxes
+        The axial flux in the xylem and phloem are calculated independently from the sum of bottom and top fluxes.
 
         .. math::
             Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i} - E
