@@ -80,7 +80,7 @@ class Model:
         Q_ax_down[0:-1, :] = (np.diff(pressures, axis=0)
                               - RHO_WATER*GRAVITATIONAL_ACCELERATION*self.tree.element_height[0:-1].repeat(2, axis=1)
                               ) * transport_ax[0:-1, :]
-        Q_ax_down[-1, 0] = (self.tree.ground_water_potential-pressures[-1, 0]) * transport_ax[-1, 0]
+        Q_ax_down[-1, 0] = 0  # xylem flux to/from soil is handled in odefun
         Q_ax_down[-1, 1] = 0  # no flux from phloem to soil
 
         Q_ax_up: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))

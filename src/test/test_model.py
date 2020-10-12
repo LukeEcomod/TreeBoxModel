@@ -1,12 +1,14 @@
 from ..constants import GRAVITATIONAL_ACCELERATION, MOLAR_GAS_CONSTANT, RHO_WATER, TEMPERATURE
 import pytest
 import numpy as np
-from .test_tree import test_tree
 from ..model import Model
+from .test_tree import test_tree
+from .test_soil import test_soil
+from. test_roots import test_roots
 
 
 @pytest.fixture(scope="function")
-def test_model(test_tree):
+def test_model(test_tree, test_soil):
     # change all viscosities to be 1
     axial_permeability = [10, 20]
     for i in range(test_tree.num_elements):
@@ -16,11 +18,11 @@ def test_model(test_tree):
             test_tree.element_height[i] = 1
             test_tree.pressure[i, j] = i
             test_tree.transpiration_rate[i] = 1
-    return Model(test_tree)
+    return Model(test_tree, test_soil)
 
 
 def test_model_init(test_model):
-    assert test_model.tree.pressure[-1, 0] == 39
+    assert test_model.tree.pressure[test_model.tree.tree_elements[-1], 0] == 39
     assert test_model.tree.viscosity[5, 1] == 1
     assert test_model.tree.axial_permeability[28, 1] == 20
 
@@ -50,8 +52,7 @@ def test_axial_fluxes(test_model):
     for ind, f in enumerate(flux_down):
         if(ind == flux_down.shape[0]-1):
             assert f[1] == 0
-            assert f[0] == transport_ax[ind, 0]\
-                * (test_model.tree.ground_water_potential - test_model.tree.pressure[39, 0])
+            assert f[0] == 0
 
         else:
             assert f[0] == transport_ax[ind, 0]*(test_model.tree.pressure[ind+1, 0]-test_model.tree.pressure[ind, 0]
@@ -64,7 +65,7 @@ def test_axial_fluxes(test_model):
     # test full flux now that up and down are correct
 
     for ind, f in enumerate(flux):
-        assert f[0] == flux_down[ind, 0]+flux_up[ind, 0] - test_model.tree.transpiration_rate[ind, 0]
+        assert f[0] == flux_down[ind, 0] + flux_up[ind, 0] - test_model.tree.transpiration_rate[ind, 0]
         assert f[1] == flux_down[ind, 1] + flux_up[ind, 1]
 
 
