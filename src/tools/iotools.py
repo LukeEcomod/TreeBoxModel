@@ -91,7 +91,6 @@ def tree_properties_to_dict(tree: Tree) -> Dict:
     properties = {}
     properties['height'] = tree.height
     properties['num_elements'] = tree.num_elements
-    properties['ground_water_potential'] = tree.ground_water_potential
     properties['transpiration_rate'] = tree.transpiration_rate
     properties['photosynthesis_rate'] = tree.photosynthesis_rate
     sugar_conc = tree.sugar_concentration_as_numpy_array().reshape(tree.num_elements, 1)

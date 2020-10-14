@@ -137,7 +137,9 @@ class Roots:
 
         ks = self.soil_root_conductance(soil)
         kr = self.root_conductance(soil)
-
-        result = (kr*ks)/(kr+ks)
-        result[np.isnan(result)] = 0.0
+        result = np.zeros((self.num_elements, 1))
+        divisor = kr*ks
+        divider = kr+ks
+        ind = np.where(divider != 0)
+        result[ind] = divisor[ind]/divider[ind]
         return result

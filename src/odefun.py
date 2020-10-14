@@ -28,7 +28,8 @@ def odefun(t: float, y: np.ndarray, model) -> np.ndarray:
       :math:`\\frac{\\text{d(radius)}}{\\text{dt}}`
 
     """
-
+    # suppress divide by zero error so function executes even with divide by zero
+    # np.seterr(divide='ignore', invalid='ignore')
     # Update model tree parameters
     pressures = y[0:model.tree.num_elements*2].reshape(model.tree.num_elements, MAX_ELEMENT_COLUMNS, order='F')
     sugar_concentration = y[model.tree.num_elements*2:model.tree.num_elements*3].reshape(model.tree.num_elements, 1,
@@ -52,15 +53,13 @@ def odefun(t: float, y: np.ndarray, model) -> np.ndarray:
     dydt = [np.zeros((model.tree.num_elements, MAX_ELEMENT_COLUMNS)),
             np.zeros((model.tree.num_elements, 1)),
             np.zeros((model.tree.num_elements, MAX_ELEMENT_COLUMNS+1))]
-
     dydt[0] = model.tree.elastic_modulus/(np.transpose(
         np.array([model.tree.element_volume([], 0),
                   model.tree.element_volume([], 1)])) * RHO_WATER) * (dmdt_ax + dmdt_rad)
-
     # add flux from soil to root xylem (Pa/s)
-    dydt[0][model.tree.root_elements] += model.tree.roots.conductivity(model.soil) *\
-        (model.soil.pressures - model.tree.pressures[model.root_elements])
-
+    dydt[0][0, model.tree.root_elements, 0] += model.tree.roots.conductivity(model.soil)\
+        .reshape(model.tree.roots.num_elements,) *\
+        (model.soil.pressure - model.tree.pressure[model.tree.root_elements, 0])
     dydt[1] = 1.0 / model.tree.element_volume([], 1).reshape(model.tree.num_elements, 1)\
         * (dmdt_ax[:, 1].reshape(model.tree.num_elements, 1)
            * model.tree.sugar_concentration_as_numpy_array()
@@ -68,7 +67,6 @@ def odefun(t: float, y: np.ndarray, model) -> np.ndarray:
            / RHO_WATER
            + model.tree.sugar_loading_rate.reshape(model.tree.num_elements, 1)
            - model.tree.sugar_unloading_rate.reshape(model.tree.num_elements, 1))
-
     dmdt = (dmdt_ax + dmdt_rad)
     dydt[2][:, 0] = 0.0
     dydt[2][:, 1] = ((dmdt[:, 0].reshape(model.tree.num_elements, 1))
