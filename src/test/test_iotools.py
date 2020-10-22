@@ -32,19 +32,19 @@ def ncf(test_model):
 
 def test_ncf_inif(ncf):
     assert ncf.variables['simulation_time'].units == 's'
-    assert ncf.variables['radius'].shape[2] == 140
+    assert ncf.variables['radius'].shape[2] == 45
 
 
 def test_ncf_writer(ncf):
     # add random data to pressures and simTime
-    random_pressure_data = np.random.uniform(size=(2, 140, 2))
+    random_pressure_data = np.random.uniform(size=(2, 45, 2))
     random_simTime_data = np.random.uniform(size=(2, 1))
     results = {'simulation_time': random_simTime_data[0],
-               'pressure': random_pressure_data[0, :, :].reshape(140, 2)}
+               'pressure': random_pressure_data[0, :, :].reshape(45, 2)}
     write_netcdf(ncf, results)
     # write again
     results = {'simulation_time': random_simTime_data[1],
-               'pressure': random_pressure_data[1, :, :].reshape(140, 2)}
+               'pressure': random_pressure_data[1, :, :].reshape(45, 2)}
     write_netcdf(ncf, results)
     # read the netcdf file with xarray
     data = xr.open_dataset('iotools_test.nc')

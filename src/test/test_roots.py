@@ -7,25 +7,25 @@ from .test_soil import test_soil
 
 @pytest.fixture(scope="function")
 def test_roots():
-    num_elements = 100
-    rooting_depth = 2
+    num_elements = 5
+    rooting_depth = 5
 
-    area_density = np.zeros((100, 1))
+    area_density = np.zeros((5, 1))
     area_density[:2] = 10
 
-    effective_radius = np.zeros((100, 1))
+    effective_radius = np.zeros((5, 1))
     effective_radius[:2] = 0.1
 
-    conductance_to_soil = 0.01
+    soil_conductance_scale = 0.01
     return Roots(rooting_depth=rooting_depth,
                  area_density=area_density,
                  effective_radius=effective_radius,
-                 conductance_to_soil=conductance_to_soil,
+                 soil_conductance_scale=soil_conductance_scale,
                  num_elements=num_elements)
 
 
 def test_init(test_roots):
-    assert test_roots.conductance_to_soil == 0.01
+    assert test_roots.soil_conductance_scale == 0.01
     assert any(test_roots.area_density == 10)
 
 
@@ -34,7 +34,7 @@ def test_root_conductance(test_roots, test_soil):
     assert all(result[:2] == 1000)
 
     result_short = test_roots.root_conductance(test_soil, [1, 2])
-    print(result_short)
+
     assert np.array_equal(result_short, np.asarray([1000.0, 0.0]).reshape(2, 1))
 
 

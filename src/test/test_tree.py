@@ -17,8 +17,9 @@ def test_tree(test_roots, test_soil):
     # values from Hölttä et al. (2006)
     # except for transp/photosynth/loading/unloading/sugar profile
     height = 12.0
-    element_height = np.concatenate((np.repeat(0.3, repeats=40), test_soil.layer_thickness().reshape(100,)))
-    num_elements = 140
+    element_height = np.concatenate((np.repeat(0.3, repeats=40),
+                                     test_roots.root_layer_thickness(test_soil).reshape(5,)))
+    num_elements = 45
 
     radii = [0.5, 1, 2]
     transpiration_profile: List[float] = [0 for i in range(num_elements)]
@@ -65,7 +66,7 @@ def test_tree_init(test_tree):
     for i in range(test_tree.num_elements):
         assert test_tree.solutes[i, 1].concentration == 10
 
-    assert np.array_equal(test_tree.root_elements, np.arange(40, 140))
+    assert np.array_equal(test_tree.root_elements, np.arange(40, 45))
     assert np.array_equal(test_tree.tree_elements, np.arange(0, 40))
 
 

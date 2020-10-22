@@ -1,3 +1,4 @@
+from logging import root
 from typing import List
 import numpy as np
 from .soil import Soil
@@ -12,7 +13,7 @@ class Roots:
         area_density (List[float] or numpy.ndarray): surface area of self in given layer per layer
             volume (:math:`\\frac{m^2}{m^3}`)
         effective radius (List[float] or numpy.ndarray): effective horizontal root radius in a layer
-        conductance_to_soil (List[float] or numpy.ndarray): typical soil conductance in a layer.
+        soil_conductance_scale (List[float] or numpy.ndarray): typical soil conductance in a layer.
         num_elements (int): number of elements in the root zone.
 
     Attributes:
@@ -21,7 +22,7 @@ class Roots:
             surface area of self in given layer per layer volume (:math:`\\frac{m^2}{m^3}`)
         effective radius (numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]):
             effective horizontal root radius in a layer
-        conductance_to_soil (numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]):
+        soil_conductance_scale (numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]):
             typical soil conductance in a layer (:math:`s`)
 
     """
@@ -29,13 +30,13 @@ class Roots:
     def __init__(self, rooting_depth: float,
                  area_density: np.ndarray,
                  effective_radius: np.ndarray,
-                 conductance_to_soil: float,
+                 soil_conductance_scale: float,
                  num_elements: int):
 
         self.num_elements = num_elements
         self.area_density: np.ndarray = area_density
         self.effective_radius: np.ndarray = effective_radius
-        self.conductance_to_soil: float = conductance_to_soil
+        self.soil_conductance_scale: float = soil_conductance_scale
         self.rooting_depth: float = rooting_depth
 
     def root_area_index(self, soil: Soil) -> float:
@@ -52,7 +53,8 @@ class Roots:
         Returns:
             float: The root area index (:math:`\\frac{m^2}{m^2}`)
         """
-        return np.sum(self.area_density*soil.layer_thickness())
+        ind = np.where(soil.depth() <= self.rooting_depth)
+        return np.sum(self.area_density*soil.layer_thickness[ind])
 
     def root_conductance(self, soil: Soil, ind: List[int] = None) -> np.ndarray:
         """ calculates to conductance from soil-root interface up to the xylem of the tree which is
@@ -77,17 +79,19 @@ class Roots:
             Volpe, V. et. al., "Root controls on water redistribution and carbon uptake in the soil–plant
             system under current and future climate", Advances in Water Resources, 60, 110-120, 2013.
         """
-        dz = soil.layer_thickness()
 
         if ind is None:
             ind = []
 
         if(len(ind) > 0):
-            return (self.area_density[ind] * dz[ind]/self.conductance_to_soil)\
+            print(self.area_density[ind])
+            print(soil.layer_thickness[ind])
+            return (self.area_density[ind] * soil.layer_thickness[ind]/self.soil_conductance_scale)\
                 .reshape(len(ind), 1)
         else:
-            return (self.area_density * dz / self.conductance_to_soil)\
-                .reshape(self.num_elements, 1)
+            root_ind, _ = np.where(soil.depth() < self.rooting_depth)
+            return (self.area_density * soil.layer_thickness[root_ind].reshape(len(root_ind), 1)
+                    / self.soil_conductance_scale).reshape(self.num_elements, 1)
 
     def soil_root_conductance(self, soil: Soil, ind: List[int] = None) -> np.ndarray:
         """ Calcualtes the conductance in layer i which is :math:`k_{s,i}` in Volpe et al., (2013)
@@ -126,8 +130,10 @@ class Roots:
             result = ((self.rooting_depth/(2*self.root_area_index(soil)*self.effective_radius[ind]))**(1/2)
                       * soil.hydraulic_conductivity[ind]*self.area_density[ind]).reshape(len(ind), 1)
         else:
+            root_ind, _ = np.where(soil.depth() < self.rooting_depth)
             result = ((self.rooting_depth/(2*self.root_area_index(soil)*self.effective_radius))**(1/2)
-                      * soil.hydraulic_conductivity*self.area_density).reshape(self.num_elements, 1)
+                      * soil.hydraulic_conductivity[root_ind].reshape(len(root_ind), 1)*self.area_density)\
+                .reshape(self.num_elements, 1)
 
         result[np.isnan(result)] = 0.0
         return result
@@ -143,3 +149,9 @@ class Roots:
         ind = np.where(divider != 0)
         result[ind] = divisor[ind]/divider[ind]
         return result
+
+    def root_layer_thickness(self, soil: Soil):
+        """ returns the layer thickness from soil until the self.rooting_depth """
+
+        root_ind, _ = np.where(soil.depth() < self.rooting_depth)
+        return soil.layer_thickness[root_ind].reshape(len(root_ind), 1)

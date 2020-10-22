@@ -57,9 +57,10 @@ def odefun(t: float, y: np.ndarray, model) -> np.ndarray:
         np.array([model.tree.element_volume([], 0),
                   model.tree.element_volume([], 1)])) * RHO_WATER) * (dmdt_ax + dmdt_rad)
     # add flux from soil to root xylem (Pa/s)
+
     dydt[0][0, model.tree.root_elements, 0] += model.tree.roots.conductivity(model.soil)\
         .reshape(model.tree.roots.num_elements,) *\
-        (model.soil.pressure - model.tree.pressure[model.tree.root_elements, 0])
+        (model.soil.pressure[:, 0] - model.tree.pressure[model.tree.root_elements, 0])
     dydt[1] = 1.0 / model.tree.element_volume([], 1).reshape(model.tree.num_elements, 1)\
         * (dmdt_ax[:, 1].reshape(model.tree.num_elements, 1)
            * model.tree.sugar_concentration_as_numpy_array()
