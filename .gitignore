@@ -31,7 +31,6 @@ latexmkrc
 *.tex
 *.toc
 *.toctree
-*.txt
 *.doctree
 *.pickle
 
