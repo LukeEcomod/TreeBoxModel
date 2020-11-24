@@ -46,7 +46,7 @@
 <h1>Description of the modelled system<a class="headerlink" href="#description-of-the-modelled-system" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p><img alt="Modelled system" src="../../source/_static/modelled_system.png" /></p>
+<p><img alt="Modelled system" src="_images/modelled_system.png" /></p>
 <p>Modelled system is a 2-dimensional array representation of a tree. Each property of the tree is saved in a NumPy array.
 The first column in each array represents values of the xylem and the second column values of the phloem.
 The rows of the arrays represent vertical elements in the tree. The height of an element (l<sub>i</sub>) is calculated
@@ -61,17 +61,17 @@ in the phloem.</p>
 </div>
 <div class="section" id="input-and-output-of-the-model">
 <h2>Input and output of the model<a class="headerlink" href="#input-and-output-of-the-model" title="Permalink to this headline">¶</a></h2>
-<p><img alt="Model input and output" src="../../source/_static/model_input_output.png" /></p>
+<p><img alt="Model input and output" src="_images/model_input_output.png" /></p>
 <p>See <a class="reference internal" href="instructions_to_run.html"><span class="doc">instructions how to run the model</span></a> how to give the input to the model.</p>
 </div>
 <div class="section" id="the-fluxes-inside-the-tree">
 <h2>The fluxes inside the tree<a class="headerlink" href="#the-fluxes-inside-the-tree" title="Permalink to this headline">¶</a></h2>
-<p><img alt="Fluxes" src="../../source/_static/fluxes.png" /></p>
+<p><img alt="Fluxes" src="_images/fluxes.png" /></p>
 <p>The fluxes shown in the figure above are calculated as follows (the index i refers to rows in any 2D property array in the model). The fluxes are in the units (kg/s)</p>
 <p>$$ Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i} - E_i$$</p>
 <p>$$ Q_{ax,bottom,i} = \frac{k_i \: A_{ax,i} \: \rho_w}{\eta_i \: l_i}(P_{i+1} - P_{i} - P_h) $$</p>
 <p>$$ Q_{ax,top,i} = \frac{k_i \: A_{ax,i+1} \: \rho_w}{\eta_i \: l_i}(P_{i-1} - P_{i} + P_h) $$</p>
-<p>$$ Q_{radial,phloem} = L_r A_{rad,i}\rho_{w} [P_{i,xylem} - P_{i,phloem} - \sigma(C_{i,xylem} - C_{i,phloem})RT)] $$</p>
+<p>$$ Q_{radial,phloem} = L_r A_{rad,i} \rho_{w} [P_{i,xylem} - P_{i,phloem} - \sigma(C_{i,xylem} - C_{i,phloem}) R T)] $$</p>
 <p>$$ Q_{radial,xylem} = -Q_{radial,phloem} $$</p>
 <p>where</p>
 <ul class="simple">
@@ -132,7 +132,7 @@ in the phloem.</p>
 </div>
 <div class="section" id="how-the-element-radii-are-modelled">
 <h2>How the element radii are modelled<a class="headerlink" href="#how-the-element-radii-are-modelled" title="Permalink to this headline">¶</a></h2>
-<p><img alt="Tree dimension" src="../../source/_static/tree.png" /></p>
+<p><img alt="Tree dimension" src="_images/tree.png" /></p>
 <p>The radius of each horizontal element (heartwood, xylem and phloem) are given as the width of the element.
 For example, <strong>given total tree diameter of 10 cm, heartwood radius of 2 cm and 90/10% split between the phloem
 and the xylem</strong>. The traditional radii of each element (distance from the pith) would be</p>

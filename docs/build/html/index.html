@@ -96,13 +96,13 @@
 <a class="reference external" href="https://link.springer.com/article/10.1007/s00468-005-0014-6">Hölttä et. al. 2006</a>
 or <a class="reference external" href="https://academic.oup.com/aob/article/114/4/653/2769025">Nikinmaa et. al., (2014)</a>.</p>
 <p>A sine-like behaviour is assumed for the transpiration and photosynthesis</p>
-<a class="reference external image-reference" href="../../source/_static/transpiration_rate.png"><img alt="Transpiration rate" src="../../source/_static/transpiration_rate.png" /></a>
+<a class="reference external image-reference" href="/_static/transpiration_rate.png"><img alt="Transpiration rate" src="_images/transpiration_rate.png" /></a>
 </div>
 <div class="section" id="module-src.model">
 <span id="modules-classes-functions"></span><h2>Modules, Classes &amp; functions<a class="headerlink" href="#module-src.model" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="src.model.Model">
-<em class="property">class </em><code class="sig-prename descclassname">src.model.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tree</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.tree.Tree" title="src.tree.Tree">src.tree.Tree</a></span></em>, <em class="sig-param"><span class="n">outputfile</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'a.nc'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.Model" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">src.model.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tree</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.tree.Tree" title="src.tree.Tree">src.tree.Tree</a></span></em>, <em class="sig-param"><span class="n">outputfile</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.Model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the next time step for given tree and saves the tree stage.</p>
 <p>Provides functionality for solving the ordinary differential equations (ODE) describing
 the behaviour of the <a class="reference external" href="modelled_system.html">modelled system</a>.</p>
@@ -249,9 +249,10 @@ order of the sub lists should be from the top of the tree (the first sub list) t
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>height</strong> (<em>float</em>) – total tree height (<span class="math notranslate nohighlight">\(m\)</span>)</p></li>
-<li><p><strong>initial_radius</strong> (<em>List</em><em>[</em><em>float</em><em>] or </em><em>numpy.ndarray</em>) – <p>the radius of the xylem and the phloem (<span class="math notranslate nohighlight">\(m\)</span>) in this order.
-See from the <a class="reference external" href="modelled_system.html">modelled system</a>, how the radii should be given. Only two values can
-be given and the radius of each element is set to be the same in the tree initialization.</p>
+<li><p><strong>initial_radius</strong> (<em>List</em><em>[</em><em>float</em><em>] or </em><em>numpy.ndarray</em>) – <p>the radius of the heartwood, xylem and phloem (<span class="math notranslate nohighlight">\(m\)</span>)
+in this order. See from the <a class="reference external" href="modelled_system.html">modelled system</a>, how the radii should be given.
+Only three values can be given and the radius of each element is set to be the same in the tree
+initialization.</p>
 </p></li>
 <li><p><strong>num_elements</strong> (<em>int</em>) – number of vertical elemenets in the tree.
 The height of an element is determined by
@@ -453,7 +454,7 @@ conductivity between the xylem and the phloem (<span class="math notranslate noh
 <dd><p>Radius of each element (<span class="math notranslate nohighlight">\(m\)</span>)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]</p>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 3]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -625,12 +626,6 @@ values of the model ODEs where the elements 0:2 <span class="math notranslate no
 </dd></dl>
 
 <dl class="py data">
-<dt id="src.constants.HEARTWOOD_RADIUS">
-<code class="sig-prename descclassname">src.constants.</code><code class="sig-name descname">HEARTWOOD_RADIUS</code><em class="property"> = 0.0444</em><a class="headerlink" href="#src.constants.HEARTWOOD_RADIUS" title="Permalink to this definition">¶</a></dt>
-<dd><p>The radius of the heartwood <span class="math notranslate nohighlight">\(\left( m \right)\)</span></p>
-</dd></dl>
-
-<dl class="py data">
 <dt id="src.constants.TEMPERATURE">
 <code class="sig-prename descclassname">src.constants.</code><code class="sig-name descname">TEMPERATURE</code><em class="property">: float</em><em class="property"> = 298.0</em><a class="headerlink" href="#src.constants.TEMPERATURE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Temperature of the tree <span class="math notranslate nohighlight">\(\left( K \right)\)</span></p>
@@ -737,7 +732,8 @@ The possible NETCDF dimensions are “index”, “radial_layers” and “axial
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ncf</strong> (<em>netCDF4.Dataset</em>) – the netcdf file where the results are written</p></li>
-<li><p><strong>results</strong> (<em>Dict</em>) – the results dictionary. Use the <a class="reference external" href="index.html#src.tools.iotools.tree_properties_to_dict">tree_properties_to_dict</a> function
+<li><p><strong>results</strong> (<em>Dict</em>) – the results dictionary. Use the
+<a class="reference external" href="index.html#src.tools.iotools.tree_properties_to_dict">tree_properties_to_dict</a> function
 to create the dictionary.</p></li>
 </ul>
 </dd>
@@ -745,6 +741,11 @@ to create the dictionary.</p></li>
 </dd></dl>
 
 <span class="target" id="module-src.tools.plotting"></span><dl class="py function">
+<dt id="src.tools.plotting.plot_ax_up_change">
+<code class="sig-prename descclassname">src.tools.plotting.</code><code class="sig-name descname">plot_ax_up_change</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filenames</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.tools.plotting.plot_ax_up_change" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt id="src.tools.plotting.plot_phloem_pressure_top_bottom">
 <code class="sig-prename descclassname">src.tools.plotting.</code><code class="sig-name descname">plot_phloem_pressure_top_bottom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#src.tools.plotting.plot_phloem_pressure_top_bottom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the phloem pressure at the top and bottom of the tree.</p>

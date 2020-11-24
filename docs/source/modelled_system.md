@@ -4,7 +4,7 @@ Description of the modelled system
 Introduction
 ------------
 
-![Modelled system](../_static/modelled_system.png "modelled system")
+![Modelled system](/_static/modelled_system.png "modelled system")
 
 
 Modelled system is a 2-dimensional array representation of a tree. Each property of the tree is saved in a NumPy array. 
@@ -25,14 +25,14 @@ in the phloem.
 
 Input and output of the model
 -----------------------------
-![Model input and output](../../source/_static/model_input_output.png "model input and output")
+![Model input and output](/_static/model_input_output.png "model input and output")
 
 See [instructions how to run the model](instructions_to_run.md) how to give the input to the model.
 
 The fluxes inside the tree
 -------------------------------------------------------------------------------
 
-![Fluxes](../../source/_static/fluxes.png "calculated fluxes in the model")
+![Fluxes](/_static/fluxes.png "calculated fluxes in the model")
 
 The fluxes shown in the figure above are calculated as follows (the index i refers to rows in any 2D property array in the model). The fluxes are in the units (kg/s)
 
@@ -116,7 +116,7 @@ where
 
 How the element radii are modelled
 -------------------------------------------------
-![Tree dimension](../../source/_static/tree.png "definition of tree radii")
+![Tree dimension](/_static/tree.png "definition of tree radii")
 
 The radius of each horizontal element (heartwood, xylem and phloem) are given as the width of the element.
 For example, **given total tree diameter of 10 cm, heartwood radius of 2 cm and 90/10% split between the phloem
