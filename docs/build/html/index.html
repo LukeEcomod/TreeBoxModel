@@ -102,7 +102,7 @@ or <a class="reference external" href="https://academic.oup.com/aob/article/114/
 <span id="modules-classes-functions"></span><h2>Modules, Classes &amp; functions<a class="headerlink" href="#module-src.model" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="src.model.Model">
-<em class="property">class </em><code class="sig-prename descclassname">src.model.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tree</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.tree.Tree" title="src.tree.Tree">src.tree.Tree</a></span></em>, <em class="sig-param"><span class="n">outputfile</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'a.nc'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.Model" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">src.model.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tree</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.tree.Tree" title="src.tree.Tree">src.tree.Tree</a></span></em>, <em class="sig-param"><span class="n">soil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.soil.Soil" title="src.soil.Soil">src.soil.Soil</a></span></em>, <em class="sig-param"><span class="n">outputfile</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.Model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the next time step for given tree and saves the tree stage.</p>
 <p>Provides functionality for solving the ordinary differential equations (ODE) describing
 the behaviour of the <a class="reference external" href="modelled_system.html">modelled system</a>.</p>
@@ -140,7 +140,7 @@ the behaviour of the <a class="reference external" href="modelled_system.html">m
 <dt id="src.model.Model.axial_fluxes">
 <code class="sig-name descname">axial_fluxes</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.model.Model.axial_fluxes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates axial sap mass flux for every element.</p>
-<p>The axial flux in the xylem and phloem are calculated independently from the sum of bottom and top fluxes</p>
+<p>The axial flux in the xylem and phloem are calculated independently from the sum of bottom and top fluxes.</p>
 <div class="math notranslate nohighlight">
 \[Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i} - E\]</div>
 <div class="math notranslate nohighlight">
@@ -166,6 +166,36 @@ the behaviour of the <a class="reference external" href="modelled_system.html">m
 <dl class="py method">
 <dt id="src.model.Model.radial_fluxes">
 <code class="sig-name descname">radial_fluxes</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.model.Model.radial_fluxes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates radial sap mass flux for every element.</p>
+<p>The radial flux for the phloem of the ith axial is calculated similar to
+<a class="reference external" href="https://link.springer.com/article/10.1007/s00468-005-0014-6">Hölttä et. al. 2006</a></p>
+<div class="math notranslate nohighlight">
+\[Q_{radial,phloem} = L_r A_{rad,i}\rho_{w}
+[P_{i,xylem} - P_{i,phloem} - \sigma(C_{i,xylem} - C_{i,phloem})RT)]\]</div>
+<p>where</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(L_r\)</span>: radial hydraulic conductivity (<span class="math notranslate nohighlight">\(\frac{m}{Pa \: s}\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(A_{rad,i}\)</span>: lateral surface area of the xylem (<span class="math notranslate nohighlight">\(m^2\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(\rho_w\)</span>: liquid phase density of water (<span class="math notranslate nohighlight">\(\frac{kg}{m^3}\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(P_{i}\)</span>: Pressure in the ith element (<span class="math notranslate nohighlight">\(Pa\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(\sigma\)</span>: Reflection coefficient (Van’t hoff factor) (unitless)</p></li>
+<li><p><span class="math notranslate nohighlight">\(C_{i}\)</span>: Sucrose concentration in the ith element (<span class="math notranslate nohighlight">\(\frac{mol}{m^3}\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(R\)</span>: Universal gas constant (<span class="math notranslate nohighlight">\(\frac{J}{K \: mol}\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(T\)</span>: Ambient temperature (<span class="math notranslate nohighlight">\(K\)</span>)</p></li>
+</ul>
+<p>The radial flux for the xylem is equal to the additive inverse of the phloem flux</p>
+<div class="math notranslate nohighlight">
+\[Q_{radial,xylem} = -Q_{radial,phloem}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 2]</em> – The radial fluxes in units kg/s</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.model.Model.root_fluxes">
+<code class="sig-name descname">root_fluxes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.model.Model.root_fluxes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates radial sap mass flux for every element.</p>
 <p>The radial flux for the phloem of the ith axial is calculated similar to
 <a class="reference external" href="https://link.springer.com/article/10.1007/s00468-005-0014-6">Hölttä et. al. 2006</a></p>
@@ -222,8 +252,8 @@ the time interval into multiple sub intervals.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>time_start</strong> (<em>float</em>) – Time in seconds where to start the simulation.</p></li>
 <li><p><strong>time_ned</strong> (<em>float</em>) – Time in seconds where to end the simulation.</p></li>
-<li><p><strong>ind</strong> (<em>int</em>) – index which refers to the index in model.outputfile.
-The last stage of the tree is saved to model.outputfile[ind].</p></li>
+<li><p><strong>ind</strong> (<em>int</em>) – index which refers to the index in self.outputfile.
+The last stage of the tree is saved to self.outputfile[ind].</p></li>
 </ul>
 </dd>
 </dl>
@@ -233,7 +263,7 @@ The last stage of the tree is saved to model.outputfile[ind].</p></li>
 
 <span class="target" id="module-src.tree"></span><dl class="py class">
 <dt id="src.tree.Tree">
-<em class="property">class </em><code class="sig-prename descclassname">src.tree.</code><code class="sig-name descname">Tree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">height</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">initial_radius</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">num_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">transpiration_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">photosynthesis_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_loading_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_unloading_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_target_concentration</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">sugar_unloading_slope</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">axial_permeability_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>float<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">radial_hydraulic_conductivity_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">elastic_modulus_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>float<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ground_water_potential</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.tree.Tree" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">src.tree.</code><code class="sig-name descname">Tree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">height</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">element_height</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">initial_radius</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">num_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">transpiration_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">photosynthesis_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_loading_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_unloading_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_target_concentration</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">sugar_unloading_slope</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">axial_permeability_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>float<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">radial_hydraulic_conductivity_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">elastic_modulus_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>float<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">roots</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.roots.Roots" title="src.roots.Roots">src.roots.Roots</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.tree.Tree" title="Permalink to this definition">¶</a></dt>
 <dd><p>Model of a tree.</p>
 <p>Provides properties and functionality for saving and editing the modelled tree. Arguments whose
 type is List[float] or List[List[float]] are converted to numpy.ndarray with numpy.asarray method.
@@ -249,9 +279,10 @@ order of the sub lists should be from the top of the tree (the first sub list) t
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>height</strong> (<em>float</em>) – total tree height (<span class="math notranslate nohighlight">\(m\)</span>)</p></li>
-<li><p><strong>initial_radius</strong> (<em>List</em><em>[</em><em>float</em><em>] or </em><em>numpy.ndarray</em>) – <p>the radius of the xylem and the phloem (<span class="math notranslate nohighlight">\(m\)</span>) in this order.
-See from the <a class="reference external" href="modelled_system.html">modelled system</a>, how the radii should be given. Only two values can
-be given and the radius of each element is set to be the same in the tree initialization.</p>
+<li><p><strong>initial_radius</strong> (<em>List</em><em>[</em><em>float</em><em>] or </em><em>numpy.ndarray</em>) – <p>the radius of the heartwood, xylem and phloem (<span class="math notranslate nohighlight">\(m\)</span>)
+in this order. See from the <a class="reference external" href="modelled_system.html">modelled system</a>, how the radii should be given.
+Only three values can be given and the radius of each element is set to be the same in the tree
+initialization.</p>
 </p></li>
 <li><p><strong>num_elements</strong> (<em>int</em>) – number of vertical elemenets in the tree.
 The height of an element is determined by
@@ -453,7 +484,7 @@ conductivity between the xylem and the phloem (<span class="math notranslate noh
 <dd><p>Radius of each element (<span class="math notranslate nohighlight">\(m\)</span>)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 2]</p>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 3]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -588,7 +619,213 @@ the order is from top of the tree (first element, new_concentration[0]) to botto
 
 </dd></dl>
 
-<span class="target" id="module-src.solute"></span><dl class="py function">
+<span class="target" id="module-src.solute"></span><span class="target" id="module-src.soil"></span><dl class="py class">
+<dt id="src.soil.Soil">
+<em class="property">class </em><code class="sig-prename descclassname">src.soil.</code><code class="sig-name descname">Soil</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer_thickness</span></em>, <em class="sig-param"><span class="n">pressure</span></em>, <em class="sig-param"><span class="n">hydraulic_conductivity</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.soil.Soil" title="Permalink to this definition">¶</a></dt>
+<dd><p>”
+Model of a soil. Each array should have the same length except for the depth
+array whose length should be one higher than all the other arrays</p>
+<dl class="py method">
+<dt id="src.soil.Soil.depth">
+<code class="sig-name descname">depth</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.soil.Soil.depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the midpoint of every soil element</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-src.roots"></span><dl class="py class">
+<dt id="src.roots.Roots">
+<em class="property">class </em><code class="sig-prename descclassname">src.roots.</code><code class="sig-name descname">Roots</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rooting_depth</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">area_density</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">effective_radius</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">soil_conductance_scale</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">area_per_tree</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">num_elements</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.roots.Roots" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Model of the root system of the tree. The number of elements (layers) is calculated from the length</dt><dd><p>of the area density variable. All the arrays should have the same length.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rooting_depth</strong> (<em>float</em>) – depth of the root system in the soil (<span class="math notranslate nohighlight">\(m\)</span>)</p></li>
+<li><p><strong>area_density</strong> (<em>List</em><em>[</em><em>float</em><em>] or </em><em>numpy.ndarray</em>) – surface area of roots in given layer per tree</p></li>
+<li><p><strong>per soil layer thickness</strong> (<em>and</em>) – </p></li>
+<li><p><strong>radius</strong> (<em>effective</em>) – effective horizontal root radius in a layer</p></li>
+<li><p><strong>soil_conductance_scale</strong> (<em>List</em><em>[</em><em>float</em><em>] or </em><em>numpy.ndarray</em>) – typical soil conductance in a layer.</p></li>
+<li><p><strong>area_per_tree</strong> (<em>float</em>) – area of soil that the tree takes. Used in calculating root area density.</p></li>
+<li><p><strong>num_elements</strong> (<em>int</em>) – number of elements in the root zone.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="src.roots.Roots.rooting_depth">
+<code class="sig-name descname">rooting_depth</code><a class="headerlink" href="#src.roots.Roots.rooting_depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>depth of the root system in the soil (<span class="math notranslate nohighlight">\(m\)</span>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.roots.Roots.area_density">
+<code class="sig-name descname">area_density</code><a class="headerlink" href="#src.roots.Roots.area_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>surface area of roots in given layer per tree and per soil layer thickness (<span class="math notranslate nohighlight">\(\frac{m^2}{m}\)</span>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">effective radius</code></dt>
+<dd><p>effective horizontal root radius in a layer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.roots.Roots.soil_conductance_scale">
+<code class="sig-name descname">soil_conductance_scale</code><a class="headerlink" href="#src.roots.Roots.soil_conductance_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>typical soil to root xylem conductance in a layer (<span class="math notranslate nohighlight">\(s\)</span>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="src.roots.Roots.area_per_tree">
+<code class="sig-name descname">area_per_tree</code><a class="headerlink" href="#src.roots.Roots.area_per_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Surface area ground that the tree takes. Used in calculating root area density.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.roots.Roots.conductivity">
+<code class="sig-name descname">conductivity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">soil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.soil.Soil" title="src.soil.Soil">src.soil.Soil</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.roots.Roots.conductivity" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculates the total conductivity in each root/soil layer</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.roots.Roots.layer_depth">
+<code class="sig-name descname">layer_depth</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">soil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.soil.Soil" title="src.soil.Soil">src.soil.Soil</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.roots.Roots.layer_depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the midpoint depth of every layer that has roots</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.roots.Roots.layer_thickness">
+<code class="sig-name descname">layer_thickness</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">soil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.soil.Soil" title="src.soil.Soil">src.soil.Soil</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.roots.Roots.layer_thickness" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the layer thickness from soil until the self.rooting_depth</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.roots.Roots.root_area_index">
+<code class="sig-name descname">root_area_index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">soil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.soil.Soil" title="src.soil.Soil">src.soil.Soil</a></span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#src.roots.Roots.root_area_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the root area index i.e.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>:math:`RAI = \frac{\sum_{i=1}^{N} B_i \Delta z_i}{A_{tree}} `
+
+where :math:`B_i` is the root area density, :math:`\Delta z_i` is the thickness of layer i
+and  :math:`A_{tree}` is the area of ground that the tree takes.
+
+NB! the soil depth must match the depth for which Roots.area_density is given.
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>soil</strong> (<a class="reference internal" href="#src.soil.Soil" title="src.soil.Soil"><em>Soil</em></a>) – Instance of the soil unit class. The soil layer thicknesses is used in calculation.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>float</em> – The root area index (<span class="math notranslate nohighlight">\(\frac{m^2}{m^2}\)</span>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.roots.Roots.root_conductance">
+<code class="sig-name descname">root_conductance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">soil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.soil.Soil" title="src.soil.Soil">src.soil.Soil</a></span></em>, <em class="sig-param"><span class="n">ind</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.roots.Roots.root_conductance" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>calculates to conductance from soil-root interface up to the xylem of the tree which is</dt><dd><p><span class="math notranslate nohighlight">\(k_{r,i}\)</span> in Volpe et al., (2013).</p>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>:math:`k_{r,i} = \frac{B_i \Delta z_i}{\beta}`
+
+where :math:`B_i` is the root area density, :math:`\Delta z_i` is the thickness of layer i
+and :math:`\beta` is &quot;typical root to soil conductance&quot; in Volpe et. al., (2013)
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soil</strong> (<a class="reference internal" href="#src.soil.Soil" title="src.soil.Soil"><em>Soil</em></a>) – Instance of the soil unit class. The soil layer thicknesses is used in calculation.</p></li>
+<li><p><strong>ind</strong> (<em>List</em><em>[</em><em>int</em><em>] or </em><em>numpy.ndarray</em><em>(</em><em>dtype=int</em><em>, </em><em>ndim=1</em><em>)</em><em>, </em><em>optional</em>) – the indices of the elements
+for which conductance is calculated. If no ind is given, the
+cross-sectional area is calculated for every element.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>numpy.ndarray(dtype=float, ndim=2) [len(ind) or self.num_elements, 1]</em> – conductance from
+root-soil interface to root xylem (<span class="math notranslate nohighlight">\(s^{-1}\)</span>)</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>Volpe, V. et. al., “Root controls on water redistribution and carbon uptake in the soil–plant
+system under current and future climate”, Advances in Water Resources, 60, 110-120, 2013.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.roots.Roots.soil_elements">
+<code class="sig-name descname">soil_elements</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">soil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.soil.Soil" title="src.soil.Soil">src.soil.Soil</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.roots.Roots.soil_elements" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="src.roots.Roots.soil_root_conductance">
+<code class="sig-name descname">soil_root_conductance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">soil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.soil.Soil" title="src.soil.Soil">src.soil.Soil</a></span></em>, <em class="sig-param"><span class="n">ind</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.roots.Roots.soil_root_conductance" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Calculates the conductance in layer i which is <span class="math notranslate nohighlight">\(k_{s,i}\)</span> in Volpe et al., (2013)</dt><dd><p>which is the horizontal conductance in soil to the soil-root interface.</p>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>:math:`k_{s,i} = \alpha K_i B_i`
+
+where :math:`K_i` is the water hydraulic conductivity in layer i,
+:math:`B_i` is the root area density in layer i and
+
+:math:`\alpha = \left(\frac{L}{2RAI \cdot r_i}\right)^{1/2}`
+
+where :math:`L` is the rooting depth, RAI is the root area index and :math:`r_i`
+is the effective root radius in layer i.
+TODO: check that effective radius is the average root radius
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soil</strong> (<a class="reference internal" href="#src.soil.Soil" title="src.soil.Soil"><em>Soil</em></a>) – Instance of the soil unit class. The soil layer thicknesses is used in calculation.</p></li>
+<li><p><strong>ind</strong> (<em>List</em><em>[</em><em>int</em><em>] or </em><em>numpy.ndarray</em><em>(</em><em>dtype=int</em><em>, </em><em>ndim=1</em><em>)</em><em>, </em><em>optional</em>) – the indices of the elements
+for which conductance is calculated. If no ind is given, the
+cross-sectional area is calculated for every element.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>numpy.ndarray(dtype=float, ndim=2) [len(ind) or self.num_elements, 1]</em> – conductance from
+root-soil interface to root xylem (<span class="math notranslate nohighlight">\(s^{-1}\)</span>)</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>Volpe, V. et. al., “Root controls on water redistribution and carbon uptake in the soil–plant
+system under current and future climate”, Advances in Water Resources, 60, 110-120, 2013.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
 <dt id="src.odefun.odefun">
 <code class="sig-prename descclassname">src.odefun.</code><code class="sig-name descname">odefun</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">y</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.odefun.odefun" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the right hand side of the model ODEs.</p>
@@ -622,12 +859,6 @@ values of the model ODEs where the elements 0:2 <span class="math notranslate no
 <dt id="src.constants.MAX_ELEMENT_COLUMNS">
 <code class="sig-prename descclassname">src.constants.</code><code class="sig-name descname">MAX_ELEMENT_COLUMNS</code><em class="property">: int</em><em class="property"> = 2</em><a class="headerlink" href="#src.constants.MAX_ELEMENT_COLUMNS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Max number of columns in the <a class="reference external" href="index.html#src.tree.Tree">tree</a> class</p>
-</dd></dl>
-
-<dl class="py data">
-<dt id="src.constants.HEARTWOOD_RADIUS">
-<code class="sig-prename descclassname">src.constants.</code><code class="sig-name descname">HEARTWOOD_RADIUS</code><em class="property"> = 0.0444</em><a class="headerlink" href="#src.constants.HEARTWOOD_RADIUS" title="Permalink to this definition">¶</a></dt>
-<dd><p>The radius of the heartwood <span class="math notranslate nohighlight">\(\left( m \right)\)</span></p>
 </dd></dl>
 
 <dl class="py data">
@@ -691,7 +922,7 @@ values of the model ODEs where the elements 0:2 <span class="math notranslate no
 
 <span class="target" id="module-src.tools.iotools"></span><dl class="py function">
 <dt id="src.tools.iotools.initialize_netcdf">
-<code class="sig-prename descclassname">src.tools.iotools.</code><code class="sig-name descname">initialize_netcdf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">axial_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">variables</span><span class="p">:</span> <span class="n">Dict</span></em><span class="sig-paren">)</span> &#x2192; netCDF4._netCDF4.Dataset<a class="headerlink" href="#src.tools.iotools.initialize_netcdf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">src.tools.iotools.</code><code class="sig-name descname">initialize_netcdf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">axial_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">soil_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">root_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">variables</span><span class="p">:</span> <span class="n">Dict</span></em><span class="sig-paren">)</span> &#x2192; netCDF4._netCDF4.Dataset<a class="headerlink" href="#src.tools.iotools.initialize_netcdf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes a netcdf file to be ready for saving simulation results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -737,7 +968,8 @@ The possible NETCDF dimensions are “index”, “radial_layers” and “axial
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ncf</strong> (<em>netCDF4.Dataset</em>) – the netcdf file where the results are written</p></li>
-<li><p><strong>results</strong> (<em>Dict</em>) – the results dictionary. Use the <a class="reference external" href="index.html#src.tools.iotools.tree_properties_to_dict">tree_properties_to_dict</a> function
+<li><p><strong>results</strong> (<em>Dict</em>) – the results dictionary. Use the
+<a class="reference external" href="index.html#src.tools.iotools.tree_properties_to_dict">tree_properties_to_dict</a> function
 to create the dictionary.</p></li>
 </ul>
 </dd>
@@ -745,6 +977,11 @@ to create the dictionary.</p></li>
 </dd></dl>
 
 <span class="target" id="module-src.tools.plotting"></span><dl class="py function">
+<dt id="src.tools.plotting.plot_ax_up_change">
+<code class="sig-prename descclassname">src.tools.plotting.</code><code class="sig-name descname">plot_ax_up_change</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filenames</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.tools.plotting.plot_ax_up_change" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt id="src.tools.plotting.plot_phloem_pressure_top_bottom">
 <code class="sig-prename descclassname">src.tools.plotting.</code><code class="sig-name descname">plot_phloem_pressure_top_bottom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#src.tools.plotting.plot_phloem_pressure_top_bottom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the phloem pressure at the top and bottom of the tree.</p>

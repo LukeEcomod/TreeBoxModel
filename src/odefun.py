@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from .constants import RHO_WATER, MAX_ELEMENT_COLUMNS
+from .constants import GRAVITATIONAL_ACCELERATION, RHO_WATER, MAX_ELEMENT_COLUMNS
 
 
 def odefun(t: float, y: np.ndarray, model) -> np.ndarray:
@@ -49,18 +49,40 @@ def odefun(t: float, y: np.ndarray, model) -> np.ndarray:
     model.tree.sugar_unloading_rate[model.tree.root_elements] *= 10
     dmdt_ax: np.ndarray = model.axial_fluxes()[0]
     dmdt_rad: np.ndarray = model.radial_fluxes()
+    dmdt_root: np.ndarray = model.root_fluxes()
 
     dydt = [np.zeros((model.tree.num_elements, MAX_ELEMENT_COLUMNS)),
             np.zeros((model.tree.num_elements, 1)),
             np.zeros((model.tree.num_elements, MAX_ELEMENT_COLUMNS+1))]
     dydt[0] = model.tree.elastic_modulus/(np.transpose(
         np.array([model.tree.element_volume([], 0),
-                  model.tree.element_volume([], 1)])) * RHO_WATER) * (dmdt_ax + dmdt_rad)
+                  model.tree.element_volume([], 1)])) * RHO_WATER) * (dmdt_ax + dmdt_rad + dmdt_root)
     # add flux from soil to root xylem (Pa/s)
+    #  dpdt_root = model.tree.elastic_modulus[model.tree.root_elements, 0].reshape(model.tree.roots.num_elements, 1)\
+    #      / (model.tree.element_volume(model.tree.root_elements, 0) * RHO_WATER
+    #         * GRAVITATIONAL_ACCELERATION) *\
+    #      model.tree.roots.conductivity(model.soil).reshape(model.tree.roots.num_elements, 1) *\
+    #      (model.soil.pressure[model.tree.roots.soil_elements(model.soil), 0].reshape(model.tree.roots.num_elements, 1)
+    #       - model.tree.pressure[model.tree.root_elements, 0].reshape(model.tree.roots.num_elements, 1))
 
-    dydt[0][0, model.tree.root_elements, 0] += model.tree.roots.conductivity(model.soil)\
-        .reshape(model.tree.roots.num_elements,) *\
-        (model.soil.pressure[:, 0] - model.tree.pressure[model.tree.root_elements, 0])
+    #  Q_root = dpdt_root/model.tree.elastic_modulus[model.tree.root_elements, 0]\
+    #      .reshape(model.tree.roots.num_elements, 1)\
+    #      * (model.tree.element_volume(model.tree.root_elements, 0)) * RHO_WATER
+    # print(t)
+    # print(np.sum(Q_root))
+    # print(np.sum(model.tree.transpiration_rate))
+    # print(dpdt_root.shape)
+    # print(Q_root.shape)
+    # print((model.tree.elastic_modulus[model.tree.root_elements, 0] / np.transpose(
+    #     np.array([model.tree.element_volume(model.tree.root_elements, 0)]) * RHO_WATER
+    #     * GRAVITATIONAL_ACCELERATION
+    # )).shape)
+    # print(model.tree.element_volume(model.tree.root_elements, 0).shape)
+    # print(model.tree.elastic_modulus[model.tree.root_elements, 0].shape)
+
+    # print(dpdt_root)
+    # print(np.sum(dpdt_root/(RHO_WATER*GRAVITATIONAL_ACCELERATION)*1e3/86400))
+    # dydt[0][0, model.tree.root_elements, 0] += dpdt_root.reshape(model.tree.roots.num_elements, )
     dydt[1] = 1.0 / model.tree.element_volume([], 1).reshape(model.tree.num_elements, 1)\
         * (dmdt_ax[:, 1].reshape(model.tree.num_elements, 1)
            * model.tree.sugar_concentration_as_numpy_array()

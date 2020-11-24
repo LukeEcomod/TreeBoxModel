@@ -138,8 +138,8 @@ class Tree:
         self.pressure = np.asarray([0 for i in range(self.num_elements)]).reshape(self.num_elements, 1)\
             .repeat(2, axis=1)
 
-        self.pressure[:, 1] = (self.sugar_concentration_as_numpy_array()*MOLAR_GAS_CONSTANT*TEMPERATURE
-                               ).reshape(self.num_elements,)
+        # self.pressure[:, 1] = (self.sugar_concentration_as_numpy_array()*MOLAR_GAS_CONSTANT*TEMPERATURE
+        #                        ).reshape(self.num_elements,)
 
         # calculate radius and height for every element in the tree
         self.element_radius: np.ndarray = np.asarray([initial_radius]*self.num_elements)

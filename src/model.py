@@ -31,7 +31,8 @@ class Model:
         self.tree: Tree = tree
         self.soil = soil
         if(len(outputfile) != 0):
-            self.ncf: Dataset = initialize_netcdf(outputfile, tree.num_elements, all_variables)
+            self.ncf: Dataset = initialize_netcdf(outputfile, tree.num_elements,
+                                                  soil.num_elements, tree.roots.num_elements, all_variables)
 
     def axial_fluxes(self) -> np.ndarray:
         """Calculates axial sap mass flux for every element.
@@ -74,7 +75,6 @@ class Model:
 
         transport_ax: np.ndarray = k/eta/length*RHO_WATER * np.concatenate([self.tree.element_area([], 0),
                                                                             self.tree.element_area([], 1)], axis=1)
-
         # calculate downward and upward fluxes separately
         Q_ax_down: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
         Q_ax_down[0:-1, :] = (np.diff(pressures, axis=0)
@@ -138,6 +138,24 @@ class Model:
         Q_rad_xylem: np.ndarray = -(Q_rad_phloem.copy())
         return np.concatenate((Q_rad_xylem, Q_rad_phloem), axis=1)
 
+    def root_fluxes(self):
+        """ Calculates root water uptake for every element. If the part of the tree is not part
+        of the root system, the flux is set to zero.
+
+        Approach similar to [Volpe et. al. 2013](https://doi.org/10.1016/j.advwatres.2013.07.008) is used
+        to calculate the total conductance between soil and root xylem.
+
+        .. math::
+            Q_{root,i} = \\frac{g_i}{g rho_w} (P_{soil,i} - P_{root,xylem,i})
+
+        where
+
+        * :math:`g_i`: Total conductance from 
+
+        Returns:
+            numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 2]: The root water uptake in units kg/s
+        """
+
     def run(self, time_start: float = 1e-3, time_end: float = 120.0,
             dt: float = 0.01, output_interval: float = 60) -> None:
         """ Propagates the tree in time using explicit Euler method (very slow).
@@ -198,8 +216,8 @@ class Model:
         Args:
             time_start (float): Time in seconds where to start the simulation.
             time_ned (float): Time in seconds where to end the simulation.
-            ind (int): index which refers to the index in model.outputfile.
-                The last stage of the tree is saved to model.outputfile[ind].
+            ind (int): index which refers to the index in self.outputfile.
+                The last stage of the tree is saved to self.outputfile[ind].
 
         """
         # If time < 0 save the first stage of the tree
@@ -212,7 +230,7 @@ class Model:
             results['dqax'], results['dqax_up'], results['dqax_down'] = self.axial_fluxes()
             write_netcdf(self.ncf, results)
 
-        # Initial values from model.tree
+        # Initial values from self.tree
         initial_values = [self.tree.pressure,
                           self.tree.sugar_concentration_as_numpy_array().reshape(self.tree.num_elements, 1),
                           self.tree.element_radius]
@@ -241,4 +259,8 @@ class Model:
         results['model_index'] = ind
         results['dqrad'] = self.radial_fluxes()
         results['dqax'], results['dqax_up'], results['dqax_down'] = self.axial_fluxes()
+        results['soil_dz'] = self.soil.layer_thickness
+        results['soil_kh'] = self.soil.hydraulic_conductivity
+        results['soil_pressure'] = self.soil.pressure
+        results['soil_root_k'] = self.tree.roots.conductivity(self.soil)
         write_netcdf(self.ncf, results)

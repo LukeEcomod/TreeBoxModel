@@ -58,6 +58,14 @@ Modules, Classes \& functions
 
 .. automodule:: src.solute
 
+.. automodule:: src.soil
+   :members:
+   :undoc-members:
+
+.. automodule:: src.roots
+   :members:
+   :undoc-members:
+
 .. autofunction:: src.odefun.odefun
 
 .. autodata:: src.constants.MAX_ELEMENT_COLUMNS

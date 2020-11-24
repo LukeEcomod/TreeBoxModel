@@ -10,41 +10,45 @@ class Roots:
 
     Args:
         rooting_depth (float): depth of the root system in the soil (:math:`m`)
-        area_density (List[float] or numpy.ndarray): surface area of self in given layer per layer
-            volume (:math:`\\frac{m^2}{m^3}`)
+        area_density (List[float] or numpy.ndarray): surface area of roots in given layer per tree
+        and per soil layer thickness (:math:`\\frac{m^2}{m}`)
         effective radius (List[float] or numpy.ndarray): effective horizontal root radius in a layer
         soil_conductance_scale (List[float] or numpy.ndarray): typical soil conductance in a layer.
+        area_per_tree (float): area of soil that the tree takes. Used in calculating root area density.
         num_elements (int): number of elements in the root zone.
 
     Attributes:
         rooting_depth (float): depth of the root system in the soil (:math:`m`)
         area_density (numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]):
-            surface area of self in given layer per layer volume (:math:`\\frac{m^2}{m^3}`)
+            surface area of roots in given layer per tree and per soil layer thickness (:math:`\\frac{m^2}{m}`)
         effective radius (numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]):
             effective horizontal root radius in a layer
         soil_conductance_scale (numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]):
-            typical soil conductance in a layer (:math:`s`)
-
+            typical soil to root xylem conductance in a layer (:math:`s`)
+        area_per_tree (float): Surface area ground that the tree takes. Used in calculating root area density.
     """
 
     def __init__(self, rooting_depth: float,
                  area_density: np.ndarray,
                  effective_radius: np.ndarray,
                  soil_conductance_scale: float,
+                 area_per_tree: float,
                  num_elements: int):
 
         self.num_elements = num_elements
         self.area_density: np.ndarray = area_density
         self.effective_radius: np.ndarray = effective_radius
         self.soil_conductance_scale: float = soil_conductance_scale
+        self.area_per_tree: float = area_per_tree
         self.rooting_depth: float = rooting_depth
 
     def root_area_index(self, soil: Soil) -> float:
         """ Calculates the root area index i.e.
 
-            :math:`RAI = \\sum_{i=1}^{N} B_i \\Delta z_i`
+            :math:`RAI = \\frac{\\sum_{i=1}^{N} B_i \\Delta z_i}{A_{tree}} `
 
-            where :math:`B_i` is the root area density and :math:`\\Delta z_i` is the thickness of layer i
+            where :math:`B_i` is the root area density, :math:`\\Delta z_i` is the thickness of layer i
+            and  :math:`A_{tree}` is the area of ground that the tree takes.
 
             NB! the soil depth must match the depth for which Roots.area_density is given.
         Args:
@@ -53,8 +57,9 @@ class Roots:
         Returns:
             float: The root area index (:math:`\\frac{m^2}{m^2}`)
         """
-        ind = np.where(soil.depth() <= self.rooting_depth)
-        return np.sum(self.area_density*soil.layer_thickness[ind])
+        ind, _ = np.where(soil.depth() <= self.rooting_depth)
+        dz = soil.layer_thickness[ind].reshape(len(ind), 1)
+        return np.sum(self.area_density*dz)/self.area_per_tree
 
     def root_conductance(self, soil: Soil, ind: List[int] = None) -> np.ndarray:
         """ calculates to conductance from soil-root interface up to the xylem of the tree which is
@@ -84,8 +89,6 @@ class Roots:
             ind = []
 
         if(len(ind) > 0):
-            print(self.area_density[ind])
-            print(soil.layer_thickness[ind])
             return (self.area_density[ind] * soil.layer_thickness[ind]/self.soil_conductance_scale)\
                 .reshape(len(ind), 1)
         else:
@@ -94,7 +97,7 @@ class Roots:
                     / self.soil_conductance_scale).reshape(self.num_elements, 1)
 
     def soil_root_conductance(self, soil: Soil, ind: List[int] = None) -> np.ndarray:
-        """ Calcualtes the conductance in layer i which is :math:`k_{s,i}` in Volpe et al., (2013)
+        """ Calculates the conductance in layer i which is :math:`k_{s,i}` in Volpe et al., (2013)
             which is the horizontal conductance in soil to the soil-root interface.
 
             :math:`k_{s,i} = \\alpha K_i B_i`
@@ -150,8 +153,19 @@ class Roots:
         result[ind] = divisor[ind]/divider[ind]
         return result
 
-    def root_layer_thickness(self, soil: Soil):
+    def layer_thickness(self, soil: Soil):
         """ returns the layer thickness from soil until the self.rooting_depth """
 
         root_ind, _ = np.where(soil.depth() < self.rooting_depth)
         return soil.layer_thickness[root_ind].reshape(len(root_ind), 1)
+
+    def layer_depth(self, soil: Soil):
+        """ Returns the midpoint depth of every layer that has roots """
+        dz = self.layer_thickness(soil)
+        length = np.concatenate(([0], dz.reshape(self.num_elements, )))
+        cumulative_sum = np.cumsum(length).reshape(len(length), 1)
+        return dz/2 + cumulative_sum[:-1]
+
+    def soil_elements(self, soil: Soil):
+        root_ind, _ = np.where(soil.depth() < self.rooting_depth)
+        return root_ind

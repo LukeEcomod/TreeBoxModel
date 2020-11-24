@@ -42,7 +42,7 @@ $$ Q_{ax,bottom,i} = \\frac{k_i \\: A_{ax,i} \\: \\rho_w}{\eta_i \\: l_i}(P_{i
 
 $$ Q_{ax,top,i} = \\frac{k_i \\: A_{ax,i+1} \\: \\rho_w}{\eta_i \\: l_i}(P_{i-1} - P_{i} + P_h) $$
 
-$$ Q_{radial,phloem} = L_r A_{rad,i}\\rho_{w} [P_{i,xylem} - P_{i,phloem} - \sigma(C_{i,xylem} - C_{i,phloem})RT)] $$
+$$ Q_{radial,phloem} = L_r A_{rad,i} \\rho_{w} [P_{i,xylem} - P_{i,phloem} - \\sigma(C_{i,xylem} - C_{i,phloem}) R T)] $$
 
 $$ Q_{radial,xylem} = -Q_{radial,phloem} $$
 

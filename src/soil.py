@@ -15,6 +15,7 @@ class Soil:
 
     def depth(self) -> np.ndarray:
         """ Returns the midpoint of every soil element """
-        cumulative_sum = np.cumsum(self.layer_thickness)
-        cumulative_sum = np.concatenate(([0], cumulative_sum[:-1]))
-        return self.layer_thickness/2 + cumulative_sum.reshape(self.num_elements, 1)
+        dz = np.concatenate(([0], self.layer_thickness.reshape(len(self.layer_thickness),)))
+        cumulative_sum = np.cumsum(dz).reshape(len(dz), 1)
+        result = self.layer_thickness/2 + cumulative_sum[:-1]
+        return result.reshape(self.num_elements, 1)

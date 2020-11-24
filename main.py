@@ -14,7 +14,6 @@ Todo:
 '''
 
 from src.tools.iotools import tree_properties_to_dict, write_netcdf
-from src.constants import PHLOEM_RADIUS, XYLEM_RADIUS
 from src.model import Model
 from src.tree import Tree
 from typing import List
@@ -67,7 +66,7 @@ if __name__ == "__main__":
 
     elastic_modulus_profile: List[List[float]] = [[1000e6, 30e6]] * num_elements
 
-    radii: List[float] = [XYLEM_RADIUS, PHLOEM_RADIUS]
+    radii: List[float] = [0.1, 0.05, 0.001]
 
     ground_water_potential: float = 0.0
 
