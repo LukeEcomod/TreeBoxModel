@@ -4,7 +4,7 @@ Description of the modelled system
 Introduction
 ------------
 
-![Modelled system](../../source/_static/modelled_system.png "modelled system")
+![Modelled system](../_static/modelled_system.png "modelled system")
 
 
 Modelled system is a 2-dimensional array representation of a tree. Each property of the tree is saved in a NumPy array. 
