@@ -73,11 +73,11 @@
 <h3>Install the required packages<a class="headerlink" href="#install-the-required-packages" title="Permalink to this headline">¶</a></h3>
 <p>Ideally you have created a new virtual environment for this project.</p>
 <p>To install all the packages required for the model to run use</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements_pip</span><span class="o">.</span><span class="n">txt</span>
 </pre></div>
 </div>
 <p>or</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">conda</span> <span class="n">install</span> <span class="o">--</span><span class="n">file</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">conda</span> <span class="n">install</span> <span class="o">--</span><span class="n">file</span> <span class="n">requirements_conda</span><span class="o">.</span><span class="n">txt</span>
 </pre></div>
 </div>
 </div>
@@ -589,7 +589,43 @@ the order is from top of the tree (first element, new_concentration[0]) to botto
 
 </dd></dl>
 
-<span class="target" id="module-src.solute"></span><dl class="py function">
+<span class="target" id="module-src.solute"></span><dl class="py class">
+<dt id="src.solute.Solute">
+<em class="property">class </em><code class="sig-prename descclassname">src.solute.</code><code class="sig-name descname">Solute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">molar_mass</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">density</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">concentration</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.solute.Solute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains the variables to model a solute compound</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the compound</p></li>
+<li><p><strong>molar_mass</strong> (<em>float</em>) – Molar mass of the compound (<span class="math notranslate nohighlight">\(\frac{kg}{mol}\)</span>)</p></li>
+<li><p><strong>density</strong> – Liquid phase density of the compound (<span class="math notranslate nohighlight">\(\frac{kg}{m^3}\)</span>)</p></li>
+<li><p><strong>concentration</strong> – Concentration of the compound in the sap solution (<span class="math notranslate nohighlight">\(\frac{mol}{m^3}\)</span>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="src.solute.Solute.concentration">
+<code class="sig-name descname">concentration</code><em class="property">: float</em><em class="property"> = None</em><a class="headerlink" href="#src.solute.Solute.concentration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="src.solute.Solute.density">
+<code class="sig-name descname">density</code><em class="property">: float</em><em class="property"> = None</em><a class="headerlink" href="#src.solute.Solute.density" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="src.solute.Solute.molar_mass">
+<code class="sig-name descname">molar_mass</code><em class="property">: float</em><em class="property"> = None</em><a class="headerlink" href="#src.solute.Solute.molar_mass" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="src.solute.Solute.name">
+<code class="sig-name descname">name</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#src.solute.Solute.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
 <dt id="src.odefun.odefun">
 <code class="sig-prename descclassname">src.odefun.</code><code class="sig-name descname">odefun</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">y</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.odefun.odefun" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the right hand side of the model ODEs.</p>
@@ -911,7 +947,7 @@ includes the simulation results.</p>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, Olli-Pekka Tikkanen.
+        &#169; Copyright 2020, Olli-Pekka Tikkasalo.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.
     </div>
   </body>

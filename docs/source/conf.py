@@ -22,8 +22,8 @@ sys.setrecursionlimit(1500)
 # -- Project information -----------------------------------------------------
 
 project = 'Tree Box Model'
-copyright = '2020, Olli-Pekka Tikkanen'
-author = 'Olli-Pekka Tikkanen'
+copyright = '2020, Olli-Pekka Tikkasalo'
+author = 'Olli-Pekka Tikkasalo'
 
 # The full version, including alpha/beta/rc tags
 release = '0.3'

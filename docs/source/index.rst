@@ -29,11 +29,11 @@ Ideally you have created a new virtual environment for this project.
 
 To install all the packages required for the model to run use 
 
->>> pip install -r requirements.txt
+>>> pip install -r requirements_pip.txt
 
 or
 
->>> conda install --file requirements.txt
+>>> conda install --file requirements_conda.txt
 
 Quick start
 -----------
@@ -57,6 +57,8 @@ Modules, Classes \& functions
    :undoc-members:
 
 .. automodule:: src.solute
+   :members:
+   :undoc-members:
 
 .. autofunction:: src.odefun.odefun
 
