@@ -109,7 +109,6 @@ class Roots:
 
             where :math:`L` is the rooting depth, RAI is the root area index and :math:`r_i`
             is the effective root radius in layer i.
-            TODO: check that effective radius is the average root radius
 
         Args:
             soil (Soil): Instance of the soil unit class. The soil layer thicknesses is used in calculation.

@@ -28,8 +28,10 @@ RAI = 2*LAI_tree[i]
 area_density = np.ones((root_elements, 1))
 effective_radius = 0.5e-3*np.ones((root_elements, 1))
 rooting_depth = 0.5
+area_per_tree = 1
 roots = Roots(rooting_depth=rooting_depth, area_density=area_density,
-              effective_radius=effective_radius, soil_conductance_scale=3e8, num_elements=root_elements)
+              effective_radius=effective_radius, soil_conductance_scale=3e8,
+              area_per_tree=area_per_tree, num_elements=root_elements)
 
 dz = roots.layer_thickness(soil)
 length = roots.layer_depth(soil)

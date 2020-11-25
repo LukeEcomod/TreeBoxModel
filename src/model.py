@@ -142,19 +142,30 @@ class Model:
         """ Calculates root water uptake for every element. If the part of the tree is not part
         of the root system, the flux is set to zero.
 
-        Approach similar to [Volpe et. al. 2013](https://doi.org/10.1016/j.advwatres.2013.07.008) is used
-        to calculate the total conductance between soil and root xylem.
+        Conductance between soil and root xylem is calculated similar to
+        [Volpe et. al. 2013](https://doi.org/10.1016/j.advwatres.2013.07.008)
 
         .. math::
-            Q_{root,i} = \\frac{g_i}{g rho_w} (P_{soil,i} - P_{root,xylem,i})
+            Q_{root,i} = \\frac{g_i}{g} (P_{soil,i} - P_{root,xylem,i})
 
         where
 
-        * :math:`g_i`: Total conductance from 
+        * :math:`g_i`: Total conductance from soil to root xylem (:math:`\\frac{1}{s}`)
+        * :math:`g`: gravitational acceleration (:math:`\\frac{m}{s^2}`)
+        * :math:`P`: Pressure in either the soil element or root xylem element
 
         Returns:
-            numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 2]: The root water uptake in units kg/s
+            numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 1]: The root water uptake in units kg/s
         """
+
+        ind = self.tree.root_elements
+        soil_ind = self.tree.roots.soil_elements(self.soil)
+        gi: np.ndarray = self.tree.roots.conductivity(self.soil)
+        P_root = self.tree.pressure[ind, 0].reshape(len(ind), 1)
+        P_soil = self.soil.pressure[soil_ind].reshape(len(ind), 1)
+        Q_root = np.zeros((self.tree.num_elements, 1))
+        Q_root[ind, 0] = (gi/GRAVITATIONAL_ACCELERATION*(P_soil-P_root)).reshape(len(ind),)
+        return Q_root
 
     def run(self, time_start: float = 1e-3, time_end: float = 120.0,
             dt: float = 0.01, output_interval: float = 60) -> None:
