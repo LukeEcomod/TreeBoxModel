@@ -6,15 +6,9 @@ or [Nikinmaa et. al., (2014)](https://academic.oup.com/aob/article/114/4/653/276
 
 A sine-like behaviour is assumed for the transpiration and photosynthesis
 
-![Transpiration rate](../../source/_static/transpiration_rate.png "transpiration rate")
-
-Todo:
-    * make own tree profiles which are called from the main file
+![Transpiration rate](/_static/transpiration_rate.png "transpiration rate")
 
 '''
-
-from src.tools.iotools import tree_properties_to_dict, write_netcdf
-from src.constants import PHLOEM_RADIUS, XYLEM_RADIUS
 from src.model import Model
 from src.tree import Tree
 from typing import List
@@ -67,7 +61,7 @@ if __name__ == "__main__":
 
     elastic_modulus_profile: List[List[float]] = [[1000e6, 30e6]] * num_elements
 
-    radii: List[float] = [XYLEM_RADIUS, PHLOEM_RADIUS]
+    radii: List[float] = [0.2, 0.1, 0.001]
 
     ground_water_potential: float = 0.0
 
