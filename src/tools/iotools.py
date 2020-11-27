@@ -2,13 +2,17 @@ from typing import Dict
 from netCDF4 import Dataset, Variable
 # from ..model import Model # TODO: check why this import fails
 from ..constants import MAX_ELEMENT_COLUMNS
-from ..model_variables import index_dim_vars
+from ..model_variables import index_dim_vars, soil_dim_vars, root_dim_vars
 from ..tree import Tree
 import os.path
 import numpy as np
 
 
-def initialize_netcdf(filename: str, axial_elements: int, variables: Dict) -> Dataset:
+def initialize_netcdf(filename: str,
+                      axial_elements: int,
+                      soil_elements: int,
+                      root_elements: int,
+                      variables: Dict) -> Dataset:
     """ Initializes a netcdf file to be ready for saving simulation results.
 
         Args:
@@ -37,6 +41,8 @@ def initialize_netcdf(filename: str, axial_elements: int, variables: Dict) -> Da
     ncf.createDimension("index", 0)
     ncf.createDimension("radial_layers", MAX_ELEMENT_COLUMNS)
     ncf.createDimension("axial_layers", axial_elements)
+    ncf.createDimension("soil_elements", soil_elements)
+    ncf.createDimension("root_elements", root_elements)
 
     # create the index variable
     ind: Variable = ncf.createVariable('index', 'i4', ('index'))
@@ -72,6 +78,8 @@ def write_netcdf(ncf: Dataset, results: Dict) -> None:
         if key in index_dim_vars:
             # variable has dimension ("index")
             ncf[key][ind] = results[key]
+        elif key in root_dim_vars or key in soil_dim_vars:
+            ncf[key][ind, :] = results[key].reshape(len(results[key]),)
         else:
             # the variable has dimension
             # ("index", "radial_layers", "axial_layers")
@@ -91,7 +99,6 @@ def tree_properties_to_dict(tree: Tree) -> Dict:
     properties = {}
     properties['height'] = tree.height
     properties['num_elements'] = tree.num_elements
-    properties['ground_water_potential'] = tree.ground_water_potential
     properties['transpiration_rate'] = tree.transpiration_rate
     properties['photosynthesis_rate'] = tree.photosynthesis_rate
     sugar_conc = tree.sugar_concentration_as_numpy_array().reshape(tree.num_elements, 1)

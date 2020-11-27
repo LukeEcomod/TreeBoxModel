@@ -270,3 +270,7 @@ def plot_ax_up_change(filenames):
     plt.ylabel('Flux (g/s)')
     plt.xlabel('Time (d)')
     plt.legend()
+
+# def plot_two_simulations_vs_time()
+
+# def plot_two_simulation_comparison()

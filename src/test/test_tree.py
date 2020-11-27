@@ -4,17 +4,22 @@ import pytest
 import math
 import numpy as np
 from ..tree import Tree
+from ..roots import Roots
+from ..soil import Soil
+from .test_soil import test_soil
+from .test_roots import test_roots
 from typing import List
 
 
 @pytest.fixture(scope="function")
-def test_tree():
+def test_tree(test_roots, test_soil):
 
     # values from Hölttä et al. (2006)
     # except for transp/photosynth/loading/unloading/sugar profile
     height = 12.0
-
-    num_elements = 40
+    element_height = np.concatenate((np.repeat(0.3, repeats=40),
+                                     test_roots.root_layer_thickness(test_soil).reshape(5,)))
+    num_elements = 45
 
     radii = [0.5, 1, 2]
     transpiration_profile: List[float] = [0 for i in range(num_elements)]
@@ -34,11 +39,9 @@ def test_tree():
     radial_hydr_conductivity = [1e-13] * num_elements
 
     elastic_modulus_profile = [[1000e6, 30e6]] * num_elements
-
-    ground_water_potential = 0.0
-
     return Tree(height=height,
                 num_elements=num_elements,
+                element_height=element_height,
                 initial_radius=radii,
                 transpiration_profile=transpiration_profile,
                 photosynthesis_profile=photosynth_profile,
@@ -48,9 +51,9 @@ def test_tree():
                 axial_permeability_profile=axial_permeability_profile,
                 radial_hydraulic_conductivity_profile=radial_hydr_conductivity,
                 elastic_modulus_profile=elastic_modulus_profile,
-                ground_water_potential=ground_water_potential,
                 sugar_target_concentration=0.9,
-                sugar_unloading_slope=1)
+                sugar_unloading_slope=1,
+                roots=test_roots)
 
 
 def test_tree_init(test_tree):
@@ -62,6 +65,9 @@ def test_tree_init(test_tree):
     assert test_tree.pressure[-1, 0] == 0.0
     for i in range(test_tree.num_elements):
         assert test_tree.solutes[i, 1].concentration == 10
+
+    assert np.array_equal(test_tree.root_elements, np.arange(40, 45))
+    assert np.array_equal(test_tree.tree_elements, np.arange(0, 40))
 
 
 def test_element_area(test_tree):

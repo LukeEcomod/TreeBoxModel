@@ -41,6 +41,16 @@ all_variables = {'height': ['height of the tree', 'm', ("index"), 'f4'],
                  'area':
                  ['Element base area', 'm^2', ("index", "axial_layers", "radial_layers"), 'f4'],
                  'volume':
-                 ['Element volume', 'm^3', ("index", "axial_layers", "radial_layers"), 'f4']}
+                 ['Element volume', 'm^3', ("index", "axial_layers", "radial_layers"), 'f4'],
+                 'soil_dz':
+                 ['Soil layer thickness', 'm', ("index", "soil_elements"), 'f4'],
+                 'soil_pressure':
+                 ['Soil water potential / pressure', 'Pa', ("index", "soil_elements"), 'f4'],
+                 'soil_kh':
+                 ['Soil hydraulic conductivity', 'm/s', ("index", "soil_elements"), 'f4'],
+                 'soil_root_k':
+                 ['Soil-root system total conductivity', '1/s', ("index", "root_elements"), 'f4']}
 
 index_dim_vars = [key for key in all_variables.keys() if all_variables[key][2] == ("index")]
+soil_dim_vars = [key for key in all_variables.keys() if all_variables[key][2] == ("index", "soil_elements")]
+root_dim_vars = [key for key in all_variables.keys() if all_variables[key][2] == ("index", "root_elements")]

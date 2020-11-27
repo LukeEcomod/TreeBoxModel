@@ -1,3 +1,4 @@
+from .roots import Roots
 import numpy as np
 import math
 from typing import List
@@ -87,7 +88,7 @@ class Tree:
 
     """
 
-    def __init__(self, height: float, initial_radius: List[float],
+    def __init__(self, height: float, element_height: List[float], initial_radius: List[float],
                  num_elements: int, transpiration_profile: List[float],
                  photosynthesis_profile: List[float], sugar_profile: List[float],
                  sugar_loading_profile: List[float], sugar_unloading_profile: List[float],
@@ -95,14 +96,14 @@ class Tree:
                  axial_permeability_profile: List[List[float]],
                  radial_hydraulic_conductivity_profile: List[float],
                  elastic_modulus_profile: List[List[float]],
-                 ground_water_potential: float):
+                 roots: Roots):
 
         # for all arrays/lists the first column is for xylem and the second for phloem
         # all the arrays/lists have num_elements rows
 
         self.height: float = height  # unit: m
 
-        self.num_elements: int = num_elements  # number of tree elements
+        self.num_elements: int = num_elements  # number of total elements
 
         self.transpiration_rate: np.ndarray = np.asarray(transpiration_profile).reshape(self.num_elements, 1)
 
@@ -127,20 +128,23 @@ class Tree:
 
         self.elastic_modulus: np.ndarray = np.asarray(elastic_modulus_profile).reshape(self.num_elements, 2)
 
-        self.ground_water_potential: float = ground_water_potential
+        self.roots = roots
 
+        # set root elements as the roots.num_elements lowest elements
+
+        self.root_elements = np.arange(self.num_elements - self.roots.num_elements, self.num_elements)
+        self.tree_elements = np.arange(0, self.num_elements-self.roots.num_elements)
         # initialize pressure to be 0
         self.pressure = np.asarray([0 for i in range(self.num_elements)]).reshape(self.num_elements, 1)\
             .repeat(2, axis=1)
 
-        self.pressure[:, 1] = (self.sugar_concentration_as_numpy_array()*MOLAR_GAS_CONSTANT*TEMPERATURE
-                               ).reshape(self.num_elements,)
+        # self.pressure[:, 1] = (self.sugar_concentration_as_numpy_array()*MOLAR_GAS_CONSTANT*TEMPERATURE
+        #                        ).reshape(self.num_elements,)
 
         # calculate radius and height for every element in the tree
         self.element_radius: np.ndarray = np.asarray([initial_radius]*self.num_elements)
 
-        self.element_height: np.ndarray = np.asarray(
-            [self.height/self.num_elements]*self.num_elements).reshape(self.num_elements, 1)
+        self.element_height: np.ndarray = element_height.reshape(self.num_elements, 1)
 
         # initialize viscosity to be viscosity of water
         self.viscosity: np.ndarray = np.asarray([[VISCOSITY_WATER, VISCOSITY_WATER]]*self.num_elements)

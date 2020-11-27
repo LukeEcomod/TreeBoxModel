@@ -140,7 +140,7 @@ the behaviour of the <a class="reference external" href="modelled_system.html">m
 <dt id="src.model.Model.axial_fluxes">
 <code class="sig-name descname">axial_fluxes</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.model.Model.axial_fluxes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates axial sap mass flux for every element.</p>
-<p>The axial flux in the xylem and phloem are calculated independently from the sum of bottom and top fluxes</p>
+<p>The axial flux in the xylem and phloem are calculated independently from the sum of bottom and top fluxes.</p>
 <div class="math notranslate nohighlight">
 \[Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i} - E\]</div>
 <div class="math notranslate nohighlight">
@@ -166,6 +166,36 @@ the behaviour of the <a class="reference external" href="modelled_system.html">m
 <dl class="py method">
 <dt id="src.model.Model.radial_fluxes">
 <code class="sig-name descname">radial_fluxes</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#src.model.Model.radial_fluxes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates radial sap mass flux for every element.</p>
+<p>The radial flux for the phloem of the ith axial is calculated similar to
+<a class="reference external" href="https://link.springer.com/article/10.1007/s00468-005-0014-6">Hölttä et. al. 2006</a></p>
+<div class="math notranslate nohighlight">
+\[Q_{radial,phloem} = L_r A_{rad,i}\rho_{w}
+[P_{i,xylem} - P_{i,phloem} - \sigma(C_{i,xylem} - C_{i,phloem})RT)]\]</div>
+<p>where</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(L_r\)</span>: radial hydraulic conductivity (<span class="math notranslate nohighlight">\(\frac{m}{Pa \: s}\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(A_{rad,i}\)</span>: lateral surface area of the xylem (<span class="math notranslate nohighlight">\(m^2\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(\rho_w\)</span>: liquid phase density of water (<span class="math notranslate nohighlight">\(\frac{kg}{m^3}\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(P_{i}\)</span>: Pressure in the ith element (<span class="math notranslate nohighlight">\(Pa\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(\sigma\)</span>: Reflection coefficient (Van’t hoff factor) (unitless)</p></li>
+<li><p><span class="math notranslate nohighlight">\(C_{i}\)</span>: Sucrose concentration in the ith element (<span class="math notranslate nohighlight">\(\frac{mol}{m^3}\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(R\)</span>: Universal gas constant (<span class="math notranslate nohighlight">\(\frac{J}{K \: mol}\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(T\)</span>: Ambient temperature (<span class="math notranslate nohighlight">\(K\)</span>)</p></li>
+</ul>
+<p>The radial flux for the xylem is equal to the additive inverse of the phloem flux</p>
+<div class="math notranslate nohighlight">
+\[Q_{radial,xylem} = -Q_{radial,phloem}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 2]</em> – The radial fluxes in units kg/s</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="src.model.Model.root_fluxes">
+<code class="sig-name descname">root_fluxes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.model.Model.root_fluxes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates radial sap mass flux for every element.</p>
 <p>The radial flux for the phloem of the ith axial is calculated similar to
 <a class="reference external" href="https://link.springer.com/article/10.1007/s00468-005-0014-6">Hölttä et. al. 2006</a></p>
@@ -222,8 +252,8 @@ the time interval into multiple sub intervals.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>time_start</strong> (<em>float</em>) – Time in seconds where to start the simulation.</p></li>
 <li><p><strong>time_ned</strong> (<em>float</em>) – Time in seconds where to end the simulation.</p></li>
-<li><p><strong>ind</strong> (<em>int</em>) – index which refers to the index in model.outputfile.
-The last stage of the tree is saved to model.outputfile[ind].</p></li>
+<li><p><strong>ind</strong> (<em>int</em>) – index which refers to the index in self.outputfile.
+The last stage of the tree is saved to self.outputfile[ind].</p></li>
 </ul>
 </dd>
 </dl>
@@ -233,7 +263,7 @@ The last stage of the tree is saved to model.outputfile[ind].</p></li>
 
 <span class="target" id="module-src.tree"></span><dl class="py class">
 <dt id="src.tree.Tree">
-<em class="property">class </em><code class="sig-prename descclassname">src.tree.</code><code class="sig-name descname">Tree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">height</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">initial_radius</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">num_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">transpiration_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">photosynthesis_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_loading_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_unloading_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_target_concentration</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">sugar_unloading_slope</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">axial_permeability_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>float<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">radial_hydraulic_conductivity_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">elastic_modulus_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>float<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ground_water_potential</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.tree.Tree" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">src.tree.</code><code class="sig-name descname">Tree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">height</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">element_height</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">initial_radius</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">num_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">transpiration_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">photosynthesis_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_loading_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_unloading_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sugar_target_concentration</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">sugar_unloading_slope</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">axial_permeability_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>float<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">radial_hydraulic_conductivity_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">elastic_modulus_profile</span><span class="p">:</span> <span class="n">List<span class="p">[</span>List<span class="p">[</span>float<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">roots</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#src.roots.Roots" title="src.roots.Roots">src.roots.Roots</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.tree.Tree" title="Permalink to this definition">¶</a></dt>
 <dd><p>Model of a tree.</p>
 <p>Provides properties and functionality for saving and editing the modelled tree. Arguments whose
 type is List[float] or List[List[float]] are converted to numpy.ndarray with numpy.asarray method.
@@ -722,7 +752,7 @@ values of the model ODEs where the elements 0:2 <span class="math notranslate no
 
 <span class="target" id="module-src.tools.iotools"></span><dl class="py function">
 <dt id="src.tools.iotools.initialize_netcdf">
-<code class="sig-prename descclassname">src.tools.iotools.</code><code class="sig-name descname">initialize_netcdf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">axial_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">variables</span><span class="p">:</span> <span class="n">Dict</span></em><span class="sig-paren">)</span> &#x2192; netCDF4._netCDF4.Dataset<a class="headerlink" href="#src.tools.iotools.initialize_netcdf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">src.tools.iotools.</code><code class="sig-name descname">initialize_netcdf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">axial_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">soil_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">root_elements</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">variables</span><span class="p">:</span> <span class="n">Dict</span></em><span class="sig-paren">)</span> &#x2192; netCDF4._netCDF4.Dataset<a class="headerlink" href="#src.tools.iotools.initialize_netcdf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes a netcdf file to be ready for saving simulation results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
