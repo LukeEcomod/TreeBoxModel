@@ -10,7 +10,10 @@ A sine-like behaviour is assumed for the transpiration and photosynthesis
 
 '''
 
+from numpy.lib.polynomial import roots
 from src.model import Model
+from src.roots import Roots
+from src.soil import Soil
 from src.tree import Tree
 from typing import List
 import numpy as np
@@ -64,7 +67,7 @@ if __name__ == "__main__":
 
     radii: List[float] = [0.1, 0.05, 0.001]
 
-    ground_water_potential: float = 0.0
+    
 
     tree = Tree(height=height,
                 num_elements=num_elements,
@@ -79,7 +82,7 @@ if __name__ == "__main__":
                 axial_permeability_profile=axial_permeability_profile,
                 radial_hydraulic_conductivity_profile=radial_hydr_conductivity,
                 elastic_modulus_profile=elastic_modulus_profile,
-                ground_water_potential=ground_water_potential)
+                roots=roots)
 
     outputfname = 'test_'
     outputfname = outputfname + datetime.now().strftime("%y-%m-%dT%H:%M:%S") + ".nc"
