@@ -10,7 +10,6 @@ A sine-like behaviour is assumed for the transpiration and photosynthesis
 
 '''
 
-from src.tools.iotools import tree_properties_to_dict, write_netcdf
 from src.model import Model
 from src.tree import Tree
 from typing import List

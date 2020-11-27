@@ -28,8 +28,6 @@ def odefun(t: float, y: np.ndarray, model) -> np.ndarray:
       :math:`\\frac{\\text{d(radius)}}{\\text{dt}}`
 
     """
-    # suppress divide by zero error so function executes even with divide by zero
-    # np.seterr(divide='ignore', invalid='ignore')
     # Update model tree parameters
     pressures = y[0:model.tree.num_elements*2].reshape(model.tree.num_elements, MAX_ELEMENT_COLUMNS, order='F')
     sugar_concentration = y[model.tree.num_elements*2:model.tree.num_elements*3].reshape(model.tree.num_elements, 1,
