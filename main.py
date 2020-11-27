@@ -22,10 +22,39 @@ from datetime import datetime
 
 if __name__ == "__main__":
 
-    height: float = 2.37
+    # create the soil object
+    z = np.linspace(0, 1, 11)
+    soil_layer_thickness = np.array(np.diff(z))
+    pressure = np.zeros((len(soil_layer_thickness), 1))  # Pa
+    hydraulic_conductivity = np.ones((len(soil_layer_thickness), 1))*1e-9  # m/s
+    soil = Soil(layer_thickness=soil_layer_thickness,
+                hydraulic_conductivity=hydraulic_conductivity,
+                pressure=pressure)
+    # create the roots object
+    # set area density until 1 meter so that RAI=30 using a linear function
+    root_elements = 5
+    area_density = np.zeros((root_elements, 1))
 
-    num_elements: int = 40
+    RAI = 30  # m^2 root / tree
+    area_density = np.ones((root_elements, 1))
+    effective_radius = 0.5e-3*np.ones((root_elements, 1))
+    rooting_depth = 0.5
+    area_per_tree = 1
+    roots = Roots(rooting_depth=rooting_depth, area_density=area_density,
+                  effective_radius=effective_radius, soil_conductance_scale=3e8,
+                  area_per_tree=area_per_tree, num_elements=root_elements)
 
+    dz = roots.layer_thickness(soil)
+    length = roots.layer_depth(soil)
+    a = 50
+    b = RAI/(np.sum(np.exp(-a*length)*dz))
+
+    roots.area_density = b*np.exp(-a*length).reshape(roots.num_elements, 1)
+
+    height: float = 2.4
+
+    num_elements: int = 45  # 40 tree elements, 5 root elements
+    element_height = np.repeat(0.06, num_elements)
     transpiration_profile: List[float] = [0.0 for i in range(num_elements)]
     photosynth_profile: List[float] = [0 for i in range(num_elements)]
     sugar_loading_profile = photosynth_profile
@@ -67,9 +96,8 @@ if __name__ == "__main__":
 
     radii: List[float] = [0.1, 0.05, 0.001]
 
-    
-
     tree = Tree(height=height,
+                element_height=element_height,
                 num_elements=num_elements,
                 initial_radius=radii,
                 transpiration_profile=transpiration_profile,
@@ -86,19 +114,19 @@ if __name__ == "__main__":
 
     outputfname = 'test_'
     outputfname = outputfname + datetime.now().strftime("%y-%m-%dT%H:%M:%S") + ".nc"
-    model = Model(tree, outputfile=outputfname)
+    model = Model(tree, outputfile=outputfname, soil=soil)
     for day in range(0, 2):
-        for (ind, time) in enumerate(time[0:-1]):
+        for (ind, t) in enumerate(time[0:-1]):
             # set new transpiration rate
             transpiration_rate = transpiration_profile.copy()
             transpiration_rate[0:10] = [transpiration[ind]]*10
-            model.tree.transpiration_rate = np.asarray(transpiration_rate).reshape(40, 1)
+            model.tree.transpiration_rate = np.asarray(transpiration_rate).reshape(num_elements, 1)
 
             photosynthesis_rate = photosynth_profile.copy()
             photosynthesis_rate[0:10] = [photosynthesis[ind]]*10
-            model.tree.photosynthesis_rate = np.asarray(photosynthesis_rate).reshape(40, 1)
+            model.tree.photosynthesis_rate = np.asarray(photosynthesis_rate).reshape(num_elements, 1)
             model.tree.sugar_loading_rate = model.tree.photosynthesis_rate.copy()
 
-            model.run_scipy(time_start=(day*60*60*24)+time*60*60, time_end=(day*60*60*24)+time[ind+1]*60*60, ind=ind)
+            model.run_scipy(time_start=(day*60*60*24)+t*60*60, time_end=(day*60*60*24)+time[ind+1]*60*60, ind=ind)
 
     print('Model simulation finished')
