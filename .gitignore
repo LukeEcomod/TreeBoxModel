@@ -35,3 +35,4 @@ latexmkrc
 *.pickle
 
 runs/
+docs/build/

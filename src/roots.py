@@ -1,4 +1,3 @@
-from logging import root
 from typing import List
 import numpy as np
 from .soil import Soil
