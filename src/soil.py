@@ -2,9 +2,24 @@ import numpy as np
 
 
 class Soil:
-    """"
+    """
         Model of a soil. Each array should have the same length except for the depth
         array whose length should be one higher than all the other arrays
+
+        Args:
+            layer_thickness (List[float] or numpy.ndarray): Thickness of each layer in units :math:`m`.
+            pressure (List[float] or numpy.ndarray): Pressure (soil water potential) in every layer in units :math:`Pa`
+            hydraulic_conductivity (List[float] or numpy.ndarray): Hydraulic conductivity in each soil layer in units
+                :math:`\\frac{m}{s}`
+
+        Attributes:
+            layer_thickness (numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]): Thickness of each layer in
+                units :math:`m`.
+            pressure (numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]): Pressure (soil water potential) in
+                every layer in units :math:`Pa`
+            hydraulic_conductivity (numpy.ndarray(dtype=float, ndim=2) [self.num_elements, 1]): Hydraulic conductivity
+                in each soil layer in units :math:`\\frac{m}{s}`
+            num_elements (float): Number of soil elements. Calculated from the length of layer_thickness argument.
     """
 
     def __init__(self, layer_thickness, pressure, hydraulic_conductivity):

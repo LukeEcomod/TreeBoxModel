@@ -150,12 +150,17 @@ class Model:
 
         where
 
-        * :math:`g_i`: Total conductance from soil to root xylem (:math:`\\frac{1}{s}`)
+        * :math:`g_i`: Total conductance from soil to root xylem (:math:`\\frac{1}{s}`). See
+            [Roots class](index.html#src.roots.Roots.conductivity) for details
         * :math:`g`: gravitational acceleration (:math:`\\frac{m}{s^2}`)
         * :math:`P`: Pressure in either the soil element or root xylem element
 
         Returns:
             numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 1]: The root water uptake in units kg/s
+
+        References:
+            Volpe, V. et. al., "Root controls on water redistribution and carbon uptake in the soil–plant
+            system under current and future climate", Advances in Water Resources, 60, 110-120, 2013.
         """
 
         ind = self.tree.root_elements
