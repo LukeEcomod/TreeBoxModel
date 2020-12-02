@@ -244,6 +244,11 @@ class Model:
             results['model_index'] = ind
             results['dqrad'] = self.radial_fluxes()
             results['dqax'], results['dqax_up'], results['dqax_down'] = self.axial_fluxes()
+            results['dqroot'] = self.root_fluxes()
+            results['soil_dz'] = self.soil.layer_thickness
+            results['soil_kh'] = self.soil.hydraulic_conductivity
+            results['soil_pressure'] = self.soil.pressure
+            results['soil_root_k'] = self.tree.roots.conductivity(self.soil)
             write_netcdf(self.ncf, results)
 
         # Initial values from self.tree

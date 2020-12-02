@@ -2,7 +2,7 @@ from typing import Dict
 from netCDF4 import Dataset, Variable
 # from ..model import Model # TODO: check why this import fails
 from ..constants import MAX_ELEMENT_COLUMNS
-from ..model_variables import index_dim_vars, soil_dim_vars, root_dim_vars
+from ..model_variables import index_dim_vars, soil_dim_vars, root_dim_vars, axial_layer_dim_vars
 from ..tree import Tree
 import os.path
 import numpy as np
@@ -78,7 +78,7 @@ def write_netcdf(ncf: Dataset, results: Dict) -> None:
         if key in index_dim_vars:
             # variable has dimension ("index")
             ncf[key][ind] = results[key]
-        elif key in root_dim_vars or key in soil_dim_vars:
+        elif key in root_dim_vars or key in soil_dim_vars or key in axial_layer_dim_vars:
             ncf[key][ind, :] = results[key].reshape(len(results[key]),)
         else:
             # the variable has dimension
