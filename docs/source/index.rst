@@ -37,9 +37,11 @@ or
 
 Quick start
 -----------
-run main.py
+run main.py.
 
 >>> python main.py
+
+See instructions to run the model for detailed instructions.
 
 main.py
 -------

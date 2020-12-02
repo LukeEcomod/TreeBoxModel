@@ -10,7 +10,6 @@ A sine-like behaviour is assumed for the transpiration and photosynthesis
 
 '''
 
-from numpy.lib.polynomial import roots
 from src.model import Model
 from src.roots import Roots
 from src.soil import Soil
@@ -47,7 +46,7 @@ if __name__ == "__main__":
     dz = roots.layer_thickness(soil)
     length = roots.layer_depth(soil)
     a = 50
-    b = RAI/(np.sum(np.exp(-a*length)*dz))
+    b = RAI/(np.sum(np.exp(-a*length)*dz))/area_per_tree
 
     roots.area_density = b*np.exp(-a*length).reshape(roots.num_elements, 1)
 
