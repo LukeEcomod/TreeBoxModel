@@ -66,10 +66,11 @@ class Roots:
             :math:`k_{r,i}` in Volpe et al., (2013).
 
             .. math::
-                k_{r,i} = \\frac{B_i \\Delta z_i}{\\beta}
+                k_{r,i} = \\frac{B_i \\Delta z_i}{\\beta A_{tree}}
 
-            where :math:`B_i` is the root area density, :math:`\\Delta z_i` is the thickness of layer i
-            and :math:`\\beta` is typical root to soil conductance as presented in Volpe et. al., (2013)
+            where :math:`B_i` is the root area density, :math:`\\Delta z_i` is the thickness of layer i,
+            :math:`\\beta` is typical root to soil conductance as presented in Volpe et. al., (2013) and
+            :math:`A_{tree}` is the area of ground that the tree takes.
 
         Args:
             soil (Soil): Instance of the soil unit class. The soil layer thicknesses is used in calculation.
@@ -90,27 +91,27 @@ class Roots:
             ind = []
 
         if(len(ind) > 0):
-            return (self.area_density[ind] * soil.layer_thickness[ind]/self.soil_conductance_scale)\
+            return (self.area_density[ind] * soil.layer_thickness[ind]/self.soil_conductance_scale/self.area_per_tree)\
                 .reshape(len(ind), 1)
         else:
             root_ind, _ = np.where(soil.depth() < self.rooting_depth)
             return (self.area_density * soil.layer_thickness[root_ind].reshape(len(root_ind), 1)
-                    / self.soil_conductance_scale).reshape(self.num_elements, 1)
+                    / self.soil_conductance_scale/self.area_per_tree).reshape(self.num_elements, 1)
 
     def soil_root_conductance(self, soil: Soil, ind: List[int] = None) -> np.ndarray:
         """ Calculates the conductance in layer i which is :math:`k_{s,i}` in Volpe et al., (2013)
             which is the horizontal conductance in soil to the soil-root interface.
 
             .. math::
-                k_{s,i} = \\alpha K_i B_i
+                k_{s,i} = \\alpha K_i \\frac{B_i}{A_{tree}}
 
             where :math:`K_i` is the water hydraulic conductivity in layer i,
             :math:`B_i` is the root area density in layer i and
 
-            :math:`\\alpha = \\left(\\frac{L}{2RAI \\cdot r_i}\\right)^{1/2}`
+            :math:`\\alpha = \\left(\\frac{L A_{tree}}{2RAI \\cdot r_i}\\right)^{1/2}`
 
-            where :math:`L` is the rooting depth, RAI is the root area index and :math:`r_i`
-            is the effective root radius in layer i.
+            where :math:`L` is the rooting depth, RAI is the root area index, :math:`r_i`
+            is the effective root radius in layer i and :math:`A_{tree}` is the area of ground that the tree takes.
 
         Args:
             soil (Soil): Instance of the soil class. The soil layer thicknesses is used in calculation.
@@ -131,13 +132,15 @@ class Roots:
             ind = []
 
         if len(ind) > 0:
-            result = ((self.rooting_depth/(2*self.root_area_index(soil)*self.effective_radius[ind]))**(1/2)
-                      * soil.hydraulic_conductivity[ind]*self.area_density[ind]).reshape(len(ind), 1)
+            result = ((self.rooting_depth*self.area_per_tree /
+                       (2*self.root_area_index(soil)*self.effective_radius[ind]))**(1/2)
+                      * soil.hydraulic_conductivity[ind]*self.area_density[ind]/self.area_per_tree).reshape(len(ind), 1)
         else:
             root_ind, _ = np.where(soil.depth() < self.rooting_depth)
-            result = ((self.rooting_depth/(2*self.root_area_index(soil)*self.effective_radius))**(1/2)
-                      * soil.hydraulic_conductivity[root_ind].reshape(len(root_ind), 1)*self.area_density)\
-                .reshape(self.num_elements, 1)
+            result = ((self.rooting_depth*self.area_per_tree /
+                       (2*self.root_area_index(soil)*self.effective_radius))**(1/2)
+                      * soil.hydraulic_conductivity[root_ind].reshape(len(root_ind), 1)
+                      * self.area_density/self.area_per_tree).reshape(self.num_elements, 1)
 
         result[np.isnan(result)] = 0.0
         return result

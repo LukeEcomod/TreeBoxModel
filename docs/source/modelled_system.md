@@ -136,7 +136,7 @@ where the sum goes from j=1 (the heartwood) to j=3 (the phloem)
 
 For root elements the rate of radius change of both xylem and phloem is set to zero.
 
-$$ \frac{\text{d}R_{i,xylem/phloem}}{\text{d}t} = 0; \; i \in \text{roots}$$
+$$ \frac{\text{d}R_{i,xylem/phloem}}{\text{d}t} = 0;  i \in \text{roots}$$
 
 Sugar loading and unloading rates
 ---------------------------------
