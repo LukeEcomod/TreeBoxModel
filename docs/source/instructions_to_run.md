@@ -75,6 +75,8 @@ The roots object has a rooting depth of 0.5 meters with 5 elements. The element 
 
 After the roots object is created, the area density is set to be exponential function of the depth or the roots (see figure below). The area density has units m<sup>2</sup> roots / m<sup>3</sup> ground. The root area density is calculated such that the RAI = $\sum$ B<sub>i</sub> $\Delta$z<sub>i</sub> $A_{tree}$ = 30 m$^2$ / tree where B is the root area density, $\Delta z_i$ is the layer thickness and $A_{tree}$ is the ground area that the tree takes.
 
+![Figure of the root area density](./_static/root_area_density.png)
+
 ### Define tree properties
 ```python
 height: float = 2.4
