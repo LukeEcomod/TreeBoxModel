@@ -73,7 +73,7 @@ roots.area_density = b*np.exp(-a*length).reshape(roots.num_elements, 1)
 
 The roots object has a rooting depth of 0.5 meters with 5 elements. The element thickness, 0.1 meters, matches the thickness of the soil layers which is an intrinsic requirement of the model. The effective radius of the roots are set to be 0.5 mm in every layer. Each tree takes 1 m<sup>2</sup> of ground.
 
-After the roots object is created, the area density is set to be exponential function of the depth or the roots (see figure below). The area density has units m<sup>2</sup> roots / m<sup>3</sup> ground. The root area density is calculated such that the RAI = $\sum$ B<sub>i</sub> $\Delta$z<sub>i</sub> $A_{tree}$ = 30 m$^2$ / tree where B is the root area density, $\Delta z_i$ is the layer thickness and $A_{tree}$ is the ground area that the tree takes.
+After the roots object is created, the area density is set to be exponential function of the depth or the roots (see figure below). The area density has units m<sup>2</sup> roots / m<sup>3</sup> ground. The root area density is calculated such that the RAI = &sum; B<sub>i</sub> &Delta;z<sub>i</sub> A<sub>tree</sub> = 30 m$^2$ / tree where B is the root area density, &Delta; z<sub>i</sub> is the layer thickness and A<sub>tree</sub> is the ground area that the tree takes.
 
 ![Figure of the root area density](./_static/root_area_density.png)
 
@@ -124,10 +124,7 @@ sugar_target_concentration: float = 1200
 
 sugar_unloading_slope = 3.5e-7
 ```
-Set the initial sugar unloading rate and parameters for calculating the unloading rate further.
-The sugar_target_concentration is a concentration after which sugar unloading starts and 
-sugar_unloading_slope is the slope parameter (units m/s) for the unloading. See 
-[Nikinmaa et. al., (2014)](https://academic.oup.com/aob/article/114/4/653/2769025) for further details.
+Set the initial sugar unloading rate and parameters for calculating the unloading rate further. The sugar_target_concentration is a concentration after which sugar unloading starts and sugar_unloading_slope is the slope parameter (units m/s) for the unloading. See [Nikinmaa et. al., (2014)](https://academic.oup.com/aob/article/114/4/653/2769025) for further details.
 
 ```python
 axial_permeability_profile: np.ndarray = np.zeros((num_elements, 2))
