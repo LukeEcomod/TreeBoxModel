@@ -39,20 +39,44 @@ class Gas:
     def radial_fluxes(self):
         transport_coefficient: np.ndarray = 2.0*np.pi*self.element_height*self.diffusion_coefficients
         r = self.radius_from_pith()
-        # initialize flux matrix
-        Q_rad = np.zeros(self.na, self.nr)
 
-        Q_out = np.zeros(self.na, self.nr)
+        # initialize flux matrices
+        Q_rad = np.zeros((self.na, self.nr))
 
-        Q_in = np.zeros(self.na, self.nr)
+        Q_out = np.zeros((self.na, self.nr))
+
+        Q_in = np.zeros((self.na, self.nr))
 
         Q_out[:, :-1] = -1.0*transport_coefficient[:, :-1]*np.diff(self.concentration, axis=1)\
             / np.log(np.true_divide(r[:, 1:], r[:, :-1]))
-        Q_out[:, -1] = -1.0*transport_coefficient[:, -1]*(self.concentration[:, -1] - self.ambient_concentration)\
+        Q_out[:, -1] = -1.0*transport_coefficient[:, -1]*(self.concentration[:, -1]-self.ambient_concentration)\
             / np.log((self.r[:, -1] + 0.5 * (r[:, -1] - r[:, -2]))/r[:, -1])
 
         Q_in[:, 1:] = transport_coefficient[:, 1:]*np.diff(self.concentration, axis=1)\
             / np.log(np.true_divide(r[:, 1:], r[:, :-1]))
 
+        Q_rad = Q_out+Q_in
+
+        return Q_rad
+
+    def axial_fluxes(self):
+        A = self.head_area()
+        # initialize flux matrices
+        Q_ax = np.zeros((self.na, self.nr))
+        Q_ax_top = np.zeros((self.na, self.nr))
+        Q_ax_bottom = np.zeros((self.na, self.nr))
+
+        Q_ax_bottom[:, 1:] = -1.0*self.velocity[:, 1:]*A[:, 0:-1]*np.diff(self.concentration)
+        Q_ax_top[:, :-1] = self.velocity[:, :-1] * A[:, 1:]*np.diff(self.concentration)
+        Q_ax = Q_ax_top + Q_ax_bottom
+        return Q_ax
+
     def radius_from_pith(self):
         return np.cumsum(self.element_radius, axis=1)
+
+    def head_area(self):
+        r = self.radius_from_pith()
+        distance_sq = r**2
+        distance_sq[:, 1:] = distance_sq[:, 1:]-distance_sq[:, :-1]
+
+        return np.pi*distance_sq
