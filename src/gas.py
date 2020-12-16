@@ -111,7 +111,20 @@ class Gas:
         """ calculates the equilibration between air and water phase gas concentration at every level.
         """
         volume_air = self.space_division[:, :, 0]*self.element_volume()
-        equilibrium_flux = np.diff(self.concentration, axis=2)*self.equilibration_rate*self.molar_mass/volume_air
+        Q_air_water = np.zeros((self.na, self.nr, 2))
+        equilibrium_flux = np.diff(self.concentration, axis=2)*self.equilibration_rate*volume_air()*volume_air
+        Q_air_water[:, :, 0] = -equilibrium_flux
+        Q_air_water[:, :, 1] = equilibrium_flux
+
+        return Q_air_water
+
+    def sources(self):
+        """ calculates the sources in the tree """
+        return 0
+
+    def sinks(self):
+        """ calculates the sinks in the tree """
+        return 0
 
     def radius_from_pith(self):
         return np.cumsum(self.element_radius, axis=1)

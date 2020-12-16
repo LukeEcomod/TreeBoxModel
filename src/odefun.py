@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from .constants import GRAVITATIONAL_ACCELERATION, RHO_WATER, MAX_ELEMENT_COLUMNS
+from .constants import RHO_WATER, MAX_ELEMENT_COLUMNS
 
 
 def odefun(t: float, y: np.ndarray, model) -> np.ndarray:
