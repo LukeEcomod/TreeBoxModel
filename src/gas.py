@@ -48,7 +48,6 @@ class Gas:
                  elemenent_radius: List[List[float]],
                  element_height: List[List[float]],
                  diffusion_coefficients: List[List[float]],
-                 molar_mass: float,
                  equilibration_rate: float,
                  velocity: List[List[float]],
                  space_division: List[List[List[float]]],
@@ -61,7 +60,6 @@ class Gas:
         self.element_radius: np.ndarray = np.asarray(elemenent_radius).reshape(self.na, self.nr)
         self.element_height: np.ndarray = np.asarray(element_height).reshape(self.na, self.nr)
         self.diffusion_coefficients: np.ndarray = np.asarray(diffusion_coefficients).reshape(self.na, self.nr)
-        self.molar_mass: float = molar_mass
         self.equilibration_rate: float = equilibration_rate
         self.velocity: np.ndarray = np.asarray(velocity).reshape(self.na, self.nr)
         # space division marks the fraction between air, water and cell wall in this order
