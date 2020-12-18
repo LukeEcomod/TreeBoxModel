@@ -1,5 +1,6 @@
 import numpy as np
-from typing import List
+from typing import Dict, List
+from src.tree import Tree
 
 
 class Gas:
@@ -45,7 +46,7 @@ class Gas:
 
     def __init__(self, num_radial_elements: int,
                  num_axial_elements: int,
-                 elemenent_radius: List[List[float]],
+                 element_radius: List[List[float]],
                  element_height: List[List[float]],
                  diffusion_coefficients: List[List[float]],
                  equilibration_rate: float,
@@ -57,7 +58,7 @@ class Gas:
                  ambient_concentration: float):
         self.nr: float = num_radial_elements
         self.na: float = num_axial_elements
-        self.element_radius: np.ndarray = np.asarray(elemenent_radius).reshape(self.na, self.nr)
+        self.element_radius: np.ndarray = np.asarray(element_radius).reshape(self.na, self.nr)
         self.element_height: np.ndarray = np.asarray(element_height).reshape(self.na, self.nr)
         self.diffusion_coefficients: np.ndarray = np.asarray(diffusion_coefficients).reshape(self.na, self.nr)
         self.equilibration_rate: float = equilibration_rate
@@ -81,12 +82,12 @@ class Gas:
 
         Q_in = np.zeros((self.na, self.nr))
 
-        Q_out[:, :-1] = -1.0*transport_coefficient[:, :-1]*np.diff(self.concentration[:, :, 1], axis=1)\
+        Q_out[:, :-1] = -1.0*transport_coefficient[:, :-1]*np.diff(self.concentration[:, :, 0], axis=1)\
             / np.log(np.true_divide(r[:, 1:], r[:, :-1]))
-        Q_out[:, -1] = -1.0*transport_coefficient[:, -1]*(self.concentration[:, -1, 1]-self.ambient_concentration)\
-            / np.log((self.r[:, -1] + 0.5 * (r[:, -1] - r[:, -2]))/r[:, -1])
+        Q_out[:, -1] = -1.0*transport_coefficient[:, -1]*(self.concentration[:, -1, 0]-self.ambient_concentration)\
+            / np.log((r[:, -1] + 0.5 * (r[:, -1] - r[:, -2]))/r[:, -1])
 
-        Q_in[:, 1:] = transport_coefficient[:, 1:]*np.diff(self.concentration[:, :, 1], axis=1)\
+        Q_in[:, 1:] = transport_coefficient[:, 1:]*np.diff(self.concentration[:, :, 0], axis=1)\
             / np.log(np.true_divide(r[:, 1:], r[:, :-1]))
 
         Q_rad = Q_out+Q_in
@@ -100,8 +101,8 @@ class Gas:
         Q_ax_top = np.zeros((self.na, self.nr))
         Q_ax_bottom = np.zeros((self.na, self.nr))
 
-        Q_ax_bottom[1:, :] = -1.0*self.velocity[1:, :]*A[0:-1, :]*np.diff(self.concentration[:, :, 0])
-        Q_ax_top[:-1, :] = self.velocity[:-1, :] * A[1:, :]*np.diff(self.concentration[:, :, 0])
+        Q_ax_bottom[:-1, :] = self.velocity[:-1, :]*A[:-1, :]*np.diff(self.concentration[:, :, 1], axis=0)
+        Q_ax_top[1:, :] = -1.0*self.velocity[1:, :] * A[1:, :]*np.diff(self.concentration[:, :, 1], axis=0)
         Q_ax = Q_ax_top + Q_ax_bottom
         return Q_ax
 
@@ -110,15 +111,26 @@ class Gas:
         """
         volume_air = self.space_division[:, :, 0]*self.element_volume()
         Q_air_water = np.zeros((self.na, self.nr, 2))
-        equilibrium_flux = np.diff(self.concentration, axis=2)*self.equilibration_rate*volume_air()*volume_air
+        conc = self.concentration
+        conc[:, :, 1] /= self.kh
+        equilibrium_flux = np.diff(conc, axis=2).reshape(self.na, self.nr)\
+            * self.equilibration_rate*volume_air
         Q_air_water[:, :, 0] = -equilibrium_flux
         Q_air_water[:, :, 1] = equilibrium_flux
 
         return Q_air_water
 
-    def sources(self):
+    def sources(self, file: Dict = None, tree: Tree = None):
         """ calculates the sources in the tree """
-        return 0
+        P = np.zeros((self.na, self.na))
+        if file is not None:
+            module = __import__(file['module'])
+            func = getattr(module, file['func'])
+            if tree is None:
+                P = func(self)
+            else:
+                P = func(self, tree)
+        return P
 
     def sinks(self):
         """ calculates the sinks in the tree """
@@ -129,9 +141,8 @@ class Gas:
 
     def head_area(self):
         r = self.radius_from_pith()
-        distance_sq = r**2
-        distance_sq[:, 1:] = distance_sq[:, 1:]-distance_sq[:, :-1]
-
+        distance_sq = r**2.0
+        distance_sq[:, 1:] = distance_sq[:, 1:] - distance_sq[:, :-1]
         return np.pi*distance_sq
 
     def element_volume(self):

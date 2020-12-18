@@ -19,8 +19,8 @@ def test_gas():
     kh = 0.342
     temperature = 298.15
     ambient_concentration = 1
-    air_concentration = np.repeat(ambient_concentration, 50).reshape(na, nr, 1)
-    water_concentration = np.repeat(kh*ambient_concentration, 50).reshape(na, nr, 1)
+    air_concentration = np.arange(0, 50).reshape(na, nr, 1)
+    water_concentration = (kh*air_concentration).reshape(na, nr, 1)
     concentration = np.concatenate((air_concentration, water_concentration), axis=2)
 
     return Gas(num_radial_elements=nr,
@@ -39,11 +39,49 @@ def test_gas():
 
 def test_init(test_gas):
     assert test_gas.temperature == 298.15
+    assert test_gas.concentration.shape == (10, 5, 2)
 
 
 def test_radius_from_pith(test_gas):
-    assert 100 == 100
+    r = test_gas.radius_from_pith()
+    print(r)
+    assert all([a == b for a, b in zip(r[0, :], np.array([1, 2, 3, 4, 5]))])
 
 
 def test_head_area(test_gas):
-    assert 100 == 100
+    A = test_gas.head_area()
+    assert A[0, 3] == np.pi*(4**2-3**2)
+
+
+def test_axial_fluxes(test_gas):
+    Q = test_gas.axial_fluxes()
+
+    # Test that the fluxes cancel out
+    assert np.sum(np.sum(Q)) == pytest.approx(0.0, rel=1e-10)
+    # since the concentration is highest at the bottom and lowest at the top
+    # test that the first row (top of the tree) gets positive amount of concentration
+    # and that the last row (bottom of the tree) loses concentration
+    assert all([a > 0 for a in Q[0, :]])
+    assert all([a < 0 for a in Q[-1, :]])
+
+
+def test_radial_fluxes(test_gas):
+    Q = test_gas.radial_fluxes()
+    cbark = np.arange(4, 50, 5)
+    outflux = -2.0*0.1*1e-11*np.pi*(cbark-1)/(np.log((5+0.5*(5-4))/5))
+
+    # Test that the sum flux equals flux out of the tree
+    assert all([a == pytest.approx(b, rel=1e-15) for a, b in zip(np.sum(Q, axis=1), outflux)])
+
+
+def test_air_water_fluxes(test_gas):
+    Q = test_gas.air_water_fluxes()
+
+    assert np.sum(Q) == pytest.approx(0, rel=1e-15)
+
+
+def test_sources(test_gas):
+    file = {'module': 'src.test', 'func': 'source'}
+    P = test_gas.sources(file)
+    print(P)
+    assert 1 == 2
