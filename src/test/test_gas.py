@@ -89,9 +89,3 @@ def test_sources(test_gas):
 def test_sinks(test_gas):
     S = test_gas.sinks(sink)
     assert all([a == 2 for a in S[0, :]])
-
-
-def test_run(test_gas):
-    sol = test_gas.run(1e-3, 120)
-    print(sol)
-    assert 1 == 2

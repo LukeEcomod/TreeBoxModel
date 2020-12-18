@@ -124,7 +124,7 @@ class Gas:
 
     def sources(self, func: Callable = None, tree: Tree = None):
         """ calculates the sources in the tree """
-        P = np.zeros((self.na, self.na))
+        P = np.zeros((self.na, self.nr, 2))
         if func is not None:
             if tree is None:
                 P = func(self)
@@ -134,7 +134,7 @@ class Gas:
 
     def sinks(self, func: Callable = None, tree: Tree = None):
         """ calculates the sinks in the tree """
-        S = np.zeros((self.na, self.na))
+        S = np.zeros((self.na, self.nr, 2))
         if func is not None:
             if tree is None:
                 S = func(self)
@@ -156,9 +156,9 @@ class Gas:
 
     def run(self, time_start: float, time_end: float):
         """ function to run the gas module independently. """
-        yinit = self.concentration.reshape(self.na * self.nr, order='F')
+        yinit = self.concentration.reshape(self.na * self.nr * 2, order='F')
 
         sol = solve_ivp(lambda t, y: odefun_gas(t, y, self), (time_start, time_end), yinit, method='BDF',
-                        rtol=1e-6, atol=1e-3)
+                        rtol=1e-9, atol=1e-6)
 
         return sol

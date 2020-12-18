@@ -1,10 +1,9 @@
 from typing import Callable
 import numpy as np
-from src.gas import Gas
 from typing import Callable
 
 
-def odefun_gas(t: float, y: np.ndarray, gas: Gas, source: Callable = None, sink: Callable = None) -> np.ndarray:
+def odefun_gas(t: float, y: np.ndarray, gas, source: Callable = None, sink: Callable = None) -> np.ndarray:
     # update gas parameters
     gas.concentration = y.reshape(gas.na, gas.nr, 2)
 
