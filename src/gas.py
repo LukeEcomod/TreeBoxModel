@@ -1,6 +1,8 @@
 import numpy as np
-from typing import Dict, List
+from scipy.integrate import solve_ivp
+from typing import List, Callable
 from src.tree import Tree
+from .odefun_gas import odefun_gas
 
 
 class Gas:
@@ -120,21 +122,25 @@ class Gas:
 
         return Q_air_water
 
-    def sources(self, file: Dict = None, tree: Tree = None):
+    def sources(self, func: Callable = None, tree: Tree = None):
         """ calculates the sources in the tree """
         P = np.zeros((self.na, self.na))
-        if file is not None:
-            module = __import__(file['module'])
-            func = getattr(module, file['func'])
+        if func is not None:
             if tree is None:
                 P = func(self)
             else:
                 P = func(self, tree)
         return P
 
-    def sinks(self):
+    def sinks(self, func: Callable = None, tree: Tree = None):
         """ calculates the sinks in the tree """
-        return 0
+        S = np.zeros((self.na, self.na))
+        if func is not None:
+            if tree is None:
+                S = func(self)
+            else:
+                S = func(self, tree)
+        return S
 
     def radius_from_pith(self):
         return np.cumsum(self.element_radius, axis=1)
@@ -147,3 +153,12 @@ class Gas:
 
     def element_volume(self):
         return self.head_area()*self.element_height
+
+    def run(self, time_start: float, time_end: float):
+        """ function to run the gas module independently. """
+        yinit = self.concentration.reshape(self.na * self.nr, order='F')
+
+        sol = solve_ivp(lambda t, y: odefun_gas(t, y, self), (time_start, time_end), yinit, method='BDF',
+                        rtol=1e-6, atol=1e-3)
+
+        return sol

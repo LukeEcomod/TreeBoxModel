@@ -1,6 +1,7 @@
 import numpy as np
 from ..gas import Gas
 import pytest
+from .source_sink_test import source, sink
 
 
 @pytest.fixture(scope="function")
@@ -81,7 +82,16 @@ def test_air_water_fluxes(test_gas):
 
 
 def test_sources(test_gas):
-    file = {'module': 'src.test', 'func': 'source'}
-    P = test_gas.sources(file)
-    print(P)
+    P = test_gas.sources(source)
+    assert all([a == 1.5 for a in P[-1, :]])
+
+
+def test_sinks(test_gas):
+    S = test_gas.sinks(sink)
+    assert all([a == 2 for a in S[0, :]])
+
+
+def test_run(test_gas):
+    sol = test_gas.run(1e-3, 120)
+    print(sol)
     assert 1 == 2
