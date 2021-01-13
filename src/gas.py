@@ -57,7 +57,8 @@ class Gas:
                  concentration: List[List[float]],
                  henrys_law_coefficient: float,
                  temperature: float,
-                 ambient_concentration: float):
+                 ambient_concentration: float,
+                 sources_and_sinks_func: Callable = None):
         self.nr: float = num_radial_elements
         self.na: float = num_axial_elements
         self.element_radius: np.ndarray = np.asarray(element_radius).reshape(self.na, self.nr)
@@ -71,7 +72,8 @@ class Gas:
         self.kh: float = henrys_law_coefficient  # unitless form kh = cair/cwater
         self.temperature: float = temperature
         self.ambient_concentration: float = ambient_concentration
-        self.flux_out: np.ndarray = np.zeros((self.nr, self.na))
+        self.flux_out: np.ndarray = np.zeros((self.na, 1))
+        self.sources_and_sinks_func: Callable = sources_and_sinks_func
 
     def radial_fluxes(self):
         transport_coefficient: np.ndarray = 2.0*np.pi*self.element_height*self.diffusion_coefficients
@@ -113,34 +115,21 @@ class Gas:
         """
         volume_air = self.space_division[:, :, 0]*self.element_volume()
         Q_air_water = np.zeros((self.na, self.nr, 2))
-        conc = self.concentration
-        conc[:, :, 1] /= self.kh
+        conc = self.concentration.copy()
+
+        conc[:, :, 1] = conc[:, :, 1]/self.kh
         equilibrium_flux = np.diff(conc, axis=2).reshape(self.na, self.nr)\
             * self.equilibration_rate*volume_air
-        Q_air_water[:, :, 0] = -equilibrium_flux
-        Q_air_water[:, :, 1] = equilibrium_flux
+        Q_air_water[:, :, 0] = equilibrium_flux
+        Q_air_water[:, :, 1] = -equilibrium_flux
 
         return Q_air_water
 
-    def sources(self, func: Callable = None, tree: Tree = None):
-        """ calculates the sources in the tree """
-        P = np.zeros((self.na, self.nr, 2))
-        if func is not None:
-            if tree is None:
-                P = func(self)
-            else:
-                P = func(self, tree)
-        return P
-
-    def sinks(self, func: Callable = None, tree: Tree = None):
-        """ calculates the sinks in the tree """
-        S = np.zeros((self.na, self.nr, 2))
-        if func is not None:
-            if tree is None:
-                S = func(self)
-            else:
-                S = func(self, tree)
-        return S
+    def sources_and_sinks(self):
+        R = np.zeros((self.na, self.nr, 2))
+        if self.sources_and_sinks_func is not None:
+            R = self.sources_and_sinks_func
+        return R
 
     def radius_from_pith(self):
         return np.cumsum(self.element_radius, axis=1)
@@ -156,9 +145,11 @@ class Gas:
 
     def run(self, time_start: float, time_end: float):
         """ function to run the gas module independently. """
-        yinit = self.concentration.reshape(self.na * self.nr * 2, order='F')
-
+        yinit = np.concatenate((self.concentration.reshape(self.na * self.nr * 2, order='F'),
+                                self.flux_out.reshape(self.na, order='F')))
         sol = solve_ivp(lambda t, y: odefun_gas(t, y, self), (time_start, time_end), yinit, method='BDF',
-                        rtol=1e-9, atol=1e-6)
-
+                        rtol=1e-12, atol=1e-12)
+        conc = sol.y[:, -1]
+        self.concentration = conc[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
+        self.flux_out = conc[self.na*self.nr*2:].reshape(self.na, 1, order='F')
         return sol

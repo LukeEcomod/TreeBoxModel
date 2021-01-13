@@ -82,10 +82,7 @@ def test_air_water_fluxes(test_gas):
 
 
 def test_sources(test_gas):
-    P = test_gas.sources(source)
+    P = test_gas.sources_and_sinks(source)
     assert all([a == 1.5 for a in P[-1, :]])
-
-
-def test_sinks(test_gas):
-    S = test_gas.sinks(sink)
-    assert all([a == 2 for a in S[0, :]])
+    S = test_gas.sources_and_sinks(sink)
+    assert all([a == 2.0 for a in S[0, :]])
