@@ -1,7 +1,7 @@
 import numpy as np
 from ..gas import Gas
 import pytest
-from .source_sink_test import source, sink
+from .source_sink_test import source
 
 
 @pytest.fixture(scope="function")
@@ -35,7 +35,8 @@ def test_gas():
                concentration=concentration,
                henrys_law_coefficient=kh,
                temperature=temperature,
-               ambient_concentration=ambient_concentration)
+               ambient_concentration=ambient_concentration,
+               sources_and_sinks_func=source(1.5))
 
 
 def test_init(test_gas):
@@ -82,7 +83,5 @@ def test_air_water_fluxes(test_gas):
 
 
 def test_sources(test_gas):
-    P = test_gas.sources_and_sinks(source)
+    P = test_gas.sources_and_sinks()
     assert all([a == 1.5 for a in P[-1, :]])
-    S = test_gas.sources_and_sinks(sink)
-    assert all([a == 2.0 for a in S[0, :]])

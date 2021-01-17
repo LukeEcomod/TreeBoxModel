@@ -22,7 +22,8 @@ def ncf(test_model):
                  ['number of tree elements', 'pcs.', ("index"), 'i4'],
                  'simulation_time': ['Time in simulation', 's', ("index"), 'f4']}
 
-    ncf = initialize_netcdf(test_model.outputfile, test_model.tree.num_elements, variables)
+    dimensions = {'axial_layers': test_model.tree.num_elements, 'radial_layers': 2}
+    ncf = initialize_netcdf(test_model.outputfile, dimensions, variables)
     yield ncf
     print('\n Cleaning up NetCDF4 file')
     ncf.close()

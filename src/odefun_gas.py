@@ -14,10 +14,9 @@ def odefun_gas(t: float, y: np.ndarray, gas) -> np.ndarray:
 
     dcdt_air = (Q_rad + R[:, :, 0] + Q_air_water[:, :, 0])/volume_air
     dcdt_water = (Q_ax + R[:, :, 1] + Q_air_water[:, :, 1])/volume_water_cell
-    dcdt_flux_out = -1.0*np.minimum(0, Q_rad[:, -1])
+    dndt_out = -1.0*np.minimum(0, Q_rad[:, -1])
     # print(Q_rad[:, -1])
     dydt = np.concatenate([dcdt_air.reshape(gas.na*gas.nr, order='F'),
                            dcdt_water.reshape(gas.na*gas.nr, order='F'),
-                           dcdt_flux_out.reshape(gas.na, order='F')])
-
+                           dndt_out.reshape(gas.na, order='F')])
     return dydt

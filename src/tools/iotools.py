@@ -1,23 +1,23 @@
+import numpy as np
+import os.path
+from ..tree import Tree
+from ..gas import Gas
 from typing import Dict
 from netCDF4 import Dataset, Variable
 # from ..model import Model # TODO: check why this import fails
-from ..constants import MAX_ELEMENT_COLUMNS
-from ..model_variables import index_dim_vars, soil_dim_vars, root_dim_vars, axial_layer_dim_vars
-from ..tree import Tree
-import os.path
-import numpy as np
+from ..model_variables import (index_dim_vars, soil_dim_vars, root_dim_vars, axial_layer_dim_vars,
+                               gas_three_dim_vars, gas_index_dim_vars, gas_axial_dim_vars)
 
 
 def initialize_netcdf(filename: str,
-                      axial_elements: int,
-                      soil_elements: int,
-                      root_elements: int,
+                      dimensions: Dict,
                       variables: Dict) -> Dataset:
     """ Initializes a netcdf file to be ready for saving simulation results.
 
         Args:
             filename (str): name of the NETCDF4 file that is created
-            axial_elements (int): Number of axial elements in the Tree
+            dimensions (Dict): dimensions of the ncf file to be created.
+                Key = name of the dimension, value=dimension length.
             variables (Dict): The names, descriptions, units, dimensions and precision of each variable that is saved
                 to the netcdf file. The key of each dictionary element is used to label the variables.
                 The value of each dictionary element needs to be a list where <br />
@@ -39,10 +39,8 @@ def initialize_netcdf(filename: str,
 
     # create dimensions
     ncf.createDimension("index", 0)
-    ncf.createDimension("radial_layers", MAX_ELEMENT_COLUMNS)
-    ncf.createDimension("axial_layers", axial_elements)
-    ncf.createDimension("soil_elements", soil_elements)
-    ncf.createDimension("root_elements", root_elements)
+    for (key, value) in dimensions.items():
+        ncf.createDimension(key, value)
 
     # create the index variable
     ind: Variable = ncf.createVariable('index', 'i4', ('index'))
@@ -75,11 +73,17 @@ def write_netcdf(ncf: Dataset, results: Dict) -> None:
     ind: int = ncf['index'].shape[0]
     ncf['index'][ind] = ind
     for key in results.keys():
-        if key in index_dim_vars:
+        if (key in index_dim_vars
+                or key in gas_index_dim_vars):
             # variable has dimension ("index")
             ncf[key][ind] = results[key]
-        elif key in root_dim_vars or key in soil_dim_vars or key in axial_layer_dim_vars:
+        elif (key in root_dim_vars
+              or key in soil_dim_vars
+              or key in axial_layer_dim_vars
+              or key in gas_axial_dim_vars):
             ncf[key][ind, :] = results[key].reshape(len(results[key]),)
+        elif key in gas_three_dim_vars:
+            ncf[key][ind, :, :, :] = results[key]
         else:
             # the variable has dimension
             # ("index", "radial_layers", "axial_layers")
@@ -115,5 +119,31 @@ def tree_properties_to_dict(tree: Tree) -> Dict:
     properties['radius'] = tree.element_radius[:, 1:]
     properties['area'] = np.concatenate([tree.element_area([], 0), tree.element_area([], 1)], axis=1)
     properties['volume'] = np.concatenate([tree.element_volume([], 0), tree.element_volume([], 1)], axis=1)
+
+    return properties
+
+
+def gas_properties_to_dict(gas: Gas) -> Dict:
+    """ Transfers gas properties into a dictionary.
+
+    Args:
+        gas (Gas): Instance of the Gas class.
+
+    Returns:
+        (Dict): Dictionary of the gas properties.
+
+    """
+    properties = {}
+    properties['gas_concentration'] = gas.concentration
+    properties['gas_space_division'] = gas.space_division
+    properties['gas_element_radii'] = gas.element_radius
+    properties['gas_element_height'] = gas.element_height
+    properties['gas_diffusion_coef'] = gas.diffusion_coefficients
+    properties['gas_eq_rate'] = gas.equilibration_rate
+    properties['gas_velocity'] = gas.velocity
+    properties['gas_henry_coef'] = gas.kh
+    properties['gas_temperature'] = gas.temperature
+    properties['gas_concentration_ambient'] = gas.ambient_concentration
+    properties['gas_moles_out'] = gas.n_out
 
     return properties

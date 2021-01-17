@@ -18,7 +18,7 @@ def test_tree(test_roots, test_soil):
     # except for transp/photosynth/loading/unloading/sugar profile
     height = 12.0
     element_height = np.concatenate((np.repeat(0.3, repeats=40),
-                                     test_roots.root_layer_thickness(test_soil).reshape(5,)))
+                                     test_roots.layer_thickness(test_soil).reshape(5,)))
     num_elements = 45
 
     radii = [0.5, 1, 2]

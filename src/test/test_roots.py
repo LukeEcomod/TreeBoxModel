@@ -17,10 +17,12 @@ def test_roots():
     effective_radius[:2] = 0.1
 
     soil_conductance_scale = 0.01
+    area_per_tree = 1
     return Roots(rooting_depth=rooting_depth,
                  area_density=area_density,
                  effective_radius=effective_radius,
                  soil_conductance_scale=soil_conductance_scale,
+                 area_per_tree=area_per_tree,
                  num_elements=num_elements)
 
 

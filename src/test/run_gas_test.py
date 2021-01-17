@@ -1,5 +1,6 @@
 import numpy as np
-from src.gas import Gas
+from numpy.core.arrayprint import _get_format_function
+from ..gas import Gas
 import matplotlib.pyplot as plt
 
 nr = 25
@@ -12,7 +13,7 @@ def init_gas():
     D = np.repeat(1e-11, na*nr).reshape(na, nr)
     eq_rate = 0.005
     velocity = np.repeat(1e-4, na*nr).reshape(na, nr)
-    velocity[:, 11:] = 0.0
+    velocity[:, :12] = 0.0
     air_fraction = np.repeat(0.29, na*nr).reshape(na, nr, 1)
     water_fraction = np.repeat(0.52, na*nr).reshape(na, nr, 1)
     cell_fraction = np.repeat(0.19, na*nr).reshape(na, nr, 1)
@@ -23,7 +24,7 @@ def init_gas():
     air_concentration = np.repeat(ambient_concentration, repeats=na*nr).reshape(na, nr, 1)
     water_concentration = (kh*air_concentration).reshape(na, nr, 1)
     concentration = np.concatenate((air_concentration, water_concentration), axis=2)
-    sources_and_sinks_func = source(1e-10)
+    sources_and_sinks_func = source(1e-9)
 
     return Gas(num_radial_elements=nr,
                num_axial_elements=na,
@@ -48,13 +49,17 @@ def source(source_strength):
 
 if __name__ == '__main__':
     gas = init_gas()
-    print(gas.concentration)
-    sol = gas.run(1e-12, 3600)
-    print(sol)
-    print(sol.t.shape)
-    print(sol.y.shape)
+    sol = gas.run(1e-12, 60)
     gg = sol.y[:na*nr*2, -1].reshape(na, nr, 2, order='F')
-    fout = sol.y[na*nr*2:, -1]
-    print(fout)
+    nout = sol.y[na*nr*2:, -1].reshape(na, 1, order='F')
+    r = gas.radius_from_pith()
+    h = gas.element_height
+    flux_out = nout/(2*np.pi*r[:, -1].reshape(na, 1)*h[:, -1].reshape(na, 1))*16.04  # g / m2 / h
+    flux_out[flux_out < 1e-11] = 0.0
+    print(flux_out)
+    gg = sol.y[:na*nr*2, -1].reshape(na, nr, 2, order='F')
+    print((gg > 0.0).all())
+    print(np.where(gg < 0))
+    print(gg[24, :, :])
     plt.plot(sol.t, sol.y[624, :]/8.8e-5)
     plt.show()

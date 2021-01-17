@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from typing import List, Callable
-from src.tree import Tree
 from .odefun_gas import odefun_gas
 
 
@@ -72,7 +71,7 @@ class Gas:
         self.kh: float = henrys_law_coefficient  # unitless form kh = cair/cwater
         self.temperature: float = temperature
         self.ambient_concentration: float = ambient_concentration
-        self.flux_out: np.ndarray = np.zeros((self.na, 1))
+        self.n_out: np.ndarray = np.zeros((self.na, 1))
         self.sources_and_sinks_func: Callable = sources_and_sinks_func
 
     def radial_fluxes(self):
@@ -86,12 +85,12 @@ class Gas:
 
         Q_in = np.zeros((self.na, self.nr))
 
-        Q_out[:, :-1] = -1.0*transport_coefficient[:, :-1]*np.diff(self.concentration[:, :, 0], axis=1)\
+        Q_out[:, :-1] = transport_coefficient[:, :-1]*np.diff(self.concentration[:, :, 0], axis=1)\
             / np.log(np.true_divide(r[:, 1:], r[:, :-1]))
-        Q_out[:, -1] = -1.0*transport_coefficient[:, -1]*(self.concentration[:, -1, 0]-self.ambient_concentration)\
+        Q_out[:, -1] = transport_coefficient[:, -1]*(self.ambient_concentration - self.concentration[:, -1, 0])\
             / np.log((r[:, -1] + 0.5 * (r[:, -1] - r[:, -2]))/r[:, -1])
 
-        Q_in[:, 1:] = transport_coefficient[:, 1:]*np.diff(self.concentration[:, :, 0], axis=1)\
+        Q_in[:, 1:] = -1.0*transport_coefficient[:, 1:]*np.diff(self.concentration[:, :, 0], axis=1)\
             / np.log(np.true_divide(r[:, 1:], r[:, :-1]))
 
         Q_rad = Q_out+Q_in
@@ -146,10 +145,10 @@ class Gas:
     def run(self, time_start: float, time_end: float):
         """ function to run the gas module independently. """
         yinit = np.concatenate((self.concentration.reshape(self.na * self.nr * 2, order='F'),
-                                self.flux_out.reshape(self.na, order='F')))
+                                self.n_out.reshape(self.na, order='F')))
         sol = solve_ivp(lambda t, y: odefun_gas(t, y, self), (time_start, time_end), yinit, method='BDF',
                         rtol=1e-12, atol=1e-12)
         conc = sol.y[:, -1]
         self.concentration = conc[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
-        self.flux_out = conc[self.na*self.nr*2:].reshape(self.na, 1, order='F')
+        self.n_out = conc[self.na*self.nr*2:].reshape(self.na, 1, order='F')
         return sol
