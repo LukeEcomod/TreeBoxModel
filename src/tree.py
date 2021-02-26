@@ -148,6 +148,7 @@ class Tree:
 
         # initialize viscosity to be viscosity of water
         self.viscosity: np.ndarray = np.asarray([[VISCOSITY_WATER, VISCOSITY_WATER]]*self.num_elements)
+
         # update phloem viscosity due to sucrose
         self.update_sap_viscosity()
 
@@ -280,7 +281,8 @@ class Tree:
         # calculate sugar volume in sap
         sugar_volume_fraction: np.ndarray = self.sugar_concentration_as_numpy_array() * M_SUCROSE / RHO_SUCROSE
         sugar_volume_fraction = sugar_volume_fraction.reshape(self.num_elements, 1)
-
+        sugar_volume_fraction = np.minimum(sugar_volume_fraction, 0.7)
         viscosity: np.ndarray = VISCOSITY_WATER * np.exp(4.68 * 0.956 * sugar_volume_fraction /
                                                          (1 - 0.956 * sugar_volume_fraction))
+
         self.viscosity[:, 1] = viscosity.reshape(self.num_elements,)

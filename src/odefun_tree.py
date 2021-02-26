@@ -3,7 +3,7 @@ import math
 from .constants import RHO_WATER, MAX_ELEMENT_COLUMNS
 
 
-def odefun(t: float, y: np.ndarray, model) -> np.ndarray:
+def odefun_tree(t: float, y: np.ndarray, model) -> np.ndarray:
     """ Calculates the right hand side of the model ODEs.
 
     The modelled systen and the ODEs are described in the [modelled system](modelled_system.html).

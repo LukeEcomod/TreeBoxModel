@@ -1,7 +1,6 @@
 import numpy as np
 import os.path
 from ..tree import Tree
-from ..gas import Gas
 from typing import Dict
 from netCDF4 import Dataset, Variable
 # from ..model import Model # TODO: check why this import fails
@@ -123,7 +122,7 @@ def tree_properties_to_dict(tree: Tree) -> Dict:
     return properties
 
 
-def gas_properties_to_dict(gas: Gas) -> Dict:
+def gas_properties_to_dict(gas) -> Dict:
     """ Transfers gas properties into a dictionary.
 
     Args:
@@ -135,7 +134,8 @@ def gas_properties_to_dict(gas: Gas) -> Dict:
     """
     properties = {}
     properties['gas_concentration'] = gas.concentration
-    properties['gas_space_division'] = gas.space_division
+    properties['gas_space_division'] = np.stack((gas.space_division[:, :, 0],
+                                                 np.sum(gas.space_division[:, :, 1:], axis=2)), axis=2)
     properties['gas_element_radii'] = gas.element_radius
     properties['gas_element_height'] = gas.element_height
     properties['gas_diffusion_coef'] = gas.diffusion_coefficients
@@ -143,7 +143,7 @@ def gas_properties_to_dict(gas: Gas) -> Dict:
     properties['gas_velocity'] = gas.velocity
     properties['gas_henry_coef'] = gas.kh
     properties['gas_temperature'] = gas.temperature
-    properties['gas_concentration_ambient'] = gas.ambient_concentration
+    properties['gas_ambient_concentration'] = gas.ambient_concentration
     properties['gas_moles_out'] = gas.n_out
 
     return properties

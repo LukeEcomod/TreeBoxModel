@@ -36,3 +36,5 @@ latexmkrc
 
 runs/
 docs/build/
+
+*.dat

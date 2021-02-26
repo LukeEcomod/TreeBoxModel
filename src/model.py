@@ -8,7 +8,7 @@ from .constants import GRAVITATIONAL_ACCELERATION, RHO_WATER,\
     MOLAR_GAS_CONSTANT, TEMPERATURE, MAX_ELEMENT_COLUMNS
 from .tools.iotools import initialize_netcdf, write_netcdf, tree_properties_to_dict
 from .model_variables import all_variables
-from .odefun import odefun
+from .odefun_tree import odefun_tree
 from netCDF4 import Dataset
 
 
@@ -30,9 +30,11 @@ class Model:
     def __init__(self, tree: Tree, soil: Soil, outputfile: str = ''):
         self.tree: Tree = tree
         self.soil = soil
+        self.outputfile = outputfile
         if(len(outputfile) != 0):
-            self.ncf: Dataset = initialize_netcdf(outputfile, tree.num_elements,
-                                                  soil.num_elements, tree.roots.num_elements, all_variables)
+            dims = {'axial_layers': tree.num_elements, 'radial_layers': 2,
+                    'root_elements': tree.roots.num_elements, 'soil_elements': soil.num_elements}
+            self.ncf: Dataset = initialize_netcdf(outputfile, dims, all_variables)
 
     def axial_fluxes(self) -> np.ndarray:
         """Calculates axial sap mass flux for every element.
@@ -155,6 +157,9 @@ class Model:
         * :math:`g`: gravitational acceleration (:math:`\\frac{m}{s^2}`)
         * :math:`P`: Pressure in either the soil element or root xylem element
 
+        The resulting flux has units `:math:\\frac{kg}{m^2s}` and it is assumed that this flux is multiplied
+        with soil area per tree which is assumed to equal 1
+
         Returns:
             numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 1]: The root water uptake in units kg/s
 
@@ -169,7 +174,8 @@ class Model:
         P_root = self.tree.pressure[ind, 0].reshape(len(ind), 1)
         P_soil = self.soil.pressure[soil_ind].reshape(len(ind), 1)
         Q_root = np.zeros((self.tree.num_elements, 1))
-        Q_root[ind, 0] = (gi/GRAVITATIONAL_ACCELERATION*(P_soil-P_root)).reshape(len(ind),)
+        Q_root[ind, 0] = (gi/GRAVITATIONAL_ACCELERATION*(P_soil-P_root))\
+            .reshape(len(ind),)*self.tree.roots.area_per_tree
         return Q_root
 
     def run(self, time_start: float = 1e-3, time_end: float = 120.0,
@@ -237,10 +243,10 @@ class Model:
 
         """
         # If time < 0 save the first stage of the tree
-        if(time_start < 1e-3):
-            print(datetime.datetime.now(), "\t", time_end)
+        # print(datetime.datetime.now(), "\t", time_end)
+        if(time_start < 1e-3 and len(self.outputfile) != 0):
             results = tree_properties_to_dict(self.tree)
-            results['simulation_time'] = time_end
+            results['simulation_time'] = time_start
             results['model_index'] = ind
             results['dqrad'] = self.radial_fluxes()
             results['dqax'], results['dqax_up'], results['dqax_down'] = self.axial_fluxes()
@@ -260,7 +266,7 @@ class Model:
                                 initial_values[1].reshape(self.tree.num_elements, order='F'),
                                 initial_values[2].reshape(self.tree.num_elements*3, order='F')])
 
-        sol = solve_ivp(lambda t, y: odefun(t, y, self), (time_start, time_end), yinit, method='BDF',
+        sol = solve_ivp(lambda t, y: odefun_tree(t, y, self), (time_start, time_end), yinit, method='BDF',
                         rtol=1e-6, atol=1e-3)
         last_tree_stage = sol.y[:, -1]
         pressures = last_tree_stage[0:self.tree.num_elements*2].reshape(
@@ -274,15 +280,16 @@ class Model:
         self.tree.element_radius = element_radius
         self.tree.update_sap_viscosity()
         # save the tree status
-        print(datetime.datetime.now(), "\t", time_end)
-        results = tree_properties_to_dict(self.tree)
-        results['simulation_time'] = time_end
-        results['model_index'] = ind
-        results['dqrad'] = self.radial_fluxes()
-        results['dqax'], results['dqax_up'], results['dqax_down'] = self.axial_fluxes()
-        results['dqroot'] = self.root_fluxes()
-        results['soil_dz'] = self.soil.layer_thickness
-        results['soil_kh'] = self.soil.hydraulic_conductivity
-        results['soil_pressure'] = self.soil.pressure
-        results['soil_root_k'] = self.tree.roots.conductivity(self.soil)
-        write_netcdf(self.ncf, results)
+        if(len(self.outputfile) != 0):
+            print(datetime.datetime.now(), "\t", time_end)
+            results = tree_properties_to_dict(self.tree)
+            results['simulation_time'] = time_end
+            results['model_index'] = ind
+            results['dqrad'] = self.radial_fluxes()
+            results['dqax'], results['dqax_up'], results['dqax_down'] = self.axial_fluxes()
+            results['dqroot'] = self.root_fluxes()
+            results['soil_dz'] = self.soil.layer_thickness
+            results['soil_kh'] = self.soil.hydraulic_conductivity
+            results['soil_pressure'] = self.soil.pressure
+            results['soil_root_k'] = self.tree.roots.conductivity(self.soil)
+            write_netcdf(self.ncf, results)

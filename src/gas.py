@@ -1,49 +1,14 @@
+from src.tools.iotools import gas_properties_to_dict
 import numpy as np
 from scipy.integrate import solve_ivp
-from typing import List, Callable
+from typing import List, Callable, Dict
 from .odefun_gas import odefun_gas
+from netCDF4 import Dataset
+from src.tools.iotools import initialize_netcdf, write_netcdf
+from src.model_variables import gas_variables
 
 
 class Gas:
-    """
-        Description of Gas
-
-        Attributes:
-            nr (type):
-            na (type):
-            element_radius (type):
-            na, (type):
-            nr) (type):
-            element_height (type):
-            na, (type):
-            nr) (type):
-            diffusion_coefficients (type):
-            na, (type):
-            nr) (type):
-            velocity (type):
-            na, (type):
-            nr) (type):
-            space_division (type):
-            na, (type):
-            nr, (type):
-            concentration (type):
-            na, (type):
-            nr) (type):
-            kh (type):
-            temperature (type):
-            ambient_concentration (type):
-
-        Args:
-            num_radial_elements (int):
-            num_axial_elements (int):
-            elemenent_radius (List[List[float]],element_height:List[List[float]]):
-            diffusion_coefficients (List[List[float]],velocity:List[List[float]]):
-            space_division (List[List[List[float]]],concentration:List[List[float]]):
-            henrys_law_coefficient (float):
-            temperature (float):
-            ambient_concentration (float):
-
-        """
 
     def __init__(self, num_radial_elements: int,
                  num_axial_elements: int,
@@ -57,7 +22,9 @@ class Gas:
                  henrys_law_coefficient: float,
                  temperature: float,
                  ambient_concentration: float,
-                 sources_and_sinks_func: Callable = None):
+                 outputfile: str = '',
+                 sources_and_sinks_func: Callable = None,
+                 max_output_lines: int = 100):
         self.nr: float = num_radial_elements
         self.na: float = num_axial_elements
         self.element_radius: np.ndarray = np.asarray(element_radius).reshape(self.na, self.nr)
@@ -73,6 +40,11 @@ class Gas:
         self.ambient_concentration: float = ambient_concentration
         self.n_out: np.ndarray = np.zeros((self.na, 1))
         self.sources_and_sinks_func: Callable = sources_and_sinks_func
+        self.outputfile = outputfile
+        self.max_output_lines = max_output_lines
+        if len(outputfile) != 0:
+            dims: Dict = {"axial_layers": self.na, "radial_layers": self.nr, "space_layers": 2}
+            self.ncf: Dataset = initialize_netcdf(outputfile, dims, gas_variables)
 
     def radial_fluxes(self):
         transport_coefficient: np.ndarray = 2.0*np.pi*self.element_height*self.diffusion_coefficients
@@ -146,9 +118,31 @@ class Gas:
         """ function to run the gas module independently. """
         yinit = np.concatenate((self.concentration.reshape(self.na * self.nr * 2, order='F'),
                                 self.n_out.reshape(self.na, order='F')))
-        sol = solve_ivp(lambda t, y: odefun_gas(t, y, self), (time_start, time_end), yinit, method='BDF',
-                        rtol=1e-12, atol=1e-12)
+        if(time_start == 0):
+            time_start = 1e-10
+        sol = solve_ivp(lambda t, y: odefun_gas(t, y, self), (time_start, time_end), yinit, method='DOP853',
+                        rtol=1e-6, atol=1e-6)
         conc = sol.y[:, -1]
         self.concentration = conc[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
         self.n_out = conc[self.na*self.nr*2:].reshape(self.na, 1, order='F')
+        res = sol.y
+        time = sol.t
+        if len(self.outputfile) != 0:
+
+            results = gas_properties_to_dict(self)
+            # trim the solution for saving if the length of solution points exceeds maximum
+            if(res.shape[1] > self.max_output_lines):
+                ind = np.concatenate(([0],
+                                      np.arange(1, res.shape[1]-2,
+                                                int(np.round((res.shape[1]-2)/(self.max_output_lines-2)))),
+                                      [res.shape[1]-1]))
+                res = res[:, ind]
+                time = time[ind]
+            for (ind, line) in enumerate(np.rollaxis(res, 1)):
+
+                results['gas_concentration'] = line[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
+                results['gas_moles_out'] = line[self.na*self.nr*2:].reshape(self.na, 1, order='F')
+                results['gas_simulation_time'] = time[ind]
+                write_netcdf(self.ncf, results)
+
         return sol

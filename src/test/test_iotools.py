@@ -2,7 +2,6 @@ from .test_model import test_model
 from .test_tree import test_tree
 from .test_soil import test_soil
 from .test_roots import test_roots
-from typing import List
 from ..tools.iotools import initialize_netcdf, write_netcdf
 import os
 import pytest
