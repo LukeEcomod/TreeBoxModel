@@ -8,7 +8,8 @@ __pycache__
 test.out
 *.nc
 *profile*
-.png
+*.png
+*.gif
 /figures
 
 # latex files

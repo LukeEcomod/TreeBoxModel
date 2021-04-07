@@ -51,7 +51,9 @@ all_variables = {'height': ['height of the tree', 'm', ("index"), 'f4'],
                  'soil_root_k':
                  ['Soil-root system total conductivity', '1/s', ("index", "root_elements"), 'f4'],
                  'dqroot':
-                 ['Root water uptake', 'kg/s', ("index", "axial_layers"), 'f4']}
+                 ['Root water uptake', 'kg/s', ("index", "axial_layers"), 'f4'],
+                 'sapflow':
+                 ['Sapflow velocity in the tree', 'm/s', ("index", "axial_layers", "radial_layers"), 'f4']}
 
 gas_variables = {
     'gas_element_height':

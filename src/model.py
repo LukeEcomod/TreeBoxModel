@@ -245,7 +245,7 @@ class Model:
         # If time < 0 save the first stage of the tree
         # print(datetime.datetime.now(), "\t", time_end)
         if(time_start < 1e-3 and len(self.outputfile) != 0):
-            results = tree_properties_to_dict(self.tree)
+            results = tree_properties_to_dict(self)
             results['simulation_time'] = time_start
             results['model_index'] = ind
             results['dqrad'] = self.radial_fluxes()
@@ -282,7 +282,7 @@ class Model:
         # save the tree status
         if(len(self.outputfile) != 0):
             print(datetime.datetime.now(), "\t", time_end)
-            results = tree_properties_to_dict(self.tree)
+            results = tree_properties_to_dict(self)
             results['simulation_time'] = time_end
             results['model_index'] = ind
             results['dqrad'] = self.radial_fluxes()

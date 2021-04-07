@@ -1,10 +1,10 @@
 from typing import Dict, Tuple
 import numpy as np
-from src.model import Model
+# from src.model import Model
 from src.constants import RHO_WATER
 
 
-def convert_tree_to_gas_properties(model: Model, gas_dims: Tuple, c_gas_soil=0.0) -> Dict:
+def convert_tree_to_gas_properties(model, gas_dims: Tuple, c_gas_soil=0.0) -> Dict:
 
     r, r_mask = convert_tree_radii_to_gas(model, gas_dims)
     h, h_mask = convert_tree_height_to_gas(model, gas_dims)
@@ -26,22 +26,22 @@ def convert_tree_to_gas_properties(model: Model, gas_dims: Tuple, c_gas_soil=0.0
     return params
 
 
-def convert_tree_flux_to_velocity(model: Model):
+def convert_tree_flux_to_velocity(model):
 
     flux, _, _ = model.axial_fluxes()
     flux = flux/RHO_WATER  # flux in m3/s
     velocity_xylem = flux[:, 0].reshape(model.tree.num_elements, 1) / model.tree.element_area([], 0)
-    velocity_phloem = flux[:, 0].reshape(model.tree.num_elements, 1) / model.tree.element_area([], 1)
+    velocity_phloem = flux[:, 1].reshape(model.tree.num_elements, 1) / model.tree.element_area([], 1)
 
     return (velocity_xylem, velocity_phloem)
 
 
-def convert_root_fluxes_to_source_term(model: Model, gas_dims: Tuple, c_gas_soil: float):
+def convert_root_fluxes_to_source_term(model, c_gas_soil: float):
 
     return model.root_fluxes()/RHO_WATER*c_gas_soil
 
 
-def convert_tree_radii_to_gas(model: Model, gas_dims: Tuple) -> Tuple:
+def convert_tree_radii_to_gas(model, gas_dims: Tuple) -> Tuple:
     """Converts the tree heartwood, xylem and phloem radii to equally spaced gas element radii
 
     Args:
@@ -62,7 +62,7 @@ def convert_tree_radii_to_gas(model: Model, gas_dims: Tuple) -> Tuple:
     return (r, mask)
 
 
-def convert_tree_height_to_gas(model: Model, gas_dims: Tuple) -> Tuple:
+def convert_tree_height_to_gas(model, gas_dims: Tuple) -> Tuple:
     """ Converts tree element heights to equally spaced heights such that
         .. math::
             n*h_{new} = \\sum_{i=1}^m h_i

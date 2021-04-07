@@ -1,11 +1,11 @@
 import numpy as np
 import os.path
-from ..tree import Tree
 from typing import Dict
 from netCDF4 import Dataset, Variable
-# from ..model import Model # TODO: check why this import fails
+# from ..model import Model
 from ..model_variables import (index_dim_vars, soil_dim_vars, root_dim_vars, axial_layer_dim_vars,
                                gas_three_dim_vars, gas_index_dim_vars, gas_axial_dim_vars)
+from .tree_to_gas import convert_tree_flux_to_velocity
 
 
 def initialize_netcdf(filename: str,
@@ -89,7 +89,7 @@ def write_netcdf(ncf: Dataset, results: Dict) -> None:
             ncf[key][ind, :, :] = results[key]
 
 
-def tree_properties_to_dict(tree: Tree) -> Dict:
+def tree_properties_to_dict(model) -> Dict:
     """ Transfers tree properties into a dictionary.
 
     Args:
@@ -100,24 +100,25 @@ def tree_properties_to_dict(tree: Tree) -> Dict:
 
     """
     properties = {}
-    properties['height'] = tree.height
-    properties['num_elements'] = tree.num_elements
-    properties['transpiration_rate'] = tree.transpiration_rate
-    properties['photosynthesis_rate'] = tree.photosynthesis_rate
-    sugar_conc = tree.sugar_concentration_as_numpy_array().reshape(tree.num_elements, 1)
-    zeros = np.zeros((tree.num_elements, 1))
+    properties['height'] = model.tree.height
+    properties['num_elements'] = model.tree.num_elements
+    properties['transpiration_rate'] = model.tree.transpiration_rate
+    properties['photosynthesis_rate'] = model.tree.photosynthesis_rate
+    sugar_conc = model.tree.sugar_concentration_as_numpy_array().reshape(model.tree.num_elements, 1)
+    zeros = np.zeros((model.tree.num_elements, 1))
     properties['sugar_concentration'] = np.concatenate((zeros, sugar_conc), axis=1)
-    properties['sugar_loading_rate'] = tree.sugar_loading_rate
-    properties['sugar_unloading_rate'] = tree.sugar_unloading_rate
-    properties['axial_permeability'] = tree.axial_permeability
+    properties['sugar_loading_rate'] = model.tree.sugar_loading_rate
+    properties['sugar_unloading_rate'] = model.tree.sugar_unloading_rate
+    properties['axial_permeability'] = model.tree.axial_permeability
     properties['radial_hydraulic_conductivity'] = np.repeat(
-        tree.radial_hydraulic_conductivity.reshape(tree.num_elements, 1), 2, axis=1)
-    properties['viscosity'] = tree.viscosity
-    properties['elastic_modulus'] = tree.elastic_modulus
-    properties['pressure'] = tree.pressure
-    properties['radius'] = tree.element_radius[:, 1:]
-    properties['area'] = np.concatenate([tree.element_area([], 0), tree.element_area([], 1)], axis=1)
-    properties['volume'] = np.concatenate([tree.element_volume([], 0), tree.element_volume([], 1)], axis=1)
+        model.tree.radial_hydraulic_conductivity.reshape(model.tree.num_elements, 1), 2, axis=1)
+    properties['viscosity'] = model.tree.viscosity
+    properties['elastic_modulus'] = model.tree.elastic_modulus
+    properties['pressure'] = model.tree.pressure
+    properties['radius'] = model.tree.element_radius[:, 1:]
+    properties['area'] = np.concatenate([model.tree.element_area([], 0), model.tree.element_area([], 1)], axis=1)
+    properties['volume'] = np.concatenate([model.tree.element_volume([], 0), model.tree.element_volume([], 1)], axis=1)
+    properties['sapflow'] = np.concatenate(convert_tree_flux_to_velocity(model), axis=1)
 
     return properties
 
