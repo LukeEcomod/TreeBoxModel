@@ -6,10 +6,11 @@ from .tree import Tree
 from .soil import Soil
 from .constants import GRAVITATIONAL_ACCELERATION, RHO_WATER,\
     MOLAR_GAS_CONSTANT, TEMPERATURE, MAX_ELEMENT_COLUMNS
-from .tools.iotools import initialize_netcdf, write_netcdf, tree_properties_to_dict
+from .tools.iotools import initialize_netcdf, write_netcdf, tree_properties_to_dict, convert_tree_flux_to_velocity
 from .model_variables import all_variables
 from .odefun_tree import odefun_tree
 from netCDF4 import Dataset
+from typing import Dict
 
 
 class Model:
@@ -69,9 +70,13 @@ class Model:
         k: np.ndarray = self.tree.axial_permeability
         eta: np.ndarray = self.tree.viscosity
         length: np.ndarray = self.tree.element_height
+        l: np.ndarray = np.concatenate(([0], length.reshape(len(length),)))
+        cumulative_sum: np.ndarray = np.cumsum(l).reshape(len(l), 1)
+        dl: np.ndarray = np.diff(length/2 + cumulative_sum[:-1], axis=0)
         E: np.ndarray = self.tree.transpiration_rate
         C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
         C = np.concatenate([np.zeros((self.tree.num_elements, 1)), C], axis=1)
+        RWU: np.ndarray = self.root_fluxes()
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
 
@@ -80,9 +85,9 @@ class Model:
         # calculate downward and upward fluxes separately
         Q_ax_down: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
         Q_ax_down[0:-1, :] = (np.diff(pressures, axis=0)
-                              - RHO_WATER*GRAVITATIONAL_ACCELERATION*self.tree.element_height[0:-1].repeat(2, axis=1)
+                              - RHO_WATER*GRAVITATIONAL_ACCELERATION*dl.repeat(2, axis=1)
                               ) * transport_ax[0:-1, :]
-        Q_ax_down[-1, 0] = 0  # xylem flux to/from soil is handled in odefun
+        Q_ax_down[-1, 0] = 0  # flux from xylem to soil is handled in the RWU
         Q_ax_down[-1, 1] = 0  # no flux from phloem to soil
 
         Q_ax_up: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
@@ -91,12 +96,14 @@ class Model:
             np.diff(
                 np.flip(
                     pressures, axis=0), axis=0), axis=0)
-            + RHO_WATER*GRAVITATIONAL_ACCELERATION*self.tree.element_height[1:].repeat(2, axis=1)
+            + RHO_WATER*GRAVITATIONAL_ACCELERATION*dl.repeat(2, axis=1)
         ) * transport_ax[0:-1, :]
-        Q_ax_up[0, :] = 0  # the upward flux is handled in transpiration rate for the highest element
+        Q_ax_up[0, :] = 0  # no upward flux in the highest element
 
         Q_ax: np.ndarray = (Q_ax_up + Q_ax_down)
-        Q_ax[:, 0] = Q_ax[:, 0] - E.reshape(self.tree.num_elements,)  # subtract transpiration
+
+        Q_ax[:, 0] = Q_ax[:, 0]-E.reshape(self.tree.num_elements,)+RWU.reshape(self.tree.num_elements,)
+
         return Q_ax, Q_ax_up, Q_ax_down
 
     def radial_fluxes(self) -> np.ndarray:
@@ -245,16 +252,9 @@ class Model:
         # If time < 0 save the first stage of the tree
         # print(datetime.datetime.now(), "\t", time_end)
         if(time_start < 1e-3 and len(self.outputfile) != 0):
-            results = tree_properties_to_dict(self)
+            results = self.properties_to_dict()
             results['simulation_time'] = time_start
             results['model_index'] = ind
-            results['dqrad'] = self.radial_fluxes()
-            results['dqax'], results['dqax_up'], results['dqax_down'] = self.axial_fluxes()
-            results['dqroot'] = self.root_fluxes()
-            results['soil_dz'] = self.soil.layer_thickness
-            results['soil_kh'] = self.soil.hydraulic_conductivity
-            results['soil_pressure'] = self.soil.pressure
-            results['soil_root_k'] = self.tree.roots.conductivity(self.soil)
             write_netcdf(self.ncf, results)
 
         # Initial values from self.tree
@@ -281,15 +281,55 @@ class Model:
         self.tree.update_sap_viscosity()
         # save the tree status
         if(len(self.outputfile) != 0):
-            print(datetime.datetime.now(), "\t", time_end)
-            results = tree_properties_to_dict(self)
+            print(datetime.datetime.now(), "\t", time_end/86400)
+            results = self.properties_to_dict()
             results['simulation_time'] = time_end
             results['model_index'] = ind
-            results['dqrad'] = self.radial_fluxes()
-            results['dqax'], results['dqax_up'], results['dqax_down'] = self.axial_fluxes()
-            results['dqroot'] = self.root_fluxes()
-            results['soil_dz'] = self.soil.layer_thickness
-            results['soil_kh'] = self.soil.hydraulic_conductivity
-            results['soil_pressure'] = self.soil.pressure
-            results['soil_root_k'] = self.tree.roots.conductivity(self.soil)
+
             write_netcdf(self.ncf, results)
+
+    def properties_to_dict(self) -> Dict:
+        """ Transfers tree properties into a dictionary.
+
+            Args:
+                tree (Tree): Instance of the tree class.
+
+            Returns:
+                (Dict): Dictionary of the tree properties.
+
+            """
+        properties = {}
+        properties['height'] = self.tree.height
+        properties['element_height'] = self.tree.element_height
+        properties['num_elements'] = self.tree.num_elements
+        properties['transpiration_rate'] = self.tree.transpiration_rate
+        properties['photosynthesis_rate'] = self.tree.photosynthesis_rate
+        sugar_conc = self.tree.sugar_concentration_as_numpy_array().reshape(self.tree.num_elements, 1)
+        zeros = np.zeros((self.tree.num_elements, 1))
+        properties['sugar_concentration'] = np.concatenate((zeros, sugar_conc), axis=1)
+        properties['sugar_loading_rate'] = self.tree.sugar_loading_rate
+        properties['sugar_unloading_rate'] = self.tree.sugar_unloading_rate
+        properties['axial_permeability'] = self.tree.axial_permeability
+        properties['radial_hydraulic_conductivity'] = np.repeat(
+            self.tree.radial_hydraulic_conductivity.reshape(self.tree.num_elements, 1), 2, axis=1)
+        properties['viscosity'] = self.tree.viscosity
+        properties['elastic_modulus'] = self.tree.elastic_modulus
+        properties['pressure'] = self.tree.pressure
+        properties['radius'] = self.tree.element_radius[:, 1:]
+        properties['area'] = np.concatenate([self.tree.element_area([], 0), self.tree.element_area([], 1)], axis=1)
+        properties['volume'] = np.concatenate([self.tree.element_volume([], 0),
+                                               self.tree.element_volume([], 1)], axis=1)
+        properties['sapflow'] = np.concatenate(convert_tree_flux_to_velocity(self), axis=1)
+        properties['dqroot'] = self.root_fluxes()
+        properties['dqrad'] = self.radial_fluxes()
+        properties['dqax'], properties['dqax_up'], properties['dqax_down'] = self.axial_fluxes()
+        properties['dqroot'] = self.root_fluxes()
+        properties['soil_dz'] = self.soil.layer_thickness
+        properties['soil_kh'] = self.soil.hydraulic_conductivity
+        properties['soil_pressure'] = self.soil.pressure
+        properties['soil_root_k'] = self.tree.roots.conductivity(self.soil)
+        properties['rooting_depth'] = self.tree.roots.rooting_depth
+        properties['root_area_density'] = self.tree.roots.area_density
+        properties['area_per_tree'] = self.tree.roots.area_per_tree
+
+        return properties

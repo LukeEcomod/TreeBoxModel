@@ -44,17 +44,17 @@ def odefun_tree(t: float, y: np.ndarray, model) -> np.ndarray:
                                  * (model.tree.sugar_concentration_as_numpy_array()
                                     - model.tree.sugar_target_concentration)], axis=1), axis=1).reshape(
         model.tree.num_elements, 1)
-    model.tree.sugar_unloading_rate[model.tree.root_elements] *= 10
+    # model.tree.sugar_unloading_rate[model.tree.root_elements] *= 10
     dmdt_ax: np.ndarray = model.axial_fluxes()[0]
     dmdt_rad: np.ndarray = model.radial_fluxes()
-    dmdt_root: np.ndarray = model.root_fluxes()
+    # dmdt_root: np.ndarray = model.root_fluxes()
 
     dydt = [np.zeros((model.tree.num_elements, MAX_ELEMENT_COLUMNS)),
             np.zeros((model.tree.num_elements, 1)),
             np.zeros((model.tree.num_elements, MAX_ELEMENT_COLUMNS+1))]
     dydt[0] = model.tree.elastic_modulus/(np.transpose(
         np.array([model.tree.element_volume([], 0),
-                  model.tree.element_volume([], 1)])) * RHO_WATER) * (dmdt_ax + dmdt_rad + dmdt_root)
+                  model.tree.element_volume([], 1)])) * RHO_WATER) * (dmdt_ax + dmdt_rad)
 
     dydt[1] = 1.0 / model.tree.element_volume([], 1).reshape(model.tree.num_elements, 1)\
         * (dmdt_ax[:, 1].reshape(model.tree.num_elements, 1)
@@ -63,6 +63,7 @@ def odefun_tree(t: float, y: np.ndarray, model) -> np.ndarray:
            / RHO_WATER
            + model.tree.sugar_loading_rate.reshape(model.tree.num_elements, 1)
            - model.tree.sugar_unloading_rate.reshape(model.tree.num_elements, 1))
+
     dmdt = (dmdt_ax + dmdt_rad)
     dydt[2][:, 0] = 0.0
     dydt[2][:, 1] = ((dmdt[:, 0].reshape(model.tree.num_elements, 1))
@@ -83,7 +84,7 @@ def odefun_tree(t: float, y: np.ndarray, model) -> np.ndarray:
                             + model.tree.element_radius[:, 2].reshape(model.tree.num_elements, 1))))
                      ).reshape(model.tree.num_elements,)
     # no radius change in the roots
-    dydt[2][model.tree.root_elements, :] = 0.0
+    # dydt[2][model.tree.root_elements, :] = 0.0
     dydt = np.concatenate([dydt[0].reshape(model.tree.num_elements*2, order='F'),
                            dydt[1].reshape(model.tree.num_elements, order='F'),
                            dydt[2].reshape(model.tree.num_elements*3, order='F')])

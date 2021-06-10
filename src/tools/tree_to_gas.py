@@ -1,7 +1,5 @@
 from typing import Dict, Tuple
 import numpy as np
-# from src.model import Model
-from src.constants import RHO_WATER
 
 
 def convert_tree_to_gas_properties(model, gas_dims: Tuple, c_gas_soil=0.0) -> Dict:
@@ -27,9 +25,9 @@ def convert_tree_to_gas_properties(model, gas_dims: Tuple, c_gas_soil=0.0) -> Di
 
 
 def convert_tree_flux_to_velocity(model):
-
-    flux, _, _ = model.axial_fluxes()
-    flux = flux/RHO_WATER  # flux in m3/s
+    RHO_WATER = 1000
+    _, flux, _ = model.axial_fluxes()
+    flux = -1.0*flux/RHO_WATER  # flux in m3/s
     velocity_xylem = flux[:, 0].reshape(model.tree.num_elements, 1) / model.tree.element_area([], 0)
     velocity_phloem = flux[:, 1].reshape(model.tree.num_elements, 1) / model.tree.element_area([], 1)
 
@@ -37,7 +35,7 @@ def convert_tree_flux_to_velocity(model):
 
 
 def convert_root_fluxes_to_source_term(model, c_gas_soil: float):
-
+    RHO_WATER = 1000
     return model.root_fluxes()/RHO_WATER*c_gas_soil
 
 

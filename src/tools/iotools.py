@@ -11,7 +11,7 @@ from .tree_to_gas import convert_tree_flux_to_velocity
 def initialize_netcdf(filename: str,
                       dimensions: Dict,
                       variables: Dict) -> Dataset:
-    """ Initializes a netcdf file to be ready for saving simulation results.
+    """ Initializes a netcdf file to be ready for saving simulation properties.
 
         Args:
             filename (str): name of the NETCDF4 file that is created
@@ -27,7 +27,7 @@ def initialize_netcdf(filename: str,
                 The possible NETCDF dimensions are "index", "radial_layers" and "axial_layers".
 
         Returns:
-            (NETCDF4.Dataset): A NETCDF4 file where the simulation results can be saved.
+            (NETCDF4.Dataset): A NETCDF4 file where the simulation properties can be saved.
 
         """
     # create the file if it does not exist
@@ -57,70 +57,41 @@ def initialize_netcdf(filename: str,
     return ncf
 
 
-def write_netcdf(ncf: Dataset, results: Dict) -> None:
+def write_netcdf(ncf: Dataset, properties: Dict) -> None:
     """ Write a simulation result dictionary into a netcdf file.
 
     The variables that can be written are defined in the src.model_variables file
 
     Args:
-        ncf (netCDF4.Dataset): the netcdf file where the results are written
-        results (Dict): the results dictionary. Use the
+        ncf (netCDF4.Dataset): the netcdf file where the properties are written
+        properties (Dict): the properties dictionary. Use the
             [tree_properties_to_dict](index.html#src.tools.iotools.tree_properties_to_dict) function
             to create the dictionary.
 
     """
     ind: int = ncf['index'].shape[0]
     ncf['index'][ind] = ind
-    for key in results.keys():
+
+    for key in properties.keys():
         if (key in index_dim_vars
                 or key in gas_index_dim_vars):
             # variable has dimension ("index")
-            ncf[key][ind] = results[key]
+            ncf[key][ind] = properties[key]
         elif (key in root_dim_vars
               or key in soil_dim_vars
               or key in axial_layer_dim_vars
               or key in gas_axial_dim_vars):
-            ncf[key][ind, :] = results[key].reshape(len(results[key]),)
+            ncf[key][ind, :] = properties[key].reshape(len(properties[key]),)
         elif key in gas_three_dim_vars:
-            ncf[key][ind, :, :, :] = results[key]
+            ncf[key][ind, :, :, :] = properties[key]
         else:
             # the variable has dimension
             # ("index", "radial_layers", "axial_layers")
-            ncf[key][ind, :, :] = results[key]
+            ncf[key][ind, :, :] = properties[key]
 
 
 def tree_properties_to_dict(model) -> Dict:
-    """ Transfers tree properties into a dictionary.
-
-    Args:
-        tree (Tree): Instance of the tree class.
-
-    Returns:
-        (Dict): Dictionary of the tree properties.
-
-    """
-    properties = {}
-    properties['height'] = model.tree.height
-    properties['num_elements'] = model.tree.num_elements
-    properties['transpiration_rate'] = model.tree.transpiration_rate
-    properties['photosynthesis_rate'] = model.tree.photosynthesis_rate
-    sugar_conc = model.tree.sugar_concentration_as_numpy_array().reshape(model.tree.num_elements, 1)
-    zeros = np.zeros((model.tree.num_elements, 1))
-    properties['sugar_concentration'] = np.concatenate((zeros, sugar_conc), axis=1)
-    properties['sugar_loading_rate'] = model.tree.sugar_loading_rate
-    properties['sugar_unloading_rate'] = model.tree.sugar_unloading_rate
-    properties['axial_permeability'] = model.tree.axial_permeability
-    properties['radial_hydraulic_conductivity'] = np.repeat(
-        model.tree.radial_hydraulic_conductivity.reshape(model.tree.num_elements, 1), 2, axis=1)
-    properties['viscosity'] = model.tree.viscosity
-    properties['elastic_modulus'] = model.tree.elastic_modulus
-    properties['pressure'] = model.tree.pressure
-    properties['radius'] = model.tree.element_radius[:, 1:]
-    properties['area'] = np.concatenate([model.tree.element_area([], 0), model.tree.element_area([], 1)], axis=1)
-    properties['volume'] = np.concatenate([model.tree.element_volume([], 0), model.tree.element_volume([], 1)], axis=1)
-    properties['sapflow'] = np.concatenate(convert_tree_flux_to_velocity(model), axis=1)
-
-    return properties
+    pass
 
 
 def gas_properties_to_dict(gas) -> Dict:

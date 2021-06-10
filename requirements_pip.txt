@@ -65,7 +65,7 @@ toml==0.10.0
 tornado==6.0.4
 typed-ast==1.4.1
 typing-extensions==3.7.4.1
-urllib3==1.25.8
+urllib3>=1.26.5
 wcwidth==0.1.9
 wrapt==1.11.2
 xarray==0.15.1

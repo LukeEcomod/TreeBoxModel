@@ -1,16 +1,17 @@
 all_variables = {'height': ['height of the tree', 'm', ("index"), 'f4'],
+                 'element_height': ['Height of each element', 'm', ("index", "axial_layers"), 'f4'],
                  'radius': ['radius of an element', 'm', ("index", "axial_layers", "radial_layers"), 'f4'],
                  'num_elements': ['number of tree elements', 'pcs.', ("index"), 'i4'],
                  'transpiration_rate':
                  ['Transpiration rate in a tree element', 'kg/s', ("index", "axial_layers"), 'f4'],
                  'photosynthesis_rate':
-                 ['Photosynthesis rate in a tree element', 'mol/s', ("index", "axial_layers", "radial_layers"), 'f4'],
+                 ['Photosynthesis rate in a tree element', 'mol/s', ("index", "axial_layers"), 'f4'],
                  'sugar_concentration':
                  ['Sugar concentration in a tree element', 'mol/m3', ("index", "axial_layers", "radial_layers"), 'f4'],
                  'sugar_loading_rate':
-                 ['Sugar loading rate in a tree element', 'mol/s', ("index", "axial_layers", "radial_layers"), 'f4'],
+                 ['Sugar loading rate in a tree element', 'mol/s', ("index", "axial_layers"), 'f4'],
                  'sugar_unloading_rate':
-                 ['Sugar unloading rate in a tree element', 'mol/s', ("index", "axial_layers", "radial_layers"), 'f4'],
+                 ['Sugar unloading rate in a tree element', 'mol/s', ("index", "axial_layers"), 'f4'],
                  'axial_permeability':
                  ['axial_permeability (k) in a tree element', 'm^2', ("index", "axial_layers", "radial_layers"), 'f4'],
                  'viscosity':
@@ -28,12 +29,10 @@ all_variables = {'height': ['height of the tree', 'm', ("index"), 'f4'],
                  ['upward axial solution flux', 'kg/s', ("index", "axial_layers", "radial_layers"), 'f4'],
                  'dqax_down':
                  ['downward axial solution flux', 'kg/s', ("index", "axial_layers", "radial_layers"), 'f4'],
-                 'ground_water_potential':
-                 ['Ground water potential', 'Pa', ("index"), 'f4'],
                  'pressure':
                  ['pressure of an element', 'Pa', ("index", "axial_layers", "radial_layers"), 'f4'],
                  'num_elements':
-                 ['number of tree elements', 'pcs.', ("index"), 'i4'],
+                 ['number of tree+root elements', 'pcs.', ("index"), 'i4'],
                  'simulation_time':
                  ['Time in simulation', 's', ("index"), 'f4'],
                  'model_index':
@@ -50,6 +49,12 @@ all_variables = {'height': ['height of the tree', 'm', ("index"), 'f4'],
                  ['Soil hydraulic conductivity', 'm/s', ("index", "soil_elements"), 'f4'],
                  'soil_root_k':
                  ['Soil-root system total conductivity', '1/s', ("index", "root_elements"), 'f4'],
+                 'rooting_depth':
+                 ['Maximum depth of root system', 'm', ("index"), 'f4'],
+                 'root_area_density':
+                 ['Area density of fine roots in element', 'm^2/m^3', ("index", "root_elements"), 'f4'],
+                 'area_per_tree':
+                 ['Ground area of the tree', 'm^2', ("index"), 'f4'],
                  'dqroot':
                  ['Root water uptake', 'kg/s', ("index", "axial_layers"), 'f4'],
                  'sapflow':

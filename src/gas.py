@@ -1,11 +1,11 @@
-from src.tools.iotools import gas_properties_to_dict
+from .tools.iotools import gas_properties_to_dict
 import numpy as np
 from scipy.integrate import solve_ivp
 from typing import List, Callable, Dict
 from .odefun_gas import odefun_gas
 from netCDF4 import Dataset
-from src.tools.iotools import initialize_netcdf, write_netcdf
-from src.model_variables import gas_variables
+from .tools.iotools import initialize_netcdf, write_netcdf
+from .model_variables import gas_variables
 
 
 class Gas:
@@ -40,15 +40,18 @@ class Gas:
         self.ambient_concentration: float = ambient_concentration
         self.n_out: np.ndarray = np.zeros((self.na, 1))
         self.sources_and_sinks_func: Callable = sources_and_sinks_func
-        self.outputfile = outputfile
-        self.max_output_lines = max_output_lines
+        self.outputfile: str = outputfile
+        self.max_output_lines: int = max_output_lines
 
         # set head area and volume for the tree. Should speed long computations
-        self.radius_from_pith = np.cumsum(self.element_radius, axis=1)
-        self.head_area = self.radius_from_pith**2.0
+        self.radius_from_pith: np.ndarray = np.cumsum(self.element_radius, axis=1)
+        r_to_end: np.ndarray = np.concatenate((np.zeros((self.na, 1)), self.element_radius), axis=1)
+        cumulative_sum: np.ndarray = np.cumsum(r_to_end, axis=1)
+        self.radius_mid_point = np.diff(cumulative_sum/2) + cumulative_sum[:, :-1]
+        self.head_area: np.ndarray = self.radius_from_pith**2.0
         self.head_area[:, 1:] = self.head_area[:, 1:] - self.head_area[:, :-1]
         self.head_area = self.head_area * np.pi
-        self.element_volume = self.head_area * self.element_height
+        self.element_volume: np.ndarray = self.head_area * self.element_height
 
         self.element_volume_air = self.space_division[:, :, 0]*self.element_volume
         self.element_volume_water_cell = np.sum(self.space_division[:, :, 1:], axis=2)*self.element_volume
@@ -59,8 +62,7 @@ class Gas:
 
     def radial_fluxes(self):
         transport_coefficient: np.ndarray = 2.0*np.pi*self.element_height*self.diffusion_coefficients
-        r = self.radius_from_pith
-
+        r = self.radius_mid_point
         # initialize flux matrices
         Q_rad = np.zeros((self.na, self.nr))
 
@@ -142,18 +144,26 @@ class Gas:
 
             results = gas_properties_to_dict(self)
             # trim the solution for saving if the length of solution points exceeds maximum
-            if(res.shape[1] > self.max_output_lines):
+            if(self.max_output_lines == 1):
+                res = res[:, -1]
+                time = time[-1]
+                results['gas_concentration'] = res[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
+                results['gas_moles_out'] = res[self.na*self.nr*2:].reshape(self.na, 1, order='F')
+                results['gas_simulation_time'] = time
+                write_netcdf(self.ncf, results)
+            elif(res.shape[1] > self.max_output_lines):
                 ind = np.concatenate(([0],
                                       np.arange(1, res.shape[1]-2,
                                                 int(np.round((res.shape[1]-2)/(self.max_output_lines-2)))),
                                       [res.shape[1]-1]))
                 res = res[:, ind]
                 time = time[ind]
-            for (ind, line) in enumerate(np.rollaxis(res, 1)):
 
-                results['gas_concentration'] = line[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
-                results['gas_moles_out'] = line[self.na*self.nr*2:].reshape(self.na, 1, order='F')
-                results['gas_simulation_time'] = time[ind]
-                write_netcdf(self.ncf, results)
+                for (ind, line) in enumerate(np.rollaxis(res, 1)):
+
+                    results['gas_concentration'] = line[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
+                    results['gas_moles_out'] = line[self.na*self.nr*2:].reshape(self.na, 1, order='F')
+                    results['gas_simulation_time'] = time[ind]
+                    write_netcdf(self.ncf, results)
 
         return sol
