@@ -195,7 +195,7 @@ def plot_simulation_results(filename: str, foldername: str) -> None:
               'Photosynthesis rate']
     ylabels = ['Pressure (Mpa)', 'Pressure (Mpa)', 'Sugar concentration (mol/L)', 'Flux (g/s)', 'Flux (g/s)',
                'Flux (g/s)', 'Flux (g/s)', 'Flux (g/s)', 'Flux (g/s)', 'Flux (g/s)',
-               'Transpiration rate (g/s)', 'Photosynthesis rate ($\mu$mol/s)']
+               'Transpiration rate (g/s)', r'Photosynthesis rate ($\mu$mol/s)']
     variable_divides = [1e6, 1e6, 1e3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-6]
     end_index = 433
     start_index = 10
