@@ -10,7 +10,6 @@ def odefun_gas(t: float, y: np.ndarray, gas) -> np.ndarray:
     R = gas.sources_and_sinks()
     # volume_air = gas.space_division[:, :, 0]*gas.element_volume()
     # volume_water_cell = np.sum(gas.space_division[:, :, 1:], axis=2)*gas.element_volume()
-
     dcdt_air = (Q_rad + R[:, :, 0] + Q_air_water[:, :, 0])/gas.element_volume_air
     dcdt_water = (Q_ax + R[:, :, 1] + Q_air_water[:, :, 1])/gas.element_volume_water_cell
     dndt_out = -1.0*np.minimum(0, Q_rad[:, -1])

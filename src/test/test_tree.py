@@ -3,9 +3,7 @@ from ..constants import VISCOSITY_WATER
 import pytest
 import math
 import numpy as np
-from ..tree import Tree
-from ..roots import Roots
-from ..soil import Soil
+from src.tree import Tree
 from .test_soil import test_soil
 from .test_roots import test_roots
 from typing import List

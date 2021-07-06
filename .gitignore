@@ -39,3 +39,4 @@ runs/
 docs/build/
 
 *.dat
+.pylintrc

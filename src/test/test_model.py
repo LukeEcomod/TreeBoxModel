@@ -1,7 +1,7 @@
 from ..constants import GRAVITATIONAL_ACCELERATION, MOLAR_GAS_CONSTANT, RHO_WATER, TEMPERATURE
 import pytest
 import numpy as np
-from ..model import Model
+from src.model import Model
 from .test_tree import test_tree
 from .test_soil import test_soil
 from. test_roots import test_roots
@@ -63,9 +63,9 @@ def test_axial_fluxes(test_model):
                                                  * test_model.tree.element_height[ind, 0])
 
     # test full flux now that up and down are correct
-
+    Qroot = test_model.root_fluxes()
     for ind, f in enumerate(flux):
-        assert f[0] == flux_down[ind, 0] + flux_up[ind, 0] - test_model.tree.transpiration_rate[ind, 0]
+        assert f[0] == flux_down[ind, 0] + flux_up[ind, 0] - test_model.tree.transpiration_rate[ind, 0] + Qroot[ind, 0]
         assert f[1] == flux_down[ind, 1] + flux_up[ind, 1]
 
 

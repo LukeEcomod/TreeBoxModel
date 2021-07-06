@@ -15,16 +15,17 @@ Tree Box Model documentation
 
 Installation
 ------------
-Download the source
-^^^^^^^^^^^^^^^^^^^
+
+- Download the source
+
 >>> git clone git@github.com:LukeEcomod/TreeBoxModel.git
 
 or
 
 download the source https://github.com/LukeEcomod/TreeBoxModel
 
-Install the required packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Install the required packages
+
 Ideally you have created a new virtual environment for this project.
 
 To install all the packages required for the model to run use 

@@ -1,9 +1,8 @@
-from .tools.iotools import gas_properties_to_dict
+from typing import List, Callable, Dict
 import numpy as np
 from scipy.integrate import solve_ivp
-from typing import List, Callable, Dict
+from .tools.iotools import gas_properties_to_dict
 from .odefun_gas import odefun_gas
-from netCDF4 import Dataset
 from .tools.iotools import initialize_netcdf, write_netcdf
 from .model_variables import gas_variables
 
@@ -55,10 +54,9 @@ class Gas:
 
         self.element_volume_air = self.space_division[:, :, 0]*self.element_volume
         self.element_volume_water_cell = np.sum(self.space_division[:, :, 1:], axis=2)*self.element_volume
-
         if len(outputfile) != 0:
             dims: Dict = {"axial_layers": self.na, "radial_layers": self.nr, "space_layers": 2}
-            self.ncf: Dataset = initialize_netcdf(outputfile, dims, gas_variables)
+            self.ncf = initialize_netcdf(outputfile, dims, gas_variables)
 
     def radial_fluxes(self):
         transport_coefficient: np.ndarray = 2.0*np.pi*self.element_height*self.diffusion_coefficients
@@ -131,7 +129,7 @@ class Gas:
         """ function to run the gas module independently. """
         yinit = np.concatenate((self.concentration.reshape(self.na * self.nr * 2, order='F'),
                                 self.n_out.reshape(self.na, order='F')))
-        if(time_start == 0):
+        if time_start == 0:
             time_start = 1e-10
         sol = solve_ivp(lambda t, y: odefun_gas(t, y, self), (time_start, time_end), yinit, method='DOP853',
                         rtol=1e-9, atol=1e-9)
@@ -144,14 +142,17 @@ class Gas:
 
             results = gas_properties_to_dict(self)
             # trim the solution for saving if the length of solution points exceeds maximum
-            if(self.max_output_lines == 1):
+            if self.max_output_lines == 1:
                 res = res[:, -1]
                 time = time[-1]
                 results['gas_concentration'] = res[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
                 results['gas_moles_out'] = res[self.na*self.nr*2:].reshape(self.na, 1, order='F')
                 results['gas_simulation_time'] = time
+                results['gas_radial_flux'] = self.radial_fluxes()
+                results['gas_axial_flux'] = self.axial_fluxes()
+                results['gas_eq_flux'] = self.air_water_fluxes()
                 write_netcdf(self.ncf, results)
-            elif(res.shape[1] > self.max_output_lines):
+            elif res.shape[1] > self.max_output_lines:
                 ind = np.concatenate(([0],
                                       np.arange(1, res.shape[1]-2,
                                                 int(np.round((res.shape[1]-2)/(self.max_output_lines-2)))),
