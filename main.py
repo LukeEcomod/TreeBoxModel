@@ -1,6 +1,6 @@
 ''' The purpose of this main file is to provide an easy way to run the model.
 
-All the model parameters are set in the file and are taken from
+The model parameters for the modelled tree are set in the file and taken from
 [Hölttä et. al. 2006](https://link.springer.com/article/10.1007/s00468-005-0014-6)
 or [Nikinmaa et. al., (2014)](https://academic.oup.com/aob/article/114/4/653/2769025).
 
@@ -14,6 +14,8 @@ from src.model import Model
 from src.roots import Roots
 from src.soil import Soil
 from src.tree import Tree
+from src.tools.plotting import plot_xylem_pressure_top_bottom
+import matplotlib.pyplot as plt
 from typing import List
 import numpy as np
 import math
@@ -24,7 +26,7 @@ if __name__ == "__main__":
     # create the soil object
     z = np.linspace(0, 1, 11)
     soil_layer_thickness = np.array(np.diff(z))
-    pressure = np.zeros((len(soil_layer_thickness), 1))  # Pa
+    pressure = np.zeros((len(soil_layer_thickness), 1))-2e5  # Pa
     hydraulic_conductivity = np.ones((len(soil_layer_thickness), 1))*1e-9  # m/s
     soil = Soil(layer_thickness=soil_layer_thickness,
                 hydraulic_conductivity=hydraulic_conductivity,
@@ -52,7 +54,7 @@ if __name__ == "__main__":
 
     height: float = 2.4
 
-    num_elements: int = 45  # 40 tree elements, 5 root elements
+    num_elements: int = 25  # 40 tree elements, 5 root elements
     element_height = np.repeat(0.06, num_elements)
     transpiration_profile: List[float] = [0.0 for i in range(num_elements)]
     photosynth_profile: List[float] = [0 for i in range(num_elements)]
@@ -67,13 +69,13 @@ if __name__ == "__main__":
     photosynthesis = np.sin(time*math.pi/24.0)*photosynthesis_max
 
     sugar_profile: np.ndarray = np.zeros((num_elements, 1))
-    sugar_profile[0:20, 0] = 1400
-    sugar_profile[20:30, 0] = 1000
-    sugar_profile[30:40, 0] = 800
+    sugar_profile[0:20, 0] = 700
+    sugar_profile[20:30, 0] = 500
+    sugar_profile[30:40, 0] = 400
 
     sugar_unloading_profile: List[float] = [0.0 for i in range(num_elements)]
 
-    sugar_target_concentration: float = 1200
+    sugar_target_concentration: float = 700
 
     sugar_unloading_slope = 3.5e-7
 
@@ -129,3 +131,6 @@ if __name__ == "__main__":
             model.run_scipy(time_start=(day*60*60*24)+t*60*60, time_end=(day*60*60*24)+time[ind+1]*60*60, ind=ind)
 
     print('Model simulation finished')
+
+    plot_xylem_pressure_top_bottom(filename=outputfname)
+    print('Xylem pressures plot finished, filename={}_xylem_pressure.png'.format(outputfname[:-3]))

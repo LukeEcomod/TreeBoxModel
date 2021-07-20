@@ -165,6 +165,9 @@ class Gas:
                     results['gas_concentration'] = line[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
                     results['gas_moles_out'] = line[self.na*self.nr*2:].reshape(self.na, 1, order='F')
                     results['gas_simulation_time'] = time[ind]
+                    results['gas_radial_flux'] = self.radial_fluxes()
+                    results['gas_axial_flux'] = self.axial_fluxes()
+                    results['gas_eq_flux'] = self.air_water_fluxes()
                     write_netcdf(self.ncf, results)
 
         return sol

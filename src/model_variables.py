@@ -85,7 +85,14 @@ gas_variables = {
     'gas_moles_out':
     ['Amount of gas that has diffused out of the tree', 'mol', ("index", "axial_layers"), 'f4'],
     'gas_simulation_time':
-    ['Simulation time in the gas simulation', 's', ("index"), 'f4']
+    ['Simulation time in the gas simulation', 's', ("index"), 'f4'],
+    'gas_radial_flux':
+    ['Radial Diffusion flux of gas', 'mol/s', ("index", "axial_layers", "radial_layers"), 'f4'],
+    'gas_axial_flux':
+    ['Axial advection flux of gas', 'mol/s', ("index", "axial_layers", "radial_layers"), 'f4'],
+    'gas_eq_flux':
+    ['Equilibrium flux between dilution and gas phase of an element', 'mol/s',
+     ("index", "axial_layers", "radial_layers", "space_layers"), 'f4']
 }
 
 index_dim_vars = [key for key in all_variables.keys() if all_variables[key][2] == ("index")]

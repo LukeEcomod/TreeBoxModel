@@ -23,27 +23,29 @@ from src.model import Model
 from src.roots import Roots
 from src.soil import Soil
 from src.tree import Tree
+from src.tools.plotting import plot_xylem_pressure_top_bottom
+import matplotlib.pyplot as plt
 from typing import List
 import numpy as np
 import math
 from datetime import datetime
 ```
 
-The Model, Tree, Roots and Soil classes are needed to create the instances of the modelled tree, to run the model and save the
-simulation output. Datetime is used to output the current time when running the model and for  setting the name of the output file.
+The Model, Tree, Roots and Soil classes are needed to create the instances of the modelled system, to run the model and save the
+simulation output. Datetime is used to output the current time when running the model and for  setting the name of the output file. The plot_xylem_pressure_top_bottom function is used to plot the xylem pressure at the end of the simulation.
 
 ### Define soil properties
 ```python
 z = np.linspace(0, 1, 11)
 soil_layer_thickness = np.array(np.diff(z))
-pressure = np.zeros((len(soil_layer_thickness), 1))  # Pa
+pressure = np.zeros((len(soil_layer_thickness), 1))-2e4  # Pa
 hydraulic_conductivity = np.ones((len(soil_layer_thickness), 1))*1e-9  # m/s
 soil = Soil(layer_thickness=soil_layer_thickness,
             hydraulic_conductivity=hydraulic_conductivity,
             pressure=pressure)
 ```
 
-Set the soil to be 1 meter deep, the soil water potential to be 0 Pa everywhere in the soil and
+Set the soil to be 1 meter deep, the soil water potential to be -0.02 MPa everywhere in the soil and
 the horizontal hydraulic conductivity to be 10<sup>-9</sup> ms<sup>-1</sup>. 
 
 ### Define root properties
@@ -71,9 +73,9 @@ roots.area_density = b*np.exp(-a*length).reshape(roots.num_elements, 1)
 
 ```
 
-The roots object has a rooting depth of 0.5 meters with 5 elements. The element thickness, 0.1 meters, matches the thickness of the soil layers which is an intrinsic requirement of the model. The effective radius of the roots are set to be 0.5 mm in every layer. Each tree takes 1 m<sup>2</sup> of ground.
+The roots object has a rooting depth of 0.5 meters with 5 elements. The element thickness (0.1 meters), matches the thickness of the soil layers which is an intrinsic requirement of the model. The effective radius of the fine roots are set to be 0.5 mm in every layer. Each tree takes 1 m<sup>2</sup> of ground.
 
-After the roots object is created, the area density is set to be exponential function of the depth or the roots (see figure below). The area density has units m<sup>2</sup> roots / m<sup>3</sup> ground. The root area density is calculated such that the RAI = &sum; B<sub>i</sub> &Delta;z<sub>i</sub> A<sub>tree</sub> = 30 m$^2$ / tree where B is the root area density, &Delta; z<sub>i</sub> is the layer thickness and A<sub>tree</sub> is the ground area that the tree takes.
+After the roots object is created, the area density is set to be exponential function of the depth or the roots (see the figure below). The area density has units m<sup>2</sup> roots / m<sup>3</sup> ground. The root area density is calculated such that the RAI = &sum; B<sub>i</sub> &Delta;z<sub>i</sub> A<sub>tree</sub> = 30 m$^2$ / tree where B is the root area density, &Delta; z<sub>i</sub> is the layer thickness and A<sub>tree</sub> is the ground area that the tree takes.
 
 ![Figure of the root area density](./_static/root_area_density.png)
 
@@ -81,7 +83,7 @@ After the roots object is created, the area density is set to be exponential fun
 ```python
 height: float = 2.4
 
-num_elements: int = 45  # 40 tree elements, 5 root elements
+num_elements: int = 25  # 20 tree elements, 5 root elements
 element_height = np.repeat(0.06, num_elements)
 ```
 Set the total height of the modelled tree and number of elements in the whole tree (number of elements below and above ground). The element height is set to be the total height divided by the number of elements.
@@ -104,27 +106,24 @@ time = np.linspace(0, 24, 12*24+1)
 transpiration = np.sin(time*math.pi/24.0)*transpiration_max
 photosynthesis = np.sin(time*math.pi/24.0)*photosynthesis_max
 ```
-Define the positive sine shaped curves for 24h our period that peak at the values
-set to maximum values (transpiration_max and photosynthesis_max). The time step in the
-time vector is 5 minutes.
+Define the positive sine shaped curves for 24h period that peak at the maximum values (transpiration_max and photosynthesis_max). The time step in the time vector is 5 minutes.
 
 ```python
 sugar_profile: np.ndarray = np.zeros((num_elements, 1))
-sugar_profile[0:20, 0] = 1400
-sugar_profile[20:30, 0] = 1000
-sugar_profile[30:40, 0] = 800
+sugar_profile[0:20, 0] = 700
+sugar_profile[20:30, 0] = 500
+sugar_profile[30:40, 0] = 400
 ```
-Set the initial sugar concentration in the phloem. Note that the tree properties can be set either as a list (as was done for e.g. transpiration profile) or as NumPy arrays. In the Tree class, all properties are converted
-to NumPy arrays using the numpy.asarray function.
+Set the initial sugar concentration in the phloem (molm<sup>-3</sup>). Note that the tree properties can be set either as a list (as was done for e.g. transpiration profile) or as NumPy arrays. All properties are converted to NumPy arrays using the numpy.asarray function in the Tree class.
 
 ```python
 sugar_unloading_profile: List[float] = [0.0 for i in range(num_elements)]
 
-sugar_target_concentration: float = 1200
+sugar_target_concentration: float = 700
 
 sugar_unloading_slope = 3.5e-7
 ```
-Set the initial sugar unloading rate and parameters for calculating the unloading rate further. The sugar_target_concentration is a concentration after which sugar unloading starts and sugar_unloading_slope is the slope parameter (units m/s) for the unloading. See [Nikinmaa et. al., (2014)](https://academic.oup.com/aob/article/114/4/653/2769025) for further details.
+Set the initial sugar unloading rate and parameters for calculating the unloading rate further. The sugar_target_concentration is the concentration after which sugar unloading starts and sugar_unloading_slope is the slope parameter (units m/s) for the unloading. See [Nikinmaa et. al., (2014)](https://academic.oup.com/aob/article/114/4/653/2769025) for further details.
 
 ```python
 axial_permeability_profile: np.ndarray = np.zeros((num_elements, 2))
@@ -139,18 +138,17 @@ for (row, permeability) in enumerate(axial_permeability_profile):
 
 axial_permeability_profile = np.flip(axial_permeability_profile, axis=0)
 ```
-Define an axial permeability for the modelled tree. In this case the axial permeabilities are inversely proportional to the square root of distance of an element from the ground.
+Define an axial permeability (m<sup>2</sup>) for the modelled tree. In this case the axial permeabilities are inversely proportional to the square root of distance of an element from the ground.
 
 ```python
 radial_hydr_conductivity: List[float] = [1e-13] * num_elements
 
 elastic_modulus_profile: List[List[float]] = [[1000e6, 30e6]] * num_elements
 
-radii: List[float] = [0.1, 0.05, 0.001]
+radii: List[float] = [0.05, 0.1, 0.001]
 
 ```
-Define the missing properties for the modelled tree. If there are multiple elements, the first element is always for the xylem and the second for the phloem.
-
+Define the radial hydraulic conductivity (m Pa<sup>-1</sup> s<sup>-1</sup>) between xylem and phloem and elastic moduli (Pa) for every element. and the radius of heartwood, xylem and phloem (m).
 ```python
 tree = Tree(height=height,
             element_height=element_height,
@@ -174,7 +172,7 @@ Create an instance of the Tree class with the desired properties.
 outputfname = 'test_'
 outputfname = outputfname + datetime.now().strftime("%y-%m-%dT%H:%M:%S") + ".nc"
 ```
-Define name of the output file.
+Define the name of the output file.
 
 ```python
 model = Model(tree, outputfile=outputfname, soil=soil)
@@ -183,22 +181,36 @@ Create an instance of the model class.
 
 ### Run the model
 ```python
-for day in range(0, 2):
-    for (ind, time) in enumerate(time[0:-1]):
-        # set new transpiration rate
-        transpiration_rate = transpiration_profile.copy()
-        transpiration_rate[0:10] = [transpiration[ind]]*10
-        model.tree.transpiration_rate = np.asarray(transpiration_rate).reshape(40, 1)
+    for day in range(0, 2):
+        for (ind, t) in enumerate(time[0:-1]):
+            # set new transpiration rate
+            transpiration_rate = transpiration_profile.copy()
+            transpiration_rate[0:10] = [transpiration[ind]]*10
+            model.tree.transpiration_rate = np.asarray(transpiration_rate).reshape(num_elements, 1)
 
-        photosynthesis_rate = photosynth_profile.copy()
-        photosynthesis_rate[0:10] = [photosynthesis[ind]]*10
-        model.tree.photosynthesis_rate = np.asarray(photosynthesis_rate).reshape(40, 1)
-        model.tree.sugar_loading_rate = model.tree.photosynthesis_rate.copy()
+            photosynthesis_rate = photosynth_profile.copy()
+            photosynthesis_rate[0:10] = [photosynthesis[ind]]*10
+            model.tree.photosynthesis_rate = np.asarray(photosynthesis_rate).reshape(num_elements, 1)
+            model.tree.sugar_loading_rate = model.tree.photosynthesis_rate.copy()
 
-        model.run_scipy(time_start=(day*60*60*24)+time*60*60, time_end=(day*60*60*24)+time[ind+1]*60*60, ind=ind)
+            model.run_scipy(time_start=(day*60*60*24)+t*60*60, time_end=(day*60*60*24)+time[ind+1]*60*60, ind=ind)
+
 ```
-The model is run by calling the model.run_scipy method repeatedly. The outer loop defines how many days the model is run and the inner loop defines the current simulation time in a day.
+The model is run by calling the model.run_scipy method continuously. The outer loop defines how many days the model is run and the inner loop defines the current simulation time in a day.
 
-In every time step new values for the transpiration rate and photosynthesis rate are set. Note that the sugar_loading_rate is set equal to the photosynthesis rate as is required in the current version of the model.
+New values for the transpiration rate and photosynthesis rate are set at the start of every time step. Note that the sugar_loading_rate is set equal to the photosynthesis rate as is required in the current version of the model.
 
-Finally the model is run from time_start to time_end which is always a 5 minute time interval. The run_scipy method always saves the last stage of the modelled system when it is called.
+The model is run from time_start to time_end which is always a 5 minute time interval. The run_scipy method always saves the last stage of the modelled system when it is called.
+
+```python
+   print('Model simulation finished')
+
+   plot_xylem_pressure_top_bottom(filename=outputfname)
+   print('Xylem pressures plot finished, filename={}_xylem_pressure.png'.format(outputfname[:-3]))
+
+```
+Finally, when the simulation is finished a notification is printed. The full output file is saved and a figure showing the xylem pressure in the top and bottom of the tree.
+
+The figure showing the xylem pressure should look like the one below. Note that the first six elements are not shown in the figure since this is approximately the time the pressure takes to adjust from zero pressure to the values determined by the ambient conditions.
+
+![Figure of the xylem pressure in top and bottom of the tree in the simulation](./_static/xylem_pressure.png)
