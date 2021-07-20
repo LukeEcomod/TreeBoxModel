@@ -8,7 +8,6 @@ __pycache__
 test.out
 *.nc
 *profile*
-*.png
 *.gif
 /figures
 

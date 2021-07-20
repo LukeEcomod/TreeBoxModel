@@ -32,10 +32,6 @@ To install all the packages required for the model to run use
 
 >>> pip install -r requirements_pip.txt
 
-or
-
->>> conda install --file requirements_conda.txt
-
 Quick start
 -----------
 run main.py.
