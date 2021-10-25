@@ -74,10 +74,10 @@ def test_element_area(test_tree):
     assert test_tree.element_area([1], 1)[0] == pytest.approx(math.pi*(3.5**2 - 1.5**2), rel=1e-6)
 
 
-def test_element_volume(test_tree):
+def test_element_volume_water(test_tree):
 
-    assert test_tree.element_volume([1], 0)[0] == pytest.approx(math.pi*(1.5**2 - 0.5**2)*12/40, rel=1e-6)
-    assert test_tree.element_volume([1], 1)[0] == pytest.approx(math.pi*(3.5**2 - 1.5**2)*12/40, rel=1e-6)
+    assert test_tree.element_volume_water([1], 0)[0] == pytest.approx(math.pi*(1.5**2 - 0.5**2)*12/40, rel=1e-6)
+    assert test_tree.element_volume_water([1], 1)[0] == pytest.approx(math.pi*(3.5**2 - 1.5**2)*12/40, rel=1e-6)
 
 
 def test_viscosity_update(test_tree):

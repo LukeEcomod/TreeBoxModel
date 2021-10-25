@@ -53,11 +53,9 @@ class Gas:
         self.head_area = self.head_area * np.pi
         self.element_volume: np.ndarray = self.head_area * self.element_height
         self.element_volume_air = self.space_division[:, :, 0]*self.element_volume
-        self.element_volume_water_cell = np.sum(self.space_division[:, :, 1:], axis=2)*self.element_volume
-        # gas_inside_start = np.sum(self.concentration[:, :, 0]*self.element_volume_air) +\
-        #     np.sum(self.concentration[:, :, 1]*self.element_volume_water_cell)
-        # print('gas at start')
-        # print(gas_inside_start)
+        self.element_volume_water = self.space_division[:, :, 1]*self.element_volume
+        self.element_volume_cell = self.space_division[:,:,2]*self.element_volume
+
         if len(outputfile) != 0:
             dims: Dict = {"axial_layers": self.na, "radial_layers": self.nr, "space_layers": 2}
             self.ncf = initialize_netcdf(outputfile, dims, gas_variables)
@@ -118,7 +116,7 @@ class Gas:
         conc = self.concentration.copy()
 
         n_air = conc[:, :, 0]*self.element_volume_air
-        n_water = conc[:, :, 1]*self.element_volume_water_cell
+        n_water = conc[:, :, 1]*self.element_volume_water
 
         Q_air_water[:,:,0] = (n_water - n_air*self.kh)*self.equilibration_rate
         Q_air_water[:,:,1] = (n_air*self.kh - n_water)*self.equilibration_rate

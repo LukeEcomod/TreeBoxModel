@@ -52,12 +52,15 @@ class Tree:
         radial_hydraulic_conductivity_profile (List[float]] or numpy.ndarray): radial hydraulic conductivity between the
             xylem and the phloem (:math:`\\frac{m}{Pa \\: s}`)
         elastic_modulus_profile (List[List[float]] or numpy.ndarray): Elastic modulus of every element (:math:`Pa`).
-        ground_water_potential (float): The water potential in the soil. This is used to calculate the sap flux between
-            soil and the bottom xylem element.
+        temperature (float): Temperature of the tree (:math:`K`)
+        space_division (List[float] or numpy.ndarray): fraction of air, water and cell in each element in this order.
+            Only one value for each element
 
     Attributes:
         height (float): total tree height (:math:`m`)
         num_elements (float): number of vertical elemenets in the tree.
+        space_division (numpy.ndarray(dtype=float, ndim=1), [3,]): Space division of air, water and cell in the tree.
+            Only one value per air, water or cell for all elements.
         transpiration_rate (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]): The rate of transpiration
             (:math:`\\frac{kg}{s}`) in the xylem.
         photosynthesis_rate (numpy.ndarray(dtype=float, ndim=2) [tree.num_elements, 1]): The rate of photosynthesis
@@ -96,7 +99,8 @@ class Tree:
                  radial_hydraulic_conductivity_profile: List[float],
                  elastic_modulus_profile: List[List[float]],
                  roots: Roots,
-                 temperature: float = 298.15):
+                 temperature: float = 298.15,
+                 space_division: List[float] = None):
 
         # for all arrays/lists the first column is for xylem and the second for phloem
         # all the arrays/lists have num_elements rows
@@ -148,6 +152,10 @@ class Tree:
 
         #set temperature
         self.temperature = temperature
+        if space_division is None or len(space_division)!=3:
+            self.space_division = np.array([0.0, 1.0, 0.0])
+        else:
+            self.space_division = space_division
 
         # update phloem viscosity due to sucrose
         self.update_sap_viscosity()
@@ -210,7 +218,7 @@ class Tree:
         inner_radius = inner_radius.reshape(num_elements, 1)
         return np.pi*(total_area - inner_radius**2)
 
-    def element_volume(self, ind: List[int] = None, column: int = 0) -> np.ndarray:
+    def element_volume_water(self, ind: List[int] = None, column: int = 0) -> np.ndarray:
         """ Calculates the volume of the xylem or the phloem.
 
         Args:
@@ -233,7 +241,7 @@ class Tree:
         if len(ind) > 0:
             heights = heights[ind, :]
 
-        return self.element_area(ind, column) * heights
+        return self.element_area(ind, column) * heights * self.space_division[1]
 
     def cross_sectional_area(self, ind: List[int] = None) -> np.ndarray:
         """ Calculates the cross-sectional area between the xylemn and the phloem.

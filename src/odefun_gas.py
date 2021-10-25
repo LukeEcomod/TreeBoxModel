@@ -10,7 +10,7 @@ def odefun_gas(t: float, y: np.ndarray, gas) -> np.ndarray: # pylint: disable=un
     Q_air_water = gas.air_water_fluxes()
     R = gas.sources_and_sinks()
     dcdt_air = (Q_rad + R[:, :, 0] + Q_air_water[:, :, 0])/gas.element_volume_air
-    dcdt_water = (Q_ax + R[:, :, 1] + Q_air_water[:, :, 1])/gas.element_volume_water_cell
+    dcdt_water = (Q_ax + R[:, :, 1] + Q_air_water[:, :, 1])/gas.element_volume_water
     dndt_out = -1.0*np.minimum(0, Q_out[:, -1])
     dydt = np.concatenate([dcdt_air.reshape(gas.na*gas.nr, order='F'),
                            dcdt_water.reshape(gas.na*gas.nr, order='F'),

@@ -223,12 +223,12 @@ class Model:
                 write_netcdf(self.ncf, results)
 
             self.tree.pressure += dt*self.tree.elastic_modulus/(np.transpose(
-                np.array([self.tree.element_volume([], 0),
-                          self.tree.element_volume([], 1)])) * RHO_WATER)\
+                np.array([self.tree.element_volume_water([], 0),
+                          self.tree.element_volume_water([], 1)])) * RHO_WATER)\
                 * (dmdt_ax + dmdt_rad)
 
             for i in range(self.tree.num_elements):
-                self.tree.solutes[i, 1].concentration += dt / self.tree.element_volume([i], 1)\
+                self.tree.solutes[i, 1].concentration += dt / self.tree.element_volume_water([i], 1)\
                     * (dmdt_ax[i, 1]
                        * self.tree.solutes[i, 1].concentration/RHO_WATER
                        + self.tree.sugar_loading_rate[i]
@@ -325,8 +325,8 @@ class Model:
         properties['pressure'] = self.tree.pressure
         properties['radius'] = self.tree.element_radius[:, 1:]
         properties['area'] = np.concatenate([self.tree.element_area([], 0), self.tree.element_area([], 1)], axis=1)
-        properties['volume'] = np.concatenate([self.tree.element_volume([], 0),
-                                               self.tree.element_volume([], 1)], axis=1)
+        properties['volume_water'] = np.concatenate([self.tree.element_volume_water([], 0),
+                                                     self.tree.element_volume_water([], 1)], axis=1)
         properties['sapflow'] = np.concatenate(convert_tree_flux_to_velocity(self), axis=1)
         properties['dqroot'] = self.root_fluxes()
         properties['dqrad'] = self.radial_fluxes()
