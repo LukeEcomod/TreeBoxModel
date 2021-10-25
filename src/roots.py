@@ -90,14 +90,16 @@ class Roots:
         if ind is None:
             ind = []
 
-        if(len(ind) > 0):
-            return (self.area_density[ind] * soil.layer_thickness[ind]/self.soil_conductance_scale/self.area_per_tree)\
+        if len(ind) > 0:
+            conductance = (self.area_density[ind] \
+                * soil.layer_thickness[ind]/self.soil_conductance_scale/self.area_per_tree)\
                 .reshape(len(ind), 1)
         else:
             root_ind, _ = np.where(soil.depth() < self.rooting_depth)
-            return (self.area_density * soil.layer_thickness[root_ind].reshape(len(root_ind), 1)
+            conductance = (self.area_density * soil.layer_thickness[root_ind].reshape(len(root_ind), 1)
                     / self.soil_conductance_scale/self.area_per_tree).reshape(self.num_elements, 1)
 
+        return conductance
     def soil_root_conductance(self, soil: Soil, ind: List[int] = None) -> np.ndarray:
         """ Calculates the conductance in layer i which is :math:`k_{s,i}` in Volpe et al., (2013)
             which is the horizontal conductance in soil to the soil-root interface.

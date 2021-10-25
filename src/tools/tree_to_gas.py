@@ -3,6 +3,7 @@ import numpy as np
 
 
 def convert_tree_to_gas_properties(model, gas_dims: Tuple, c_gas_soil=0.0) -> Dict:
+    '''Convert tree properties in model.py to gas properties to be used in gas.py'''
 
     r, r_mask = convert_tree_radii_to_gas(model, gas_dims)
     h, h_mask = convert_tree_height_to_gas(model, gas_dims)
@@ -13,7 +14,7 @@ def convert_tree_to_gas_properties(model, gas_dims: Tuple, c_gas_soil=0.0) -> Di
     params['radius'] = np.repeat(r, repeats=n).reshape(gas_dims)
     params['height'] = np.repeat(h, repeats=n).reshape(gas_dims)
     params['velocity'] = np.zeros(gas_dims, dtype=np.float64)
-    params['root_uptake'] = convert_root_fluxes_to_source_term(model, gas_dims, c_gas_soil)
+    params['root_uptake'] = convert_root_fluxes_to_source_term(model, c_gas_soil)
 
     # set the velocity to correct values
     for row, _ in enumerate(params['velocity']):
@@ -25,6 +26,7 @@ def convert_tree_to_gas_properties(model, gas_dims: Tuple, c_gas_soil=0.0) -> Di
 
 
 def convert_tree_flux_to_velocity(model):
+    '''Convert axial upward flux to sap flow velocity to be used in gas.py'''
     RHO_WATER = 1000
     _, flux, _ = model.axial_fluxes()
     flux = -1.0*flux/RHO_WATER  # flux in m3/s
@@ -35,6 +37,7 @@ def convert_tree_flux_to_velocity(model):
 
 
 def convert_root_fluxes_to_source_term(model, c_gas_soil: float):
+    ''' Convert root fluxes to be used as a source term in sources_and_sinks_func in gas.py'''
     RHO_WATER = 1000
     return model.root_fluxes()/RHO_WATER*c_gas_soil
 
@@ -81,7 +84,7 @@ def convert_tree_height_to_gas(model, gas_dims: Tuple) -> Tuple:
     gas_h_percentage = np.array([i/gas_dims[0] for i in range(gas_dims[0])])
     gas_h_percentage[-1] = 1.0
     for (ind, _) in enumerate(h_percentage):
-        if(ind == 0):
+        if ind == 0:
             mask[np.where(gas_h_percentage <= h_percentage[0])] = ind
         else:
             mask[np.where((gas_h_percentage <= h_percentage[ind]) & (gas_h_percentage > h_percentage[ind-1]))] = ind

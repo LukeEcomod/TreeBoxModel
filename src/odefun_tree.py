@@ -1,10 +1,9 @@
 import numpy as np
-import math
 from .constants import RHO_WATER, MAX_ELEMENT_COLUMNS
 
 
-def odefun_tree(t: float, y: np.ndarray, model) -> np.ndarray:
-    """ Calculates the right hand side of the model ODEs.
+def odefun_tree(t: float, y: np.ndarray, model) -> np.ndarray: #pylint: disable=unused-argument
+    """ Calculates the right hand side of the model ODEs related to tree and model classes.
 
     The modelled systen and the ODEs are described in the [modelled system](modelled_system.html).
     The scipy.solve_ivp() function in src.model.Model.run_scipy() method calls this function during
@@ -67,13 +66,13 @@ def odefun_tree(t: float, y: np.ndarray, model) -> np.ndarray:
     dmdt = (dmdt_ax + dmdt_rad)
     dydt[2][:, 0] = 0.0
     dydt[2][:, 1] = ((dmdt[:, 0].reshape(model.tree.num_elements, 1))
-                     / (2.0*math.pi*RHO_WATER * model.tree.element_height
+                     / (2.0*np.pi*RHO_WATER * model.tree.element_height
                         * (model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1)
                            + model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1))
                         )).reshape(model.tree.num_elements,)
 
     dydt[2][:, 2] = ((dmdt[:, 1].reshape(model.tree.num_elements, 1))
-                     / (2.0*math.pi*RHO_WATER*model.tree.element_height) *
+                     / (2.0*np.pi*RHO_WATER*model.tree.element_height) *
                      ((model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1)
                        * model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1)
                        - model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1))

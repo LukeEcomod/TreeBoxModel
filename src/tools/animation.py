@@ -26,16 +26,16 @@ indeces_plot = np.arange(0, len_data, increment)
 
 
 def init():
-    start_data = np.zeros((na, nr))
+    '''Initialize image data.'''
     im.set_data(start_data)
     return [im]
 
 
 def animate(i):
+    '''Function for updating the image plot'''
     slide_data = np.log10(np.array(data.gas_concentration[indeces_plot[i], :, :, 1]))
     im.set_array(slide_data)
-    print(i)
-    plt.title('Time= {} days'.format(np.round(indeces_plot[i]*30*60/86400, 1)))
+    plt.title(f'Time= {np.round(indeces_plot[i]*30*60/86400, 1)} days')
     return [im]
 
 

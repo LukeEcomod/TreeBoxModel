@@ -1,16 +1,19 @@
-import numpy as np
-import math
 import datetime
+from typing import Dict
+import numpy as np
+from netCDF4 import Dataset
 from scipy.integrate import solve_ivp
+from .odefun_tree import odefun_tree
+from .model_variables import all_variables
 from .tree import Tree
 from .soil import Soil
-from .constants import GRAVITATIONAL_ACCELERATION, RHO_WATER,\
-    MOLAR_GAS_CONSTANT, TEMPERATURE, MAX_ELEMENT_COLUMNS
-from .tools.iotools import initialize_netcdf, write_netcdf, tree_properties_to_dict, convert_tree_flux_to_velocity
-from .model_variables import all_variables
-from .odefun_tree import odefun_tree
-from netCDF4 import Dataset
-from typing import Dict
+from .constants import (GRAVITATIONAL_ACCELERATION,
+                        RHO_WATER,
+                        MOLAR_GAS_CONSTANT,
+                        MAX_ELEMENT_COLUMNS)
+from .tools.iotools import (initialize_netcdf,
+                            write_netcdf)
+from .tools.tree_to_gas import convert_tree_flux_to_velocity
 
 
 class Model:
@@ -32,7 +35,7 @@ class Model:
         self.tree: Tree = tree
         self.soil = soil
         self.outputfile = outputfile
-        if(len(outputfile) != 0):
+        if len(outputfile) != 0:
             dims = {'axial_layers': tree.num_elements, 'radial_layers': 2,
                     'root_elements': tree.roots.num_elements, 'soil_elements': soil.num_elements}
             self.ncf: Dataset = initialize_netcdf(outputfile, dims, all_variables)
@@ -40,7 +43,8 @@ class Model:
     def axial_fluxes(self) -> np.ndarray:
         """Calculates axial sap mass flux for every element.
 
-        The axial flux in the xylem and phloem are calculated independently from the sum of bottom and top fluxes.
+        The axial flux in the xylem and phloem are calculated independently
+        from the sum of bottom and top fluxes.
 
         .. math::
             Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i} - E
@@ -72,20 +76,21 @@ class Model:
         length: np.ndarray = self.tree.element_height
         l: np.ndarray = np.concatenate(([0], length.reshape(len(length),)))
         cumulative_sum: np.ndarray = np.cumsum(l).reshape(len(l), 1)
-        dl: np.ndarray = np.diff(length/2 + cumulative_sum[:-1], axis=0)
+        l_midpoints = length/2 + cumulative_sum[:-1]
         E: np.ndarray = self.tree.transpiration_rate
         C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
         C = np.concatenate([np.zeros((self.tree.num_elements, 1)), C], axis=1)
         RWU: np.ndarray = self.root_fluxes()
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
-
         transport_ax: np.ndarray = k/eta/length*RHO_WATER * np.concatenate([self.tree.element_area([], 0),
                                                                             self.tree.element_area([], 1)], axis=1)
         # calculate downward and upward fluxes separately
         Q_ax_down: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
         Q_ax_down[0:-1, :] = (np.diff(pressures, axis=0)
-                              - RHO_WATER*GRAVITATIONAL_ACCELERATION*dl.repeat(2, axis=1)
+                              + RHO_WATER
+                              * GRAVITATIONAL_ACCELERATION
+                              * np.diff(l_midpoints, axis=0).repeat(2, axis=1)
                               ) * transport_ax[0:-1, :]
         Q_ax_down[-1, 0] = 0  # flux from xylem to soil is handled in the RWU
         Q_ax_down[-1, 1] = 0  # no flux from phloem to soil
@@ -96,7 +101,11 @@ class Model:
             np.diff(
                 np.flip(
                     pressures, axis=0), axis=0), axis=0)
-            + RHO_WATER*GRAVITATIONAL_ACCELERATION*dl.repeat(2, axis=1)
+            + RHO_WATER
+            * GRAVITATIONAL_ACCELERATION
+            * np.flip(
+                np.diff(
+                    np.flip(l_midpoints, axis=0), axis=0), axis=0).repeat(2, axis=1)
         ) * transport_ax[0:-1, :]
         Q_ax_up[0, :] = 0  # no upward flux in the highest element
 
@@ -143,7 +152,7 @@ class Model:
         Q_rad_phloem: np.ndarray = Lr.reshape(
             (self.tree.num_elements, 1)) * self.tree.cross_sectional_area() * RHO_WATER * (
             np.diff(np.flip(pressures, axis=1), axis=1) + C.reshape((self.tree.num_elements, 1))
-            * MOLAR_GAS_CONSTANT*TEMPERATURE)
+            * MOLAR_GAS_CONSTANT*self.tree.temperature)
         Q_rad_xylem: np.ndarray = -(Q_rad_phloem.copy())
         return np.concatenate((Q_rad_xylem, Q_rad_phloem), axis=1)
 
@@ -198,7 +207,7 @@ class Model:
             output_interval: Time interval in seconds when to save the tree stage
 
         """
-        # FIXME: This function needs to be updated so that dr/dt is calculated like in odefun.py
+        # TODO: This function needs to be updated so that dr/dt is calculated like in odefun.py
         dmdt_ax: np.ndarray = np.zeros((self.tree.num_elements, 2))
         dmdt_rad: np.ndarray = np.zeros((self.tree.num_elements, 2))
         for (ind, time) in enumerate(np.linspace(time_start, time_end, int((time_end-time_start)/dt))):
@@ -206,11 +215,9 @@ class Model:
 
             dmdt_ax, _, _ = self.axial_fluxes()
             dmdt_rad = self.radial_fluxes()
-            if(np.abs(time % output_interval) < 1e-2):
+            if np.abs(time % output_interval) < 1e-2:
                 print(datetime.datetime.now(), "\t", time)
-                results = tree_properties_to_dict(self.tree)
-                results['dqrad'] = dmdt_rad
-                results['dqax'] = dmdt_ax
+                results = self.properties_to_dict()
                 results['simulation_time'] = time
                 results['model_index'] = ind
                 write_netcdf(self.ncf, results)
@@ -226,14 +233,15 @@ class Model:
                        * self.tree.solutes[i, 1].concentration/RHO_WATER
                        + self.tree.sugar_loading_rate[i]
                        - self.tree.sugar_unloading_rate[i])
-                if(i > self.tree.num_elements - 6):
+                if i > self.tree.num_elements - 6:
                     self.tree.sugar_unloading_rate[i] = (self.tree.solutes[i, 1].concentration
                                                          - self.tree.sugar_target_concentration)*1e-5
             self.tree.element_radius += (dmdt_ax + dmdt_rad)\
-                / (math.pi*RHO_WATER * np.repeat(self.tree.element_height, 2, axis=1) * self.tree.element_radius)
+                / (np.pi*RHO_WATER * np.repeat(self.tree.element_height, 2, axis=1) * self.tree.element_radius)
 
             # update sap viscosity
             self.tree.update_sap_viscosity()
+            return results
 
     def run_scipy(self, time_start: float = 1e-3, time_end: float = 120.0, ind: int = 0) -> None:
         """ Propagates the tree in time using the solve_ivp function in the SciPy package.
@@ -280,7 +288,7 @@ class Model:
         self.tree.element_radius = element_radius
         self.tree.update_sap_viscosity()
         # save the tree status
-        if(len(self.outputfile) != 0):
+        if len(self.outputfile) != 0:
             print(datetime.datetime.now(), "\t", time_end/86400)
             results = self.properties_to_dict()
             results['simulation_time'] = time_end

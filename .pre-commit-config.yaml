@@ -7,10 +7,12 @@ repos:
       language: system
       pass_filenames: false
       always_run: true
-    - id: pycodestyle
-      name: pycodestyle
-      entry: pycodestyle
+    - id: pylint
+      name: pylint
+      entry: pylint
       types: [ python ]
       language: system
+      exclude: ^src/test/
       args:
         - --max-line-length=120
+

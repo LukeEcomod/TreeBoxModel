@@ -1,11 +1,9 @@
-import numpy as np
 import os.path
 from typing import Dict
+import numpy as np
 from netCDF4 import Dataset, Variable
-# from ..model import Model
 from ..model_variables import (index_dim_vars, soil_dim_vars, root_dim_vars, axial_layer_dim_vars,
                                gas_three_dim_vars, gas_index_dim_vars, gas_axial_dim_vars)
-from .tree_to_gas import convert_tree_flux_to_velocity
 
 
 def initialize_netcdf(filename: str,
@@ -88,10 +86,6 @@ def write_netcdf(ncf: Dataset, properties: Dict) -> None:
             # the variable has dimension
             # ("index", "radial_layers", "axial_layers")
             ncf[key][ind, :, :] = properties[key]
-
-
-def tree_properties_to_dict(model) -> Dict:
-    pass
 
 
 def gas_properties_to_dict(gas) -> Dict:

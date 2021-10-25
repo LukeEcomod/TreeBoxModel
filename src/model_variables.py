@@ -1,7 +1,8 @@
 all_variables = {'height': ['height of the tree', 'm', ("index"), 'f4'],
                  'element_height': ['Height of each element', 'm', ("index", "axial_layers"), 'f4'],
                  'radius': ['radius of an element', 'm', ("index", "axial_layers", "radial_layers"), 'f4'],
-                 'num_elements': ['number of tree elements', 'pcs.', ("index"), 'i4'],
+                 'num_elements':
+                 ['number of tree+root elements', 'pcs.', ("index"), 'i4'],
                  'transpiration_rate':
                  ['Transpiration rate in a tree element', 'kg/s', ("index", "axial_layers"), 'f4'],
                  'photosynthesis_rate':
@@ -31,8 +32,6 @@ all_variables = {'height': ['height of the tree', 'm', ("index"), 'f4'],
                  ['downward axial solution flux', 'kg/s', ("index", "axial_layers", "radial_layers"), 'f4'],
                  'pressure':
                  ['pressure of an element', 'Pa', ("index", "axial_layers", "radial_layers"), 'f4'],
-                 'num_elements':
-                 ['number of tree+root elements', 'pcs.', ("index"), 'i4'],
                  'simulation_time':
                  ['Time in simulation', 's', ("index"), 'f4'],
                  'model_index':

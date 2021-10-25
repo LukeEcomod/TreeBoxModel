@@ -1,4 +1,4 @@
-from ..constants import GRAVITATIONAL_ACCELERATION, MOLAR_GAS_CONSTANT, RHO_WATER, TEMPERATURE
+from ..constants import GRAVITATIONAL_ACCELERATION, MOLAR_GAS_CONSTANT, RHO_WATER
 import pytest
 import numpy as np
 from src.model import Model
@@ -41,10 +41,10 @@ def test_axial_fluxes(test_model):
             assert f[1] == 0
         else:
             assert f[0] == transport_ax[ind, 0]*(test_model.tree.pressure[ind-1, 0]-test_model.tree.pressure[ind, 0]
-                                                 + RHO_WATER*GRAVITATIONAL_ACCELERATION
+                                                 - RHO_WATER*GRAVITATIONAL_ACCELERATION
                                                  * test_model.tree.element_height[ind, 0])
             assert f[1] == transport_ax[ind, 1]*(test_model.tree.pressure[ind-1, 1]-test_model.tree.pressure[ind, 1]
-                                                 + RHO_WATER*GRAVITATIONAL_ACCELERATION
+                                                 - RHO_WATER*GRAVITATIONAL_ACCELERATION
                                                  * test_model.tree.element_height[ind, 0])
 
     # test flux down
@@ -56,10 +56,10 @@ def test_axial_fluxes(test_model):
 
         else:
             assert f[0] == transport_ax[ind, 0]*(test_model.tree.pressure[ind+1, 0]-test_model.tree.pressure[ind, 0]
-                                                 - RHO_WATER*GRAVITATIONAL_ACCELERATION
+                                                 + RHO_WATER*GRAVITATIONAL_ACCELERATION
                                                  * test_model.tree.element_height[ind, 0])
             assert f[1] == transport_ax[ind, 1]*(test_model.tree.pressure[ind+1, 1]-test_model.tree.pressure[ind, 1]
-                                                 - RHO_WATER*GRAVITATIONAL_ACCELERATION
+                                                 + RHO_WATER*GRAVITATIONAL_ACCELERATION
                                                  * test_model.tree.element_height[ind, 0])
 
     # test full flux now that up and down are correct
@@ -82,6 +82,6 @@ def test_radial_fluxes(test_model):
 
         assert f[0] == pytest.approx(transport_rad[ind, 0]
                                      * ((test_model.tree.pressure[ind, 1] - test_model.tree.pressure[ind, 0])
-                                        - C[ind, 0]*MOLAR_GAS_CONSTANT*TEMPERATURE), rel=1e-6)
+                                        - C[ind, 0]*MOLAR_GAS_CONSTANT*298.15), rel=1e-6)
 
         assert f[1] == pytest.approx(-f[0], rel=1e-6)

@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
@@ -112,23 +112,23 @@ def plot_variable_vs_time(filename: str, params: Dict = None) -> None:
         * If no folder is specified the argument filename and filename_ending is used to create the name of the figure
         that is saved.
     """
-    if(params is None):
+    if params is None:
         params = {}
     data: xr.Dataset = xr.open_dataset(filename)
 
     variable: xr.DataArray = data[params['variable_name']]
     time: xr.DataArray = data['simulation_time']
-    if(any(s == 'cut' for s in params.keys())):
+    if any(s == 'cut' for s in params.keys()):
         # cut needs to be a dictionary with at least one key from
         # keys: index, axial_layers and radial_layers
         variable = variable[params['cut']]
         time = time[{key: params['cut'][key] for key in ['index']}]
         time = time - data['simulation_time'][params['cut']['index'][0]]
-    if(not any(s == 'time_divide' for s in params.keys())):
+    if not any(s == 'time_divide' for s in params.keys()):
         params['time_divide'] = 1
-    if(not any(s == 'variable_divide' for s in params.keys())):
+    if not any(s == 'variable_divide' for s in params.keys()):
         params['variable_divide'] = 1
-    fig, ax = plt.subplots(figsize=(15, 8))
+    _, ax = plt.subplots(figsize=(15, 8))
     # assume that the first axis in 'variable' is time
     # and there will be alltogether variable.shape[1]*variable.shape[2]
     # lines
@@ -143,10 +143,10 @@ def plot_variable_vs_time(filename: str, params: Dict = None) -> None:
     plt.title(params['title'])
     plt.xlabel(params['xlabel'])
     plt.ylabel(params['ylabel'])
-    if(any(s == 'xticks' for s in params.keys())):
+    if any(s == 'xticks' for s in params.keys()):
         plt.xticks(params['xticks'])
 
-    if(not any(s == 'folder' for s in params.keys())):
+    if not any(s == 'folder' for s in params.keys()):
         filename = filename.split('.')[0]+'_' + params['filename_ending'] + '.png'
     else:
         filename = params['folder'] + params['filename_ending'] + '.png'
@@ -251,6 +251,7 @@ def plot_simulation_results(filename: str, foldername: str) -> None:
 
 
 def plot_ax_up_change(filenames):
+    ''' Plot upward axial flux and transpiration rate.'''
     colors = ['k', 'r', 'b']
     lines = ['-', '--', '-.']
     legends = ['base case $k_{base} = 1.5 \\cdot 10^{-12}$ at bottom',

@@ -26,5 +26,3 @@ MOLAR_GAS_CONSTANT: float = 8.3145  #: molar gas constant :math:`\left(\frac{J}{
 # PHLOEM_RADIUS: float = 1e-3
 
 MAX_ELEMENT_COLUMNS: int = 2  #: Max number of columns in the [tree](index.html#src.tree.Tree) class
-
-TEMPERATURE: float = 298.0  #: Temperature of the tree :math:`\left( K \right)`

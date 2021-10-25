@@ -64,9 +64,13 @@ def test_axial_fluxes(test_gas):
 
 
 def test_radial_fluxes(test_gas):
-    Q = test_gas.radial_fluxes()
+    Q,_,_ = test_gas.radial_fluxes()
     cbark = np.arange(4, 50, 5)
-    outflux = -2.0*0.1*1e-11*np.pi*(cbark-1)/(np.log((4.5+0.5*(4.5-3.5))/4.5))
+    outflux = -2.0*0.1*1e-11*np.pi*5*(cbark-1)
+    print(test_gas.element_radius[:,0])
+    print(outflux)
+    print(np.sum(Q, axis=1))
+    print(Q.shape)
 
     # Test that the sum flux equals flux out of the tree
     assert all(a == pytest.approx(b, rel=1e-15) for a, b in zip(np.sum(Q, axis=1), outflux))
