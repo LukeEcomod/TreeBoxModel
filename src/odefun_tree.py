@@ -2,7 +2,7 @@ import numpy as np
 from .constants import RHO_WATER, MAX_ELEMENT_COLUMNS
 
 
-def odefun_tree(t: float, y: np.ndarray, model) -> np.ndarray: #pylint: disable=unused-argument
+def odefun_tree(t: float, y: np.ndarray, model) -> np.ndarray:  # pylint: disable=unused-argument
     """ Calculates the right hand side of the model ODEs related to tree and model classes.
 
     The modelled systen and the ODEs are described in the [modelled system](modelled_system.html).
@@ -47,41 +47,44 @@ def odefun_tree(t: float, y: np.ndarray, model) -> np.ndarray: #pylint: disable=
     dmdt_ax: np.ndarray = model.axial_fluxes()[0]
     dmdt_rad: np.ndarray = model.radial_fluxes()
     # dmdt_root: np.ndarray = model.root_fluxes()
-
     dydt = [np.zeros((model.tree.num_elements, MAX_ELEMENT_COLUMNS)),
             np.zeros((model.tree.num_elements, 1)),
             np.zeros((model.tree.num_elements, MAX_ELEMENT_COLUMNS+1))]
     dydt[0] = model.tree.elastic_modulus/(np.transpose(
-        np.array([model.tree.element_volume([], 0),
-                  model.tree.element_volume([], 1)])) * RHO_WATER) * (dmdt_ax + dmdt_rad)
+        np.array([model.tree.element_volume_water([], 0),
+                  model.tree.element_volume_water([], 1)])) * RHO_WATER) * (dmdt_ax + dmdt_rad)
+    dydt[0][0, :, 1] = 0.0
+    dydt[0][0,-1,0] = 0.0
+    #print(dmdt_ax)
+    #dydt[1][:, :] = 0.0
+    #  dydt[1] = 1.0 / model.tree.element_volume_water([], 1).reshape(model.tree.num_elements, 1)\
+    #      * (dmdt_ax[:, 1].reshape(model.tree.num_elements, 1)
+    #         * model.tree.sugar_concentration_as_numpy_array()
+    #         .reshape(model.tree.num_elements, 1)
+    #         / RHO_WATER
+    #         + model.tree.sugar_loading_rate.reshape(model.tree.num_elements, 1)
+    #         - model.tree.sugar_unloading_rate.reshape(model.tree.num_elements, 1))
 
-    dydt[1] = 1.0 / model.tree.element_volume([], 1).reshape(model.tree.num_elements, 1)\
-        * (dmdt_ax[:, 1].reshape(model.tree.num_elements, 1)
-           * model.tree.sugar_concentration_as_numpy_array()
-           .reshape(model.tree.num_elements, 1)
-           / RHO_WATER
-           + model.tree.sugar_loading_rate.reshape(model.tree.num_elements, 1)
-           - model.tree.sugar_unloading_rate.reshape(model.tree.num_elements, 1))
-
-    dmdt = (dmdt_ax + dmdt_rad)
-    dydt[2][:, 0] = 0.0
-    dydt[2][:, 1] = ((dmdt[:, 0].reshape(model.tree.num_elements, 1))
-                     / (2.0*np.pi*RHO_WATER * model.tree.element_height
-                        * (model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1)
-                           + model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1))
-                        )).reshape(model.tree.num_elements,)
-
-    dydt[2][:, 2] = ((dmdt[:, 1].reshape(model.tree.num_elements, 1))
-                     / (2.0*np.pi*RHO_WATER*model.tree.element_height) *
-                     ((model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1)
-                       * model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1)
-                       - model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1))
-                      / ((model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1)
-                          + model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1))
-                         * (model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1)
-                            + model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1)
-                            + model.tree.element_radius[:, 2].reshape(model.tree.num_elements, 1))))
-                     ).reshape(model.tree.num_elements,)
+    #dmdt = (dmdt_ax + dmdt_rad)
+    #dydt[2][:, 0] = 0.0
+    #dydt[2][:, 1] = 0.0
+    #  dydt[2][:, 1] = ((dmdt[:, 0].reshape(model.tree.num_elements, 1))
+    #                   / (2.0*np.pi*RHO_WATER * model.tree.element_height
+    #                      * (model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1)
+    #                         + model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1))
+    #                      )).reshape(model.tree.num_elements,)
+    #dydt[2][:, 2] = 0.0
+    #  dydt[2][:, 2] = ((dmdt[:, 1].reshape(model.tree.num_elements, 1))
+    #                   / (2.0*np.pi*RHO_WATER*model.tree.element_height) *
+    #                   ((model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1)
+    #                     * model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1)
+    #                     - model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1))
+    #                    / ((model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1)
+    #                        + model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1))
+    #                       * (model.tree.element_radius[:, 0].reshape(model.tree.num_elements, 1)
+    #                          + model.tree.element_radius[:, 1].reshape(model.tree.num_elements, 1)
+    #                          + model.tree.element_radius[:, 2].reshape(model.tree.num_elements, 1))))
+    #                   ).reshape(model.tree.num_elements,)
     # no radius change in the roots
     # dydt[2][model.tree.root_elements, :] = 0.0
     dydt = np.concatenate([dydt[0].reshape(model.tree.num_elements*2, order='F'),

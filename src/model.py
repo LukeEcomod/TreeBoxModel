@@ -77,38 +77,40 @@ class Model:
         l: np.ndarray = np.concatenate(([0], length.reshape(len(length),)))
         cumulative_sum: np.ndarray = np.cumsum(l).reshape(len(l), 1)
         l_midpoints = length/2 + cumulative_sum[:-1]
+        dl_midpoints = np.diff(l_midpoints, axis=0)
         E: np.ndarray = self.tree.transpiration_rate
         C: np.ndarray = self.tree.sugar_concentration_as_numpy_array()
         C = np.concatenate([np.zeros((self.tree.num_elements, 1)), C], axis=1)
         RWU: np.ndarray = self.root_fluxes()
+        A = np.concatenate([self.tree.element_area([], 0),
+                            self.tree.element_area([], 1)], axis=1)
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
-        transport_ax: np.ndarray = k/eta/length*RHO_WATER * np.concatenate([self.tree.element_area([], 0),
-                                                                            self.tree.element_area([], 1)], axis=1)
+        transport_ax: np.ndarray = k[1:, :]/eta[1:, :]/np.repeat(dl_midpoints, 2, axis=1)*RHO_WATER * A[1:, :]
+        #print(transport_ax)
         # calculate downward and upward fluxes separately
         Q_ax_down: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
         Q_ax_down[0:-1, :] = (np.diff(pressures, axis=0)
-                              + RHO_WATER
+                              - RHO_WATER
                               * GRAVITATIONAL_ACCELERATION
-                              * np.diff(l_midpoints, axis=0).repeat(2, axis=1)
-                              ) * transport_ax[0:-1, :]
-        Q_ax_down[-1, 0] = 0  # flux from xylem to soil is handled in the RWU
+                              * np.repeat(dl_midpoints, 2, axis=1)
+                              ) * transport_ax
+        Q_ax_down[-1, 0] = 0  # flux between xylem and soil is handled in the RWU
         Q_ax_down[-1, 1] = 0  # no flux from phloem to soil
 
         Q_ax_up: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
 
-        Q_ax_up[1:, :] = (np.flip(
-            np.diff(
-                np.flip(
-                    pressures, axis=0), axis=0), axis=0)
-            + RHO_WATER
-            * GRAVITATIONAL_ACCELERATION
-            * np.flip(
-                np.diff(
-                    np.flip(l_midpoints, axis=0), axis=0), axis=0).repeat(2, axis=1)
-        ) * transport_ax[0:-1, :]
+        # Q_ax_up[1:, :] = (np.flip(
+        #     np.diff(
+        #         np.flip(
+        #             pressures, axis=0), axis=0), axis=0)
+        #     + RHO_WATER
+        #     * GRAVITATIONAL_ACCELERATION
+        #     * np.repeat(dl_midpoints, 2, axis=1)
+        # ) * transport_ax
+        Q_ax_up[1:, :] = -1.0*(np.diff(pressures, axis=0) - RHO_WATER*GRAVITATIONAL_ACCELERATION
+                               * np.repeat(dl_midpoints, 2, axis=1))*transport_ax
         Q_ax_up[0, :] = 0  # no upward flux in the highest element
-
         Q_ax: np.ndarray = (Q_ax_up + Q_ax_down)
 
         Q_ax[:, 0] = Q_ax[:, 0]-E.reshape(self.tree.num_elements,)+RWU.reshape(self.tree.num_elements,)
@@ -186,12 +188,14 @@ class Model:
 
         ind = self.tree.root_elements
         soil_ind = self.tree.roots.soil_elements(self.soil)
+        # print(self.tree.roots.root_area_index(self.soil))
         gi: np.ndarray = self.tree.roots.conductivity(self.soil)
         P_root = self.tree.pressure[ind, 0].reshape(len(ind), 1)
         P_soil = self.soil.pressure[soil_ind].reshape(len(ind), 1)
         Q_root = np.zeros((self.tree.num_elements, 1))
         Q_root[ind, 0] = (gi/GRAVITATIONAL_ACCELERATION*(P_soil-P_root))\
             .reshape(len(ind),)*self.tree.roots.area_per_tree
+        # Q_root[Q_root<0.0] = 0.0
         return Q_root
 
     def run(self, time_start: float = 1e-3, time_end: float = 120.0,

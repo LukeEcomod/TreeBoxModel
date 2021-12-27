@@ -104,6 +104,11 @@ def gas_properties_to_dict(gas) -> Dict:
                                                  np.sum(gas.space_division[:, :, 1:], axis=2)), axis=2)
     properties['gas_element_radii'] = gas.element_radius
     properties['gas_element_height'] = gas.element_height
+    properties['gas_head_area'] = gas.head_area
+    properties['gas_element_volume'] = gas.element_volume
+    properties['gas_element_volume_air'] = gas.element_volume_air
+    properties['gas_element_volume_water'] = gas.element_volume_water
+    properties['gas_element_volume_cell'] = gas.element_volume_cell
     properties['gas_diffusion_coef'] = gas.diffusion_coefficients
     properties['gas_eq_rate'] = gas.equilibration_rate
     properties['gas_velocity'] = gas.velocity

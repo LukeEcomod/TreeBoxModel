@@ -216,7 +216,9 @@ class Tree:
 
         inner_radius: np.ndarray = np.sum(radii[:, 0:column+1], axis=1)
         inner_radius = inner_radius.reshape(num_elements, 1)
-        return np.pi*(total_area - inner_radius**2)
+        element_area = np.pi*(total_area - inner_radius**2)
+
+        return element_area
 
     def element_volume_water(self, ind: List[int] = None, column: int = 0) -> np.ndarray:
         """ Calculates the volume of the xylem or the phloem.
@@ -241,7 +243,7 @@ class Tree:
         if len(ind) > 0:
             heights = heights[ind, :]
 
-        return self.element_area(ind, column) * heights * self.space_division[1]
+        return self.element_area(ind, column) * heights* self.space_division[1]
 
     def cross_sectional_area(self, ind: List[int] = None) -> np.ndarray:
         """ Calculates the cross-sectional area between the xylemn and the phloem.

@@ -38,7 +38,7 @@ all_variables = {'height': ['height of the tree', 'm', ("index"), 'f4'],
                  ['number of index in the model loop', '#', ("index"), 'i4'],
                  'area':
                  ['Element base area', 'm^2', ("index", "axial_layers", "radial_layers"), 'f4'],
-                 'volume':
+                 'volume_water':
                  ['Element volume', 'm^3', ("index", "axial_layers", "radial_layers"), 'f4'],
                  'soil_dz':
                  ['Soil layer thickness', 'm', ("index", "soil_elements"), 'f4'],
@@ -69,6 +69,16 @@ gas_variables = {
      ("index", "axial_layers", "radial_layers", "space_layers"), 'f4'],
     'gas_element_radii':
     ['Radii of each element', 'm', ("index", "axial_layers", "radial_layers"), 'f4'],
+    'gas_head_area':
+    ['Head area of each element', 'm^2', ("index", "axial_layers", "radial_layers"), 'f4'],
+    'gas_element_volume':
+    ['Volume of each element', 'm^3', ("index", "axial_layers", "radial_layers"), 'f4'],
+    'gas_element_volume_air':
+    ['Air volume of each element', 'm^3', ("index", "axial_layers", "radial_layers"), 'f4'],
+    'gas_element_volume_water':
+    ['Water volume of each element', 'm^3', ("index", "axial_layers", "radial_layers"), 'f4'],
+    'gas_element_volume_cell':
+    ['Cell volume of each element', 'm^3', ("index", "axial_layers", "radial_layers"), 'f4'],
     'gas_diffusion_coef':
     ['Diffusion coefficient of CH4 in each element', 'm^2/s', ("index", "axial_layers", "radial_layers"), 'f4'],
     'gas_eq_rate':
@@ -80,7 +90,7 @@ gas_variables = {
     'gas_temperature':
     ['Temperature of the element', 'K', ("index", "axial_layers", "radial_layers"), 'f4'],
     'gas_ambient_concentration':
-    ['Ambient concentration of the gas', 'mol/m^3', ("index"), 'f4'],
+    ['Ambient concentration of the gas', 'mol/m^3', ("index", "axial_layers"), 'f4'],
     'gas_moles_out':
     ['Amount of gas that has diffused out of the tree', 'mol', ("index", "axial_layers"), 'f4'],
     'gas_simulation_time':

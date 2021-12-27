@@ -3,7 +3,7 @@ import numpy as np
 
 def odefun_gas(t: float, y: np.ndarray, gas) -> np.ndarray: # pylint: disable=unused-argument
     ''' The right hand sides of ODEs used in the gas module. '''
-
+    #print(t)
     gas.concentration = y[:gas.nr*gas.na*2].reshape(gas.na, gas.nr, 2, order='F')
     Q_ax = gas.axial_fluxes()
     Q_rad, Q_out, _ = gas.radial_fluxes()

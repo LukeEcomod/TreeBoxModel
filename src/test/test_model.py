@@ -29,6 +29,13 @@ def test_model_init(test_model):
 
 def test_axial_fluxes(test_model):
     flux, flux_up, flux_down = test_model.axial_fluxes()
+    # length = test_model.tree.element_height
+    # l= np.concatenate(([0], length.reshape(len(length),)))
+    # cumulative_sum = np.cumsum(l).reshape(len(l), 1)
+    # l_midpoints = length/2 + cumulative_sum[:-1]
+    # dl_midpoints = np.diff(l_midpoints, axis=0)
+    # print(dl_midpoints)
+    #print(test_model.tree.element_height)
     transport_ax = np.asarray([10, 20]*test_model.tree.num_elements).reshape(
         test_model.tree.num_elements, 2)/1/test_model.tree.element_height*RHO_WATER*np.concatenate(
             [test_model.tree.element_area([], 0),
@@ -38,15 +45,11 @@ def test_axial_fluxes(test_model):
     for ind, f in enumerate(flux_up):
         if(ind == 0):
             assert f[0] == 0
-            assert f[1] == 0
         else:
+            
             assert f[0] == transport_ax[ind, 0]*(test_model.tree.pressure[ind-1, 0]-test_model.tree.pressure[ind, 0]
-                                                 - RHO_WATER*GRAVITATIONAL_ACCELERATION
+                                                 + RHO_WATER*GRAVITATIONAL_ACCELERATION
                                                  * test_model.tree.element_height[ind, 0])
-            assert f[1] == transport_ax[ind, 1]*(test_model.tree.pressure[ind-1, 1]-test_model.tree.pressure[ind, 1]
-                                                 - RHO_WATER*GRAVITATIONAL_ACCELERATION
-                                                 * test_model.tree.element_height[ind, 0])
-
     # test flux down
 
     for ind, f in enumerate(flux_down):
@@ -56,17 +59,13 @@ def test_axial_fluxes(test_model):
 
         else:
             assert f[0] == transport_ax[ind, 0]*(test_model.tree.pressure[ind+1, 0]-test_model.tree.pressure[ind, 0]
-                                                 + RHO_WATER*GRAVITATIONAL_ACCELERATION
-                                                 * test_model.tree.element_height[ind, 0])
-            assert f[1] == transport_ax[ind, 1]*(test_model.tree.pressure[ind+1, 1]-test_model.tree.pressure[ind, 1]
-                                                 + RHO_WATER*GRAVITATIONAL_ACCELERATION
+                                                 - RHO_WATER*GRAVITATIONAL_ACCELERATION
                                                  * test_model.tree.element_height[ind, 0])
 
     # test full flux now that up and down are correct
     Qroot = test_model.root_fluxes()
     for ind, f in enumerate(flux):
         assert f[0] == flux_down[ind, 0] + flux_up[ind, 0] - test_model.tree.transpiration_rate[ind, 0] + Qroot[ind, 0]
-        assert f[1] == flux_down[ind, 1] + flux_up[ind, 1]
 
 
 def test_radial_fluxes(test_model):

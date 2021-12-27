@@ -7,8 +7,9 @@ from .odefun_gas import odefun_gas
 from .tools.iotools import initialize_netcdf, write_netcdf
 from .model_variables import gas_variables
 
+
 class Gas:
-    ''' Defines a Gas class for calculating axial advection and radial diffusion of a gas in a tree.'''
+    ''' Defines a Gas class for calculating axial advection and radial diffusion of a self in a tree.'''
 
     def __init__(self, num_radial_elements: int,
                  num_axial_elements: int,
@@ -21,7 +22,7 @@ class Gas:
                  concentration: List[List[float]],
                  henrys_law_coefficient: float,
                  temperature: float,
-                 ambient_concentration: float,
+                 ambient_concentration: List[float],
                  outputfile: str = '',
                  sources_and_sinks_func: Callable = None,
                  max_output_lines: int = 100):
@@ -37,7 +38,7 @@ class Gas:
         self.concentration: np.ndarray = np.asarray(concentration).reshape(self.na, self.nr, 2)
         self.kh: float = henrys_law_coefficient  # kh = cwater/cair [kh] = (m^3 water / m^3 air)
         self.temperature: float = temperature
-        self.ambient_concentration: float = ambient_concentration
+        self.ambient_concentration: np.ndarray = np.asarray(ambient_concentration)
         self.n_out: np.ndarray = np.zeros((self.na, 1))
         self.sources_and_sinks_func: Callable = sources_and_sinks_func
         self.outputfile: str = outputfile
@@ -51,10 +52,11 @@ class Gas:
         self.head_area: np.ndarray = self.radius_from_pith**2.0
         self.head_area[:, 1:] = self.head_area[:, 1:] - self.head_area[:, :-1]
         self.head_area = self.head_area * np.pi
+        self.head_area_water = self.head_area * space_division[:, :, 1]
         self.element_volume: np.ndarray = self.head_area * self.element_height
         self.element_volume_air = self.space_division[:, :, 0]*self.element_volume
         self.element_volume_water = self.space_division[:, :, 1]*self.element_volume
-        self.element_volume_cell = self.space_division[:,:,2]*self.element_volume
+        self.element_volume_cell = self.space_division[:, :, 2]*self.element_volume
 
         if len(outputfile) != 0:
             dims: Dict = {"axial_layers": self.na, "radial_layers": self.nr, "space_layers": 2}
@@ -67,12 +69,12 @@ class Gas:
         return 2*np.pi*r*h
 
     def radial_fluxes(self):
-        ''' Calculates radial diffusion of the gas.'''
+        ''' Calculates radial diffusion of the self.'''
         # transport_coefficient: np.ndarray = 2.0*np.pi*self.element_height*self.diffusion_coefficients
         A = self.radial_surface_area()
         dr = np.diff(self.radius_mid_point)
         D = self.diffusion_coefficients
-        dr_atm = 2.0*(self.radius_from_pith[:, -1] - self.radius_mid_point[:, -1])
+        dr_atm = (self.radius_from_pith[:, -1] - self.radius_mid_point[:, -1])  # dr[:, -1].copy()  #
         # initialize flux matrices
         Q_rad = np.zeros((self.na, self.nr))
 
@@ -81,45 +83,39 @@ class Gas:
         Q_in = np.zeros((self.na, self.nr))
 
         Q_out[:, :-1] = D[:, :-1] * A[:, :-1] / dr * np.diff(self.concentration[:, :, 0], axis=1)
-        Q_out[:, -1] = D[:, -1] * A[:, -1] / dr_atm * (self.ambient_concentration - self.concentration[:, -1, 0])
+        Q_out[:, -1] = D[:, -1] * A[:, -1] / dr_atm \
+            * (self.ambient_concentration.reshape(self.na,) - self.concentration[:, -1, 0])
 
         Q_in[:, 1:] = -1.0*D[:, 1:] * A[:, :-1] / dr * np.diff(self.concentration[:, :, 0], axis=1)
-        # Old flux calculations that use log(r_(i+1)/r_i) as denominator
-        # Q_out[:, :-1] = transport_coefficient[:, :-1]*np.diff(self.concentration[:, :, 0], axis=1)\
-        #     / np.log(np.true_divide(r[:, 1:], r[:, :-1]))
-        # #Q_out[:, -1] = transport_coefficient[:, -1]*(self.ambient_concentration - self.concentration[:, -1, 0])\
-        # #    / np.log((r[:, -1] + 0.5 * (r[:, -1] - r[:, -2]))/r[:, -1])
-
-        # Q_in[:, 1:] = -1.0*transport_coefficient[:, 1:]*np.diff(self.concentration[:, :, 0], axis=1)\
-        #     / np.log(np.true_divide(r[:, 1:], r[:, :-1]))
-
         Q_rad = Q_out+Q_in
 
         return Q_rad, Q_out, Q_in
 
     def axial_fluxes(self):
-        ''' Calculates axial advection of the gas.'''
+        ''' Calculates axial advection of the gas'''
         # initialize flux matrices
         Q_ax = np.zeros((self.na, self.nr))
         Q_ax_top = np.zeros((self.na, self.nr))
         Q_ax_bottom = np.zeros((self.na, self.nr))
 
-        Q_ax_bottom[:-1, :] = self.velocity[:-1, :]*self.head_area[:-1, :]*np.diff(self.concentration[:, :, 1], axis=0)
-        Q_ax_top[1:, :] = -1.0*self.velocity[1:, :] * self.head_area[1:, :]*np.diff(self.concentration[:, :, 1], axis=0)
+        Q_ax_bottom[:-1, :] = self.velocity[:-1, :]*self.head_area_water[:-1, :]\
+            * np.diff(self.concentration[:, :, 1], axis=0)
+        Q_ax_top[1:, :] = -1.0*self.velocity[1:, :] * self.head_area_water[1:, :]\
+            * np.diff(self.concentration[:, :, 1], axis=0)
         Q_ax = Q_ax_top + Q_ax_bottom
         return Q_ax
 
     def air_water_fluxes(self):
-        """ calculates the equilibration between air and water phase gas concentration at every level.
+        """ calculates the equilibration between air and water phase self concentration at every level.
         """
         Q_air_water = np.zeros((self.na, self.nr, 2))
         conc = self.concentration.copy()
 
-        n_air = conc[:, :, 0]*self.element_volume_air
-        n_water = conc[:, :, 1]*self.element_volume_water
+        c_air = conc[:, :, 0]
+        c_water = conc[:, :, 1]
 
-        Q_air_water[:,:,0] = (n_water - n_air*self.kh)*self.equilibration_rate
-        Q_air_water[:,:,1] = (n_air*self.kh - n_water)*self.equilibration_rate
+        Q_air_water[:, :, 0] = (c_water - c_air*self.kh)*self.element_volume_water*self.equilibration_rate
+        Q_air_water[:, :, 1] = (c_air*self.kh - c_water)*self.element_volume_water*self.equilibration_rate
 
         # flux_from_air_to_water = np.diff(conc_air, axis=2).reshape(self.na, self.nr)\
         #     * self.equilibration_rate*self.element_volume_air
@@ -150,15 +146,17 @@ class Gas:
     #     return self.head_area()*self.element_height
 
     def run(self, time_start: float, time_end: float):
-        """ function to run the gas module independently. """
+        """ function to run the self module independently. """
+
         yinit = np.concatenate((self.concentration.reshape(self.na * self.nr * 2, order='F'),
                                 self.n_out.reshape(self.na, order='F')))
         if time_start == 0:
             time_start = 1e-10
         sol = solve_ivp(lambda t, y: odefun_gas(t, y, self), (time_start, time_end), yinit, method='DOP853',
-                        rtol=1e-11, atol=1e-11)
+                        rtol=1e-3, atol=1e-10)
         conc = sol.y[:, -1]
         self.concentration = conc[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
+
         self.n_out = conc[self.na*self.nr*2:].reshape(self.na, 1, order='F')
         res = sol.y
         time = sol.t
@@ -195,3 +193,21 @@ class Gas:
                     write_netcdf(self.ncf, results)
 
         return sol
+
+    def run_euler(self, time_start: float, time_end: float, dt: float):
+
+        time = time_start
+        while time < time_end:
+            Q_ax = self.axial_fluxes()
+            Q_rad, Q_out, _ = self.radial_fluxes()
+            Q_air_water = self.air_water_fluxes()
+            R = self.sources_and_sinks()
+
+            dcdt_air = (Q_rad + R[:, :, 0] + Q_air_water[:, :, 0])/self.element_volume_air
+            dcdt_water = (Q_ax + R[:, :, 1] + Q_air_water[:, :, 1])/self.element_volume_water
+            dndt_out = -1.0*Q_out[:, -1]  # -1.0*np.minimum(0, Q_rad[:, -1])
+
+            self.n_out = self.n_out + dndt_out*dt
+            self.concentration[:, :, 0] = self.concentration[:, :, 0] + dcdt_air*dt
+            self.concentration[:, :, 1] = self.concentration[:, :, 1] + dcdt_water*dt
+            time = time + dt
