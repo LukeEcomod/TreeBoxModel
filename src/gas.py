@@ -1,4 +1,4 @@
-from typing import List, Callable, Dict
+from typing import List, Dict
 import numpy as np
 from scipy.integrate import solve_ivp
 
@@ -19,13 +19,16 @@ class Gas:
                  equilibration_rate: float,
                  velocity: List[List[float]],
                  space_division: List[List[List[float]]],
-                 concentration: List[List[float]],
+                 concentration: List[List[List[float]]],
                  henrys_law_coefficient: float,
                  temperature: float,
                  ambient_concentration: List[float],
+                 sources_and_sinks: List[float],
+                 soil_gas_aq_concentration: List[List[float]],
+                 axial_water_uptake: List[float],
                  outputfile: str = '',
-                 sources_and_sinks_func: Callable = None,
-                 max_output_lines: int = 100):
+                 max_output_lines: int = 100,
+                 axial_diffusion_coefficient=0.0):
         self.nr: float = num_radial_elements
         self.na: float = num_axial_elements
         self.element_radius: np.ndarray = np.asarray(element_radius).reshape(self.na, self.nr)
@@ -40,11 +43,14 @@ class Gas:
         self.temperature: float = temperature
         self.ambient_concentration: np.ndarray = np.asarray(ambient_concentration)
         self.n_out: np.ndarray = np.zeros((self.na, 1))
-        self.sources_and_sinks_func: Callable = sources_and_sinks_func
+        self.sources_and_sinks: np.ndarray = sources_and_sinks.reshape(self.na, self.nr, 2)
+        # soil gas concentration includes gas and aq phase soil concentration in every axial element
+        self.soil_gas_aq_concentration = np.asarray(soil_gas_aq_concentration).reshape(self.na, 1)
+        self.axial_water_uptake = np.asarray(axial_water_uptake).reshape(self.na, 1)
         self.outputfile: str = outputfile
         self.max_output_lines: int = max_output_lines
 
-        # set head area and volume for the tree. Should speed long computations
+        # set head A and volume for the tree. Should speed long computations
         self.radius_from_pith: np.ndarray = np.cumsum(self.element_radius, axis=1)
         r_to_end: np.ndarray = np.concatenate((np.zeros((self.na, 1)), self.element_radius), axis=1)
         cumulative_sum: np.ndarray = np.cumsum(r_to_end, axis=1)
@@ -57,13 +63,14 @@ class Gas:
         self.element_volume_air = self.space_division[:, :, 0]*self.element_volume
         self.element_volume_water = self.space_division[:, :, 1]*self.element_volume
         self.element_volume_cell = self.space_division[:, :, 2]*self.element_volume
+        self.D_ax = axial_diffusion_coefficient
 
         if len(outputfile) != 0:
             dims: Dict = {"axial_layers": self.na, "radial_layers": self.nr, "space_layers": 2}
             self.ncf = initialize_netcdf(outputfile, dims, gas_variables)
 
     def radial_surface_area(self):
-        ''' Returns the radial surface area through which molecules diffuse in radial direction '''
+        ''' Returns the radial surface A through which molecules diffuse in radial direction '''
         r = self.radius_from_pith
         h = self.element_height
         return 2*np.pi*r*h
@@ -74,7 +81,7 @@ class Gas:
         A = self.radial_surface_area()
         dr = np.diff(self.radius_mid_point)
         D = self.diffusion_coefficients
-        dr_atm = (self.radius_from_pith[:, -1] - self.radius_mid_point[:, -1])  # dr[:, -1].copy()  #
+        dr_atm = (self.radius_from_pith[:, -1] - self.radius_mid_point[:, -1])
         # initialize flux matrices
         Q_rad = np.zeros((self.na, self.nr))
 
@@ -86,6 +93,14 @@ class Gas:
         Q_out[:, -1] = D[:, -1] * A[:, -1] / dr_atm \
             * (self.ambient_concentration.reshape(self.na,) - self.concentration[:, -1, 0])
 
+        # print('new line')
+        # print(dr_atm[[88, 118]])
+        # print(Q_out[88, -1])
+        # print(Q_out[118, -1])
+        # print(self.concentration[88, -1, 0])
+        # print(self.concentration[118, -1, 0])
+        #Q_out[-24: -1] = 0.0
+
         Q_in[:, 1:] = -1.0*D[:, 1:] * A[:, :-1] / dr * np.diff(self.concentration[:, :, 0], axis=1)
         Q_rad = Q_out+Q_in
 
@@ -93,57 +108,77 @@ class Gas:
 
     def axial_fluxes(self):
         ''' Calculates axial advection of the gas'''
-        # initialize flux matrices
-        Q_ax = np.zeros((self.na, self.nr))
+        Q_ax_top_pos = np.zeros((self.na, self.nr))
+        Q_ax_bottom_pos = np.zeros((self.na, self.nr))
+        Q_ax_top_neg = np.zeros((self.na, self.nr))
+        Q_ax_bottom_neg = np.zeros((self.na, self.nr))
+        v = self.velocity
+        A = self.head_area
+        c_aq = self.concentration[:, :, 1]
+        Q_ax_top_pos[1:, :] = -v[1:, :]*A[1:, :]*c_aq[1:, :]
+        Q_ax_bottom_pos[:-1, :] = v[1:, :]*A[1:, :]*c_aq[1:, :]
+        Q_ax_top_neg[1:, :] = -v[1:, :]*A[1:, :]*c_aq[:-1, :]
+        Q_ax_bottom_neg[:-1, :] = v[1:, :]*A[1:, :]*c_aq[:-1, :]
+
+        # Change amounts that are not real to zero
+
+        # Q_ax_top_pos is always negative when velocity > 0
+        Q_ax_top_pos[Q_ax_top_pos > 0.0] = 0.0
+
+        # Q_ax_bottom_pos is alays positive when velocity > 0
+        Q_ax_bottom_pos[Q_ax_bottom_pos < 0.0] = 0.0
+
+        # Q_ax_top_neg is always positive when velocity < 0
+        Q_ax_top_neg[Q_ax_top_neg < 0.0] = 0.0
+
+        # Q_ax_bottom_neg is always negative when velocity < 0
+        Q_ax_bottom_neg[Q_ax_bottom_neg > 0.0] = 0.0
+
+        Q_ax = Q_ax_top_pos + Q_ax_bottom_pos + Q_ax_top_neg + Q_ax_bottom_neg
+
+        return Q_ax
+
+    def axial_diffusion(self):
         Q_ax_top = np.zeros((self.na, self.nr))
         Q_ax_bottom = np.zeros((self.na, self.nr))
-
-        Q_ax_bottom[:-1, :] = self.velocity[:-1, :]*self.head_area_water[:-1, :]\
-            * np.diff(self.concentration[:, :, 1], axis=0)
-        Q_ax_top[1:, :] = -1.0*self.velocity[1:, :] * self.head_area_water[1:, :]\
-            * np.diff(self.concentration[:, :, 1], axis=0)
-        Q_ax = Q_ax_top + Q_ax_bottom
+        Q_ax = np.zeros((self.na, self.nr))
+        A = self.head_area
+        c_gas = self.concentration[:, :, 0]
+        length: np.ndarray = self.element_height[:, 0]
+        l: np.ndarray = np.concatenate(([0], length.reshape(len(length),)))
+        cumulative_sum: np.ndarray = np.cumsum(l)
+        l_midpoints = ((length/2) + cumulative_sum[:-1]).reshape(len(length), 1)
+        l_midpoints = np.repeat(l_midpoints, repeats=self.nr, axis=1)
+        dl_midpoints = np.diff(l_midpoints, axis=0)
+        Q_ax_top[1:] = -1.0*self.D_ax*A[1:]*np.diff(c_gas, axis=0)/dl_midpoints
+        Q_ax_bottom[:-1] = self.D_ax*A[1:]*np.diff(c_gas, axis=0)/dl_midpoints
+        # Q_ax = Q_ax_top+Q_ax_bottom
         return Q_ax
 
     def air_water_fluxes(self):
-        """ calculates the equilibration between air and water phase self concentration at every level.
+        """ calculates the equilibration between air and water phase self concentration at every lev.
         """
         Q_air_water = np.zeros((self.na, self.nr, 2))
-        conc = self.concentration.copy()
+        c_aq = self.concentration.copy()
 
-        c_air = conc[:, :, 0]
-        c_water = conc[:, :, 1]
+        c_air = c_aq[:, :, 0]
+        c_water = c_aq[:, :, 1]
 
         Q_air_water[:, :, 0] = (c_water - c_air*self.kh)*self.element_volume_water*self.equilibration_rate
         Q_air_water[:, :, 1] = (c_air*self.kh - c_water)*self.element_volume_water*self.equilibration_rate
 
-        # flux_from_air_to_water = np.diff(conc_air, axis=2).reshape(self.na, self.nr)\
-        #     * self.equilibration_rate*self.element_volume_air
-        # flux_from_water_to_air = -1.0*np.diff(conc_water, axis=2).reshape(self.na, self.nr)\
-        #     *self.equilibration_rate * self.element_volume_water_cell
-        # Q_air_water[:, :, 0] = flux_from_air_to_water
-        # Q_air_water[:, :, 1] = flux_from_water_to_air
-
         return Q_air_water
 
-    def sources_and_sinks(self):
-        ''' Wrapper to call self.sources_and_sinks_func without knowing is the function given.'''
-        R = np.zeros((self.na, self.nr, 2))
-        if self.sources_and_sinks_func is not None:
-            R = self.sources_and_sinks_func
-        return R
+    def axial_water_uptake_source(self):
+        '''Calculates gas uptake or loss from water uptake or loss along each axial element.'''
+        R_root = np.zeros((self.na, self.nr, 2))
+        Q_gas_aq_root = self.axial_water_uptake * self.soil_gas_aq_concentration
+        neg_mask, _ = np.where(Q_gas_aq_root < 0)
+        Q_gas_aq_root[neg_mask] = self.axial_water_uptake[neg_mask]\
+            * self.concentration[neg_mask, -1, 1].reshape(len(neg_mask), 1)
+        R_root[:, -1, 1] = Q_gas_aq_root.reshape(self.na,)
 
-    # def radius_from_pith(self):
-    #     return np.cumsum(self.element_radius, axis=1)
-
-    # def head_area(self):
-    #     # r = self.radius_from_pith()
-    #     distance_sq = self.radius_area**2.0
-    #     distance_sq[:, 1:] = distance_sq[:, 1:] - distance_sq[:, :-1]
-    #     return np.pi*distance_sq
-
-    # def element_volume(self):
-    #     return self.head_area()*self.element_height
+        return R_root
 
     def run(self, time_start: float, time_end: float):
         """ function to run the self module independently. """
@@ -152,12 +187,12 @@ class Gas:
                                 self.n_out.reshape(self.na, order='F')))
         if time_start == 0:
             time_start = 1e-10
-        sol = solve_ivp(lambda t, y: odefun_gas(t, y, self), (time_start, time_end), yinit, method='DOP853',
-                        rtol=1e-3, atol=1e-10)
-        conc = sol.y[:, -1]
-        self.concentration = conc[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
+        sol = solve_ivp(lambda t, y: odefun_gas(t, y, self), (time_start, time_end), yinit, method='RK45',
+                        rtol=1e-6, atol=1e-35)
+        c_aq = sol.y[:, -1]
+        self.concentration = c_aq[:self.na*self.nr*2].reshape(self.na, self.nr, 2, order='F')
 
-        self.n_out = conc[self.na*self.nr*2:].reshape(self.na, 1, order='F')
+        self.n_out = c_aq[self.na*self.nr*2:].reshape(self.na, 1, order='F')
         res = sol.y
         time = sol.t
         if len(self.outputfile) != 0:

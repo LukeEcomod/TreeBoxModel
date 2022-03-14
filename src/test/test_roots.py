@@ -39,7 +39,7 @@ def test_root_conductance(test_roots, test_soil):
 
 def test_soil_root_conductance(test_roots, test_soil):
     result = test_roots.soil_root_conductance(test_soil)
-    alpha = (test_roots.rooting_depth/test_roots.root_area_index(test_soil))**(1/2)\
+    alpha = (test_roots.rooting_depth/10)**(1/2)\
         * (2*test_roots.effective_radius)**(-1/2)
     assert result[0] == alpha[0]*test_soil.hydraulic_conductivity[0]*test_roots.area_density[0]
     assert all(not ele for ele in np.isnan(result))

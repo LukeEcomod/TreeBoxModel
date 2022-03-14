@@ -188,14 +188,12 @@ class Model:
 
         ind = self.tree.root_elements
         soil_ind = self.tree.roots.soil_elements(self.soil)
-        # print(self.tree.roots.root_area_index(self.soil))
         gi: np.ndarray = self.tree.roots.conductivity(self.soil)
         P_root = self.tree.pressure[ind, 0].reshape(len(ind), 1)
         P_soil = self.soil.pressure[soil_ind].reshape(len(ind), 1)
         Q_root = np.zeros((self.tree.num_elements, 1))
         Q_root[ind, 0] = (gi/GRAVITATIONAL_ACCELERATION*(P_soil-P_root))\
             .reshape(len(ind),)*self.tree.roots.area_per_tree
-        # Q_root[Q_root<0.0] = 0.0
         return Q_root
 
     def run(self, time_start: float = 1e-3, time_end: float = 120.0,

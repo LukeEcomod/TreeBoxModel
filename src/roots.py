@@ -32,7 +32,8 @@ class Roots:
                  effective_radius: np.ndarray,
                  soil_conductance_scale: float,
                  area_per_tree: float,
-                 num_elements: int):
+                 num_elements: int,
+                 RAI: float = 10.0):
 
         self.num_elements = num_elements
         self.area_density: np.ndarray = area_density
@@ -40,6 +41,7 @@ class Roots:
         self.soil_conductance_scale: float = soil_conductance_scale
         self.area_per_tree: float = area_per_tree
         self.rooting_depth: float = rooting_depth
+        self.RAI = RAI
 
     def root_area_index(self, soil: Soil) -> float:
         """ Calculates the root area index i.e.
@@ -135,12 +137,12 @@ class Roots:
 
         if len(ind) > 0:
             result = ((self.rooting_depth*self.area_per_tree /
-                       (2*self.root_area_index(soil)*self.effective_radius[ind]))**(1/2)
+                       (2*self.RAI*self.effective_radius[ind]))**(1/2)
                       * soil.hydraulic_conductivity[ind]*self.area_density[ind]/self.area_per_tree).reshape(len(ind), 1)
         else:
             root_ind, _ = np.where(soil.depth() < self.rooting_depth)
             result = ((self.rooting_depth*self.area_per_tree /
-                       (2*self.root_area_index(soil)*self.effective_radius))**(1/2)
+                       (2*self.RAI*self.effective_radius))**(1/2)
                       * soil.hydraulic_conductivity[root_ind].reshape(len(root_ind), 1)
                       * self.area_density/self.area_per_tree).reshape(self.num_elements, 1)
 

@@ -54,7 +54,7 @@ def odefun_tree(t: float, y: np.ndarray, model) -> np.ndarray:  # pylint: disabl
         np.array([model.tree.element_volume_water([], 0),
                   model.tree.element_volume_water([], 1)])) * RHO_WATER) * (dmdt_ax + dmdt_rad)
     dydt[0][0, :, 1] = 0.0
-    dydt[0][0,-1,0] = 0.0
+    #dydt[0][0,-1,0] = 0.0
     #print(dmdt_ax)
     #dydt[1][:, :] = 0.0
     #  dydt[1] = 1.0 / model.tree.element_volume_water([], 1).reshape(model.tree.num_elements, 1)\
