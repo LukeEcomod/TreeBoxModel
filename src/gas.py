@@ -26,9 +26,10 @@ class Gas:
                  sources_and_sinks: List[float],
                  soil_gas_aq_concentration: List[List[float]],
                  axial_water_uptake: List[float],
+                 axial_diffusion_coefficient: float = 0.0,
                  outputfile: str = '',
-                 max_output_lines: int = 100,
-                 axial_diffusion_coefficient=0.0):
+                 max_output_lines: int = 100
+                 ):
         self.nr: float = num_radial_elements
         self.na: float = num_axial_elements
         self.element_radius: np.ndarray = np.asarray(element_radius).reshape(self.na, self.nr)
@@ -152,7 +153,12 @@ class Gas:
         dl_midpoints = np.diff(l_midpoints, axis=0)
         Q_ax_top[1:] = -1.0*self.D_ax*A[1:]*np.diff(c_gas, axis=0)/dl_midpoints
         Q_ax_bottom[:-1] = self.D_ax*A[1:]*np.diff(c_gas, axis=0)/dl_midpoints
-        # Q_ax = Q_ax_top+Q_ax_bottom
+
+        # calculate the bottom and top fluxes using the radial diffusion coefficient
+        Q_ax_top[0, :] = A[0, :] * self.diffusion_coefficients[0, :] * (self.ambient_concentration[0] - c_gas[0, :])
+        Q_ax_bottom[-1, :] = A[-1, :] * self.diffusion_coefficients[-1, :] * (
+            self.ambient_concentration[-1] - c_gas[-1, :])
+        Q_ax = Q_ax_top+Q_ax_bottom
         return Q_ax
 
     def air_water_fluxes(self):
