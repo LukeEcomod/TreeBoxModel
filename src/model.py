@@ -194,6 +194,11 @@ class Model:
         Q_root = np.zeros((self.tree.num_elements, 1))
         Q_root[ind, 0] = (gi/GRAVITATIONAL_ACCELERATION*(P_soil-P_root))\
             .reshape(len(ind),)*self.tree.roots.area_per_tree
+        
+        total_transpiration = np.sum(self.tree.transpiration_rate)
+        total_root_area_density = np.sum(self.tree.roots.area_density/self.tree.roots.area_per_tree)
+        # Divide total transpiration according to root_area
+        Q_root[ind, 0] = (total_transpiration * self.tree.roots.area_density/total_root_area_density).reshape(len(ind),)
         return Q_root
 
     def run(self, time_start: float = 1e-3, time_end: float = 120.0,
