@@ -9,39 +9,45 @@ def test_roots():
     num_elements = 5
     rooting_depth = 5
 
-    area_density = np.zeros((5, 1)) + 10
+    area_density = np.zeros((5, 1)) + 1
 
     effective_radius = np.zeros((5, 1))+0.1
 
     soil_conductance_scale = 0.01
-    area_per_tree = 1
+
+    RAI = 3
+
+    total_root_area = np.sum(area_density * rooting_depth/num_elements)
     return Roots(rooting_depth=rooting_depth,
                  area_density=area_density,
                  effective_radius=effective_radius,
                  soil_conductance_scale=soil_conductance_scale,
-                 area_per_tree=area_per_tree,
-                 num_elements=num_elements)
+                 total_root_area=total_root_area,
+                 num_elements=num_elements,
+                 RAI=RAI)
 
 
 def test_init(test_roots):
     assert test_roots.soil_conductance_scale == 0.01
-    assert any(test_roots.area_density == 10)
+    assert all(test_roots.area_density == 1)
 
 
 def test_root_conductance(test_roots, test_soil):
     result = test_roots.root_conductance(test_soil)
-    assert all(result[:2] == 1000)
+    assert all(result[:2] == 100)
 
     result_short = test_roots.root_conductance(test_soil, [1, 2])
 
-    assert np.array_equal(result_short, np.asarray([1000.0, 1000.0]).reshape(2, 1))
+    print(result_short)
+
+    assert np.array_equal(result_short, np.asarray([100.0, 100.0]).reshape(2, 1))
 
 
 def test_soil_root_conductance(test_roots, test_soil):
     result = test_roots.soil_root_conductance(test_soil)
-    alpha = (test_roots.rooting_depth/test_roots.root_area_index(test_soil))**(1/2)\
+    alpha = (test_roots.rooting_depth/test_roots.RAI)**(1/2)\
         * (2*test_roots.effective_radius)**(-1/2)
-    assert result[0] == alpha[0]*test_soil.hydraulic_conductivity[0]*test_roots.area_density[0]
+    assert result[0] == pytest.approx(alpha[0]*test_soil.hydraulic_conductivity[0]*test_roots.area_density[0], 1e-6)
     assert all(not ele for ele in np.isnan(result))
 
 

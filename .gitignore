@@ -4,7 +4,7 @@ __pycache__
 .mypy_cache
 *.pyc
 .cache
-.env
+.env*
 test.out
 *.nc
 *profile*
@@ -39,3 +39,11 @@ docs/build/
 
 *.dat
 .pylintrc
+
+TBM/
+
+.DS_store
+
+.python-version
+
+*gas_comparison_test*

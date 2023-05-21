@@ -16,16 +16,21 @@ def test_gas():
     water_fraction = np.repeat(0.5, 50).reshape(na, nr, 1)
     cell_fraction = np.repeat(0.15, 50).reshape(na, nr, 1)
     space_division = np.concatenate((air_fraction, water_fraction, cell_fraction), axis=2)
-    ambient_concentration = 1
+    ambient_concentration = np.repeat(1, 10).reshape(na, 1)
     air_concentration = np.arange(0, 50).reshape(na, nr, 1)
     water_concentration = (0.342*air_concentration).reshape(na, nr, 1)
     concentration = np.concatenate((air_concentration, water_concentration), axis=2)
-
+    axial_water_uptake = np.zeros((na, 1))
+    axial_water_uptake[-1] = 1
+    soil_gas_aq_concentration = np.zeros((na, 1))
+    soil_gas_aq_concentration[-1] = 0.5
+    sources_and_sinks = np.zeros((na, nr, 2))
     return Gas(num_radial_elements=nr,
                num_axial_elements=na,
-               element_radius=element_radius,
+               element_length=element_radius,
                element_height=element_height,
-               diffusion_coefficients=D,
+               radial_diffusion_coefficient=D,
+               axial_diffusion_coefficient = np.zeros((na, nr)),
                equilibration_rate=0.005,
                velocity=velocity,
                space_division=space_division,
@@ -33,7 +38,9 @@ def test_gas():
                henrys_law_coefficient=0.342,
                temperature=298.15,
                ambient_concentration=ambient_concentration,
-               sources_and_sinks_func=source(1.5))
+               axial_water_uptake=axial_water_uptake,
+               soil_compound_aq_concentration=soil_gas_aq_concentration,
+               sources_and_sinks=sources_and_sinks)
 
 
 def test_init(test_gas):
@@ -52,7 +59,7 @@ def test_head_area(test_gas):
 
 
 def test_axial_fluxes(test_gas):
-    Q = test_gas.axial_fluxes()
+    Q = test_gas.aq_axial_advection()
 
     # Test that the fluxes cancel out
     assert np.sum(np.sum(Q)) == pytest.approx(0.0, rel=1e-10)
@@ -64,13 +71,9 @@ def test_axial_fluxes(test_gas):
 
 
 def test_radial_fluxes(test_gas):
-    Q,_,_ = test_gas.radial_fluxes()
+    Q, _, _ = test_gas.gas_radial_diffusion()
     cbark = np.arange(4, 50, 5)
-    outflux = -2.0*0.1*1e-11*np.pi*5*(cbark-1)
-    print(test_gas.element_radius[:,0])
-    print(outflux)
-    print(np.sum(Q, axis=1))
-    print(Q.shape)
+    outflux = -2.0*np.pi*5*0.1*1e-11*(cbark-1)/0.5  # outflux = A_(stem_surface) * D *Delta(conc)/dr_atm (5-4.5)
 
     # Test that the sum flux equals flux out of the tree
     assert all(a == pytest.approx(b, rel=1e-15) for a, b in zip(np.sum(Q, axis=1), outflux))
@@ -80,8 +83,3 @@ def test_air_water_fluxes(test_gas):
     Q = test_gas.air_water_fluxes()
 
     assert np.sum(Q) == pytest.approx(0, rel=1e-15)
-
-
-def test_sources(test_gas):
-    P = test_gas.sources_and_sinks()
-    assert all(a == 1.5 for a in P[-1, :])
