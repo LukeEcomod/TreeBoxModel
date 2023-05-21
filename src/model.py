@@ -47,12 +47,12 @@ class Model:
         from the sum of bottom and top fluxes.
 
         .. math::
-            Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i} - E
+            Q_{ax,i} = Q_{ax,bottom,i} + Q_{ax,top,i} - E + Q_{root, i}
 
         .. math::
-            Q_{ax,bottom,i} = \\frac{k_i \\: A_{ax,i} \\: \\rho_w}{\\eta_i \\: l_i}(P_{i+1} - P_{i} - P_h)
+            Q_{ax,bottom,i} = \\frac{k_i \\: A_{ax,i} \\: \\rho_w}{\\eta_i \\: l_i}(P_{i+1} - P_{i} - P_h)
 
-            Q_{ax,top,i} = \\frac{k_i \\: A_{ax,i+1} \\: \\rho_w}{\\eta_i \\: l_i}(P_{i-1} - P_{i} + P_h)
+            Q_{ax,top,i} = \\frac{k_i \\: A_{ax,i+1} \\: \\rho_w}{\\eta_i \\: l_i}(P_{i-1} - P_{i} + P_h)
 
         where
 
@@ -87,7 +87,7 @@ class Model:
         # calculate transport coefficients
         # TODO: add calculation for phloem sap density
         transport_ax: np.ndarray = k[1:, :]/eta[1:, :]/np.repeat(dl_midpoints, 2, axis=1)*RHO_WATER * A[1:, :]
-        #print(transport_ax)
+
         # calculate downward and upward fluxes separately
         Q_ax_down: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
         Q_ax_down[0:-1, :] = (np.diff(pressures, axis=0)
@@ -100,14 +100,6 @@ class Model:
 
         Q_ax_up: np.ndarray = np.zeros((self.tree.num_elements, pressures.shape[1]))
 
-        # Q_ax_up[1:, :] = (np.flip(
-        #     np.diff(
-        #         np.flip(
-        #             pressures, axis=0), axis=0), axis=0)
-        #     + RHO_WATER
-        #     * GRAVITATIONAL_ACCELERATION
-        #     * np.repeat(dl_midpoints, 2, axis=1)
-        # ) * transport_ax
         Q_ax_up[1:, :] = -1.0*(np.diff(pressures, axis=0) - RHO_WATER*GRAVITATIONAL_ACCELERATION
                                * np.repeat(dl_midpoints, 2, axis=1))*transport_ax
         Q_ax_up[0, :] = 0  # no upward flux in the highest element
@@ -166,39 +158,32 @@ class Model:
         [Volpe et. al. 2013](https://doi.org/10.1016/j.advwatres.2013.07.008)
 
         .. math::
-            Q_{root,i} = \\frac{g_i}{g} (P_{soil,i} - P_{root,xylem,i})
+            Q_{root,i} = \\frac{G_i}{g} (P_{soil,i} - P_{root,xylem,i})
 
         where
 
-        * :math:`g_i`: Total conductance from soil to root xylem (:math:`\\frac{1}{s}`). See
+        * :math:`G_i`: Total conductance from soil to root xylem (:math:`\\frac{m^2}{s}`). See
             [Roots class](index.html#src.roots.Roots.conductivity) for details
         * :math:`g`: gravitational acceleration (:math:`\\frac{m}{s^2}`)
         * :math:`P`: Pressure in either the soil element or root xylem element
-
-        The resulting flux has units `:math:\\frac{kg}{m^2s}` and it is assumed that this flux is multiplied
-        with soil area per tree which is assumed to equal 1
 
         Returns:
             numpy.ndarray (dtype=float, ndim=2)[self.tree.num_elements, 1]: The root water uptake in units kg/s
 
         References:
-            Volpe, V. et. al., "Root controls on water redistribution and carbon uptake in the soil–plant
+            Volpe, V. et. al., "Root controls on water redistribution and carbon uptake in the soil-plant
             system under current and future climate", Advances in Water Resources, 60, 110-120, 2013.
         """
 
         ind = self.tree.root_elements
         soil_ind = self.tree.roots.soil_elements(self.soil)
         gi: np.ndarray = self.tree.roots.conductivity(self.soil)
+        length: np.ndarray = self.tree.element_height
         P_root = self.tree.pressure[ind, 0].reshape(len(ind), 1)
         P_soil = self.soil.pressure[soil_ind].reshape(len(ind), 1)
         Q_root = np.zeros((self.tree.num_elements, 1))
-        Q_root[ind, 0] = (gi/GRAVITATIONAL_ACCELERATION*(P_soil-P_root))\
-            .reshape(len(ind),)*self.tree.roots.area_per_tree
-        
-        total_transpiration = np.sum(self.tree.transpiration_rate)
-        total_root_area_density = np.sum(self.tree.roots.area_density/self.tree.roots.area_per_tree)
-        # Divide total transpiration according to root_area
-        Q_root[ind, 0] = (total_transpiration * self.tree.roots.area_density/total_root_area_density).reshape(len(ind),)
+        Q_root[ind, 0] = (gi/GRAVITATIONAL_ACCELERATION*(P_soil-P_root)).reshape(len(ind),)
+
         return Q_root
 
     def run(self, time_start: float = 1e-3, time_end: float = 120.0,
@@ -345,6 +330,5 @@ class Model:
         properties['soil_root_k'] = self.tree.roots.conductivity(self.soil)
         properties['rooting_depth'] = self.tree.roots.rooting_depth
         properties['root_area_density'] = self.tree.roots.area_density
-        properties['area_per_tree'] = self.tree.roots.area_per_tree
 
         return properties

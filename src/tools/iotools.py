@@ -51,7 +51,6 @@ def initialize_netcdf(filename: str,
         new_var: Variable = ncf.createVariable(var_name, datatype, dimensions)
         new_var.units = units
         new_var.description = description
-
     return ncf
 
 
@@ -69,7 +68,6 @@ def write_netcdf(ncf: Dataset, properties: Dict) -> None:
     """
     ind: int = ncf['index'].shape[0]
     ncf['index'][ind] = ind
-
     for key in properties.keys():
         if (key in index_dim_vars
                 or key in gas_index_dim_vars):
@@ -88,8 +86,8 @@ def write_netcdf(ncf: Dataset, properties: Dict) -> None:
             ncf[key][ind, :, :] = properties[key]
 
 
-def gas_properties_to_dict(gas) -> Dict:
-    """ Transfers gas properties into a dictionary.
+def compound_properties_to_dict(gas) -> Dict:
+    """ Transfers compound properties into a dictionary.
 
     Args:
         gas (Gas): Instance of the Gas class.
@@ -99,22 +97,22 @@ def gas_properties_to_dict(gas) -> Dict:
 
     """
     properties = {}
-    properties['gas_concentration'] = gas.concentration
-    properties['gas_space_division'] = np.stack((gas.space_division[:, :, 0],
+    properties['cmp_concentration'] = gas.concentration
+    properties['cmp_space_division'] = np.stack((gas.space_division[:, :, 0],
                                                  np.sum(gas.space_division[:, :, 1:], axis=2)), axis=2)
-    properties['gas_element_radii'] = gas.element_radius
-    properties['gas_element_height'] = gas.element_height
-    properties['gas_head_area'] = gas.head_area
-    properties['gas_element_volume'] = gas.element_volume
-    properties['gas_element_volume_air'] = gas.element_volume_air
-    properties['gas_element_volume_water'] = gas.element_volume_water
-    properties['gas_element_volume_cell'] = gas.element_volume_cell
-    properties['gas_diffusion_coef'] = gas.diffusion_coefficients
-    properties['gas_eq_rate'] = gas.equilibration_rate
-    properties['gas_velocity'] = gas.velocity
-    properties['gas_henry_coef'] = gas.kh
-    properties['gas_temperature'] = gas.temperature
-    properties['gas_ambient_concentration'] = gas.ambient_concentration
-    properties['gas_moles_out'] = gas.n_out
-
+    properties['cmp_element_radii'] = gas.element_length
+    properties['cmp_element_height'] = gas.element_height
+    properties['cmp_head_area'] = gas.head_area
+    properties['cmp_element_volume'] = gas.element_volume
+    properties['cmp_element_volume_air'] = gas.element_volume_air
+    properties['cmp_element_volume_water'] = gas.element_volume_water
+    properties['cmp_element_volume_cell'] = gas.element_volume_cell
+    properties['cmp_gas_radial_diffusion_coefficient'] = gas.radial_diffusion_coefficient
+    properties['cmp_gas_axial_diffusion_coefficient'] = gas.axial_diffusion_coefficient
+    properties['cmp_eq_rate'] = gas.equilibration_rate
+    properties['cmp_velocity'] = gas.velocity
+    properties['cmp_henry_coef'] = gas.kh
+    properties['cmp_temperature'] = gas.temperature
+    properties['cmp_ambient_concentration'] = gas.ambient_concentration
+    properties['cmp_moles_out'] = gas.n_out
     return properties

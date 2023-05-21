@@ -45,3 +45,5 @@ TBM/
 .DS_store
 
 .python-version
+
+*gas_comparison_test*
